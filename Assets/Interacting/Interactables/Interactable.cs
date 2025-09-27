@@ -1,0 +1,30 @@
+using UnityEngine;
+
+/* An Interactable can be interacted with. It will try to set itself up to interact with some InteractAgent. 
+ */
+public class Interactable : MonoBehaviour{
+	[SerializeField] Interaction interaction;
+	[SerializeField] InteractAgent agent;
+	
+	private void Start(){
+		AddToAgent();
+	}
+
+	public void Interact(){
+		interaction.Trigger();
+	}
+
+	public virtual void OnOver(){
+		//TODO! Maybe add some visual effect?
+	}
+	public virtual void OnNotOver(){
+		
+	}
+
+	//By default, an Interactable will automatically add itself to the default Interaction Agent. 
+	//Otherwise, if an Interact Agent is specified, this Interactable will be added to that Interaction Agent. 
+	private protected void AddToAgent(){
+		if(agent == null) InteractAgent.AddToDefault(this);
+		else agent.Add(this);
+	}
+}
