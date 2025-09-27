@@ -633,10 +633,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1225687284}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 200, y: 50}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: -0.000030517578, y: 160.3737}
+  m_SizeDelta: {x: 0, y: -320.7475}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1864070551
 MonoBehaviour:
@@ -665,7 +665,10 @@ MonoBehaviour:
   dialogueText: {fileID: 1864070553}
   Font: {fileID: 0}
   FontSize: 0
-  DefaultFontColor: {r: 0, g: 0, b: 0, a: 1}
+  DefaultFontColor: {r: 1, g: 1, b: 1, a: 1}
+  AutoPlayWait: -1
+  DefaultAdvanceKey: 32
+  FastForwardKey: 13
 --- !u!114 &1864070553
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -686,11 +689,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: '<b> awww</b>awww
-
-    <color=#eofkoef
-
-'
+  m_text: Sample Text Here
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -755,7 +754,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: -171.09691, w: 0}
+  m_margin: {x: 0, y: 0, z: -1.5030518, w: -0.5600891}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0

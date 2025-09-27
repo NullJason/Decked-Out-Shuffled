@@ -16,7 +16,7 @@ using TMPro;
 /// &lt;Wavy=3,5&gt; The text here should make each character turn the whole text into a wave with a SPEED of 3 and AMPLITUDE of 5 &lt;/Wavy&gt;
 /// &lt;Shake=4,1&gt; The text here should Shake with a XFORCE of 4 and YFORCE of 1. &lt;/Shake&gt;
 /// &lt;Pause=3&gt; The Dialogue should Pause here for 3 SECONDS.
-/// &lt;Color=(175,175,175)&gt; The Color of this text should be GRAY. &lt;/Color&gt;
+/// &lt;Color=(175,175,175)&gt; The Color of this text should be Default + GRAY. &lt;/Color&gt;
 /// &lt;ColorTransition=(255,255,255), (0,0,0)&gt; The text here should be Gradient Colored from WHITE to BLACK. &lt;/ColorTransition&gt;
 /// &lt;Magnify=3,2,4&gt; The Text here should be magnified with a SPEED of 3, SCALE of 2, LENGTH of 4. &lt;/Magnify&gt;
 /// 
@@ -24,6 +24,7 @@ using TMPro;
 /// &lt;b&gt; for bold
 /// &lt;i&gt; for italics
 /// &lt;u&gt; for underline
+/// &lt;color&gt; for color (uses =#hex)
 /// etc...
 /// Full tmp tags at https://docs.unity3d.com/Packages/com.unity.textmeshpro@4.0/manual/RichTextSupportedTags.html
 /// </code>
@@ -31,24 +32,25 @@ using TMPro;
 /// </summary>
 public class Dialogue : MonoBehaviour
 {
-    [SerializeField] TextMeshProUGUI dialogueText;
+    [SerializeField] private TextMeshProUGUI dialogueText;
 
     // If these variables aren't set then nothing will happen to the text style.
     [SerializeField] private TMP_FontAsset Font;
     [SerializeField] private int FontSize;
     [SerializeField] private Color DefaultFontColor = Color.white;
-    [SerializeField] private bool DoAutoPlay = false;
+    [SerializeField] private float AutoPlayWait = -1; // wont autoplay <0
+    [SerializeField] private KeyCode DefaultAdvanceKey = KeyCode.Space; // set none to disable.
 
-    Queue<(string text, KeyCode key)> dialogueQueue = new Queue<(string, KeyCode)>();
-    List<TextEffect> activeEffects = new List<TextEffect>();
+    private Queue<(string text, KeyCode key)> dialogueQueue = new Queue<(string, KeyCode)>();
+    private List<TextEffect> activeEffects = new List<TextEffect>();
 
     // Pausing
-    List<TextEffectPause> pauseMarkers = new List<TextEffectPause>();
-    KeyCode DefaultAdvanceKey = KeyCode.Space; // set none to disable.
+    private List<TextEffectPause> pauseMarkers = new List<TextEffectPause>();
 
     // dependencies
-    Coroutine dialogueRoutine;
-    KeyCode currentAdvanceKey;
+    private Coroutine dialogueRoutine;
+    private KeyCode currentAdvanceKey;
+    private bool advanceRequested = false; // mostly to prevent corutine from stopping which means animations stop.
 
     // Fast-forward key & state
     [SerializeField] private KeyCode FastForwardKey = KeyCode.Return;
@@ -99,13 +101,9 @@ public class Dialogue : MonoBehaviour
             dialogueText = GetComponent<TextMeshProUGUI>();
     }
 
-    public void EnableAutoPlay()
+    public void SetAutoPlay(float wait_Time)
     {
-        DoAutoPlay = true;
-    }
-    public void DisableAutoPlay()
-    {
-        DoAutoPlay = false;
+        AutoPlayWait = wait_Time;
     }
     /// <summary>
     /// Appends a new string to be converted to on screen dialogue.
@@ -230,9 +228,9 @@ public class Dialogue : MonoBehaviour
             debuginfo += $"Pause at {p.startIndex} dur={p.Duration}\n";
         }
         Debug.Log(debuginfo);
+        advanceRequested = false;
         dialogueRoutine = StartCoroutine(RunDialogue(clean));
     }
-
     IEnumerator RunDialogue(string text)
     {
         dialogueText.text = text;
@@ -240,52 +238,44 @@ public class Dialogue : MonoBehaviour
 
         TMP_MeshInfo[] originalInfo = dialogueText.textInfo.CopyMeshInfoVertexData();
 
-        float t = 0f;
-        int pauseIndex = 0;
 
-        // gather all typewriter effects (there may be multiple)
+
         var typewriters = new List<TextEffectTypewriter>();
-        foreach (var e in activeEffects)
-            if (e is TextEffectTypewriter tt) typewriters.Add(tt);
+        foreach (var e in activeEffects) if (e is TextEffectTypewriter tt) typewriters.Add(tt);
         typewriters.Sort((a, b) => a.startIndex.CompareTo(b.startIndex));
-
-        // reset typewriters
         foreach (var tt in typewriters) { tt.timer = 0f; tt.revealed = 0; }
 
-        // DEBUG state trackers (lightweight)
-        int lastEarliestStart = -1;
-        
-        while (true)
+        bool[] visibleMask = null;
+        bool dialogueComplete = false;
+
+        float t = 0f;
+        int pauseIndex = 0;
+        float pauseTimeRemaining = 0f; // Track pause time separately
+
+        while (!dialogueComplete)
         {
             float delta = Time.deltaTime;
 
-            // 1) Fast-forward semantics:
             if (fastForwardHold)
             {
-                // reveal everything immediately
-                foreach (var tt in typewriters)
-                    tt.CompleteInstantly();
+                foreach (var tt in typewriters) tt.CompleteInstantly();
             }
             else if (fastForwardPulse)
             {
-                // one-shot: complete the earliest unrevealed typewriter span only
                 TextEffectTypewriter earliest = null;
                 foreach (var tt in typewriters)
                 {
                     if (tt.revealed < (tt.endIndex - tt.startIndex + 1))
                     {
-                        // if (earliest == null || tt.startIndex < earliest.startIndex)
                         earliest = tt;
+                        break;
                     }
                 }
-                if (earliest != null)
-                    earliest.CompleteInstantly();
-
-                fastForwardPulse = false; // consume the pulse
+                if (earliest != null) earliest.CompleteInstantly();
+                fastForwardPulse = false;
             }
-            else
+            else if (pauseTimeRemaining <= 0f)
             {
-                // advance ONLY the earliest incomplete typewriter (prevent others from pre-progressing)
                 TextEffectTypewriter earliest = null;
                 foreach (var tt in typewriters)
                 {
@@ -296,84 +286,149 @@ public class Dialogue : MonoBehaviour
                     }
                 }
                 if (earliest != null) earliest.UpdateProgress(delta);
-                // DEBUG when the earliest typewriter span changes
-                int curStart = earliest != null ? earliest.startIndex : -1;
-                if (curStart != lastEarliestStart)
-                {
-                    lastEarliestStart = curStart;
-                    Debug.Log($"[Dialogue] earliestTypewriterStart changed -> {curStart} (visible will stop at first hidden glyph)");
-                }
             }
 
-
-            // force TMP update so characterCount is accurate and characterInfo populated
             dialogueText.ForceMeshUpdate();
             var info = dialogueText.textInfo;
             int totalChars = info.characterCount;
 
-
-            // If mesh info length changed (materials came/left), refresh originalInfo
             if (originalInfo == null || originalInfo.Length != info.meshInfo.Length)
                 originalInfo = dialogueText.textInfo.CopyMeshInfoVertexData();
 
-            int visibleCount = totalChars;
-            for (int ci = 0; ci < totalChars; ci++)
+            if (visibleMask == null || visibleMask.Length < totalChars) visibleMask = new bool[totalChars];
+
+            for (int i = 0; i < totalChars; i++)
             {
-                bool hidden = false;
+                bool isRevealed = true;
                 foreach (var tt in typewriters)
                 {
-                    // if ci is within this typewriter span and not yet revealed, then it's hidden
-                    if (ci >= tt.startIndex && ci <= tt.endIndex)
+                    if (i >= tt.startIndex && i <= tt.endIndex)
                     {
-                        int revealedAbsoluteEnd = tt.startIndex + tt.revealed - 1; // last revealed index in that span
-                        if (tt.revealed <= 0 || ci > revealedAbsoluteEnd)
+                        int charsToReveal = tt.revealed;
+                        int lastRevealedIndex = tt.startIndex + charsToReveal - 1;
+
+                        if (charsToReveal <= 0 || i > lastRevealedIndex)
                         {
-                            hidden = true;
-                            break;
+                            isRevealed = false;
+                        }
+                        break;
+                    }
+                }
+
+                visibleMask[i] = isRevealed;
+            }
+
+            if (pauseIndex < pauseMarkers.Count && pauseTimeRemaining <= 0f)
+            {
+                int pIdx = pauseMarkers[pauseIndex].startIndex;
+    
+                if (pIdx >= 0 && pIdx < totalChars && IsCharacterRevealed(pIdx, typewriters))
+                {
+                    Debug.Log($"[Dialogue] Pause triggered at char {pIdx} (dur={pauseMarkers[pauseIndex].Duration})");
+                    pauseTimeRemaining = pauseMarkers[pauseIndex].Duration;
+
+                    if (fastForwardHold || fastForwardPulse) 
+                    {
+                        pauseTimeRemaining = 0f;
+                        if (fastForwardPulse) fastForwardPulse = false;
+                    }
+
+                    pauseIndex++;
+                }
+            }
+            if (pauseTimeRemaining > 0f)
+            {
+                pauseTimeRemaining -= delta;
+                if (pauseTimeRemaining < 0f) pauseTimeRemaining = 0f;
+
+                t += delta;
+                dialogueText.ForceMeshUpdate();
+                info = dialogueText.textInfo;
+
+                // compute default color
+                Color ctm = DefaultFontColor;
+                Color32 defCol32 = new Color32(
+                    (byte)Mathf.Clamp(Mathf.RoundToInt(ctm.r * 255f), 0, 255),
+                    (byte)Mathf.Clamp(Mathf.RoundToInt(ctm.g * 255f), 0, 255),
+                    (byte)Mathf.Clamp(Mathf.RoundToInt(ctm.b * 255f), 0, 255),
+                    (byte)Mathf.Clamp(Mathf.RoundToInt(ctm.a * 255f), 0, 255)
+                );
+
+                // reset mesh colors to original/default like the normal path
+                for (int mi = 0; mi < info.meshInfo.Length; mi++)
+                {
+                    var cols = info.meshInfo[mi].colors32;
+                    var origCols = (originalInfo.Length > mi) ? originalInfo[mi].colors32 : null;
+                    if (cols == null || cols.Length == 0) continue;
+
+                    if (origCols != null && origCols.Length == cols.Length)
+                    {
+                        for (int k = 0; k < cols.Length; k++) cols[k] = origCols[k];
+                    }
+                    else
+                    {
+                        for (int k = 0; k < cols.Length; k++) cols[k] = defCol32;
+                    }
+                }
+
+                // apply visibleMask: hide unrevealed characters by setting alpha = 0
+                if (info.characterCount > 0 && visibleMask != null)
+                {
+                    for (int ci = 0; ci < info.characterCount; ci++)
+                    {
+                        int mat = info.characterInfo[ci].materialReferenceIndex;
+                        int vIdx = info.characterInfo[ci].vertexIndex;
+                        var cols = info.meshInfo[mat].colors32;
+                        if (cols == null || cols.Length <= vIdx) continue;
+
+                        if (ci < visibleMask.Length && visibleMask[ci])
+                        {
+                            for (int q = 0; q < 4; q++) cols[vIdx + q] = defCol32;
+                        }
+                        else
+                        {
+                            Color32 trans = defCol32;
+                            trans.a = 0;
+                            for (int q = 0; q < 4; q++) cols[vIdx + q] = trans;
                         }
                     }
                 }
-                if (hidden)
+
+                // update other (non-typewriter) effects during pause, but clamp indices first
+                for (int i = 0; i < activeEffects.Count; i++)
                 {
-                    visibleCount = ci;
-                    break;
+                    var e = activeEffects[i];
+                    if (e is TextEffectTypewriter) continue; // leave typewriter frozen
+                    e.startIndex = Mathf.Clamp(e.startIndex, 0, Mathf.Max(0, info.characterCount - 1));
+                    e.endIndex = Mathf.Clamp(e.endIndex, 0, Mathf.Max(0, info.characterCount - 1));
+                    e.Apply(dialogueText, info, originalInfo, t);
                 }
+
+                // update geometry
+                for (int i = 0; i < info.meshInfo.Length; i++)
+                {
+                    var meshInfo = info.meshInfo[i];
+                    var mesh = meshInfo.mesh;
+                    mesh.vertices = meshInfo.vertices;
+                    mesh.colors32 = meshInfo.colors32;
+                    dialogueText.UpdateGeometry(mesh, i);
+                }
+
+                yield return null;
+                continue; // skip remaining logic this frame
             }
 
-            // pause markers
-            if (pauseIndex < pauseMarkers.Count && visibleCount >= pauseMarkers[pauseIndex].startIndex)
-            {
-
-                Debug.Log($"[Dialogue] Pause triggered at visibleCount={visibleCount}, pause.start={pauseMarkers[pauseIndex].startIndex}, duration={pauseMarkers[pauseIndex].Duration}");
-
-                float duration = pauseMarkers[pauseIndex].Duration;
-                // holding fast-forward skips pauses
-                if (fastForwardHold) duration = 0f;
-
-                pauseIndex++;
-                float pauseEnd = Time.time + duration;
-                while (Time.time < pauseEnd)
-                {
-                    // allow hold to cancel pauses
-                    if (fastForwardHold) break;
-                    yield return null;
-                }
-            }
-
-            dialogueText.maxVisibleCharacters = visibleCount;
+            dialogueText.maxVisibleCharacters = info.characterCount;
             dialogueText.ForceMeshUpdate();
-            info = dialogueText.textInfo; // refresh info after changing visibility
+            info = dialogueText.textInfo;
 
             if (info.characterCount == 0)
             {
-                // finish condition uses TMP count
-                if (visibleCount >= info.characterCount) break;
                 t += delta;
                 yield return null;
                 continue;
             }
 
-            // Set every visible glyph's vertex colors to DefaultFontColor unless a color effect overrides it
             Color ctmp = DefaultFontColor;
             Color32 defaultCol32 = new Color32(
                 (byte)Mathf.Clamp(Mathf.RoundToInt(ctmp.r * 255f), 0, 255),
@@ -382,38 +437,44 @@ public class Dialogue : MonoBehaviour
                 (byte)Mathf.Clamp(Mathf.RoundToInt(ctmp.a * 255f), 0, 255)
             );
 
-
             for (int mi = 0; mi < info.meshInfo.Length; mi++)
             {
-                var origCols = originalInfo.Length > mi ? originalInfo[mi].colors32 : null;
                 var cols = info.meshInfo[mi].colors32;
+                var origCols = (originalInfo.Length > mi) ? originalInfo[mi].colors32 : null;
                 if (cols == null || cols.Length == 0) continue;
+
                 if (origCols != null && origCols.Length == cols.Length)
                 {
-                    // copy original
                     for (int k = 0; k < cols.Length; k++) cols[k] = origCols[k];
                 }
                 else
                 {
-                    // fallback: fill with default
                     for (int k = 0; k < cols.Length; k++) cols[k] = defaultCol32;
                 }
             }
+
             for (int ci = 0; ci < info.characterCount; ci++)
             {
-                if (!info.characterInfo[ci].isVisible) continue;
                 int mat = info.characterInfo[ci].materialReferenceIndex;
                 int vIdx = info.characterInfo[ci].vertexIndex;
                 var cols = info.meshInfo[mat].colors32;
                 if (cols == null) continue;
-                for (int q = 0; q < 4; q++) cols[vIdx + q] = defaultCol32;
+
+                if (visibleMask[ci])
+                {
+                    for (int q = 0; q < 4; q++) cols[vIdx + q] = defaultCol32;
+                }
+                else
+                {
+                    Color32 trans = defaultCol32;
+                    trans.a = 0;
+                    for (int q = 0; q < 4; q++) cols[vIdx + q] = trans;
+                }
             }
 
-            // update other effects after revealing text hidden by tw.
             for (int i = 0; i < activeEffects.Count; i++)
             {
                 var e = activeEffects[i];
-                // clamp or will reading out of bounds
                 e.startIndex = Mathf.Clamp(e.startIndex, 0, info.characterCount - 1);
                 e.endIndex = Mathf.Clamp(e.endIndex, 0, info.characterCount - 1);
                 e.Apply(dialogueText, info, originalInfo, t);
@@ -427,58 +488,215 @@ public class Dialogue : MonoBehaviour
                 mesh.colors32 = meshInfo.colors32;
                 dialogueText.UpdateGeometry(mesh, i);
             }
-            // done
-            if (visibleCount >= totalChars)
-                break;
 
-            t += delta;
-            yield return null;
+            bool allVisible = true;
+            if (visibleMask == null || visibleMask.Length < totalChars) allVisible = false;
+            else
+            {
+                for (int i = 0; i < totalChars; i++)
+                {
+                    if (!visibleMask[i]) { allVisible = false; break; }
+                }
+            }
+
+            if (!allVisible)
+            {
+                t += delta;
+                yield return null;
+                continue;
+            }
+
+            bool autoplayEnabled = AutoPlayWait > 0f;
+            float autoplayEnd = autoplayEnabled ? Time.time + AutoPlayWait : 0f;
+            bool shouldAdvance = false;
+
+            while (true)
+            {
+                if (advanceRequested)
+                {
+                    advanceRequested = false;
+                    shouldAdvance = true;
+                    break;
+                }
+
+                if (autoplayEnabled && Time.time >= autoplayEnd)
+                {
+                    shouldAdvance = true;
+                    break;
+                }
+
+                t += Time.deltaTime;
+                dialogueText.ForceMeshUpdate();
+                info = dialogueText.textInfo;
+
+                for (int i = 0; i < activeEffects.Count; i++)
+                {
+                    var e = activeEffects[i];
+                    e.startIndex = Mathf.Clamp(e.startIndex, 0, info.characterCount - 1);
+                    e.endIndex = Mathf.Clamp(e.endIndex, 0, info.characterCount - 1);
+                    e.Apply(dialogueText, info, originalInfo, t);
+                }
+
+                for (int i = 0; i < info.meshInfo.Length; i++)
+                {
+                    var meshInfo = info.meshInfo[i];
+                    var mesh = meshInfo.mesh;
+                    mesh.vertices = meshInfo.vertices;
+                    mesh.colors32 = meshInfo.colors32;
+                    dialogueText.UpdateGeometry(mesh, i);
+                }
+
+                yield return null;
+            }
+
+            fastForwardPulse = false;
+            fastForwardHold = false;
+            dialogueRoutine = null;
+
+            if (shouldAdvance && dialogueQueue.Count > 0)
+            {
+                yield return new WaitForEndOfFrame(); // Prevent input carry-over
+                PlayNext();
+            }
         }
-        // finished (reveal all)
-        dialogueText.maxVisibleCharacters = dialogueText.textInfo.characterCount;
-        dialogueText.ForceMeshUpdate();
-
-        fastForwardPulse = false;
-        fastForwardHold = false;
-        dialogueRoutine = null;
-
-        if (DoAutoPlay) PlayNext();
     }
+    string[] SplitTopLevelArgs(string s)
+    {
+        if (string.IsNullOrEmpty(s)) return new string[0];
+        var parts = new List<string>();
+        var sb = new System.Text.StringBuilder();
+        int depth = 0;
+        for (int i = 0; i < s.Length; i++)
+        {
+            char c = s[i];
+            if (c == '(')
+            {
+                depth++;
+                sb.Append(c);
+            }
+            else if (c == ')')
+            {
+                depth = Mathf.Max(0, depth - 1);
+                sb.Append(c);
+            }
+            else if (c == ',' && depth == 0)
+            {
+                parts.Add(sb.ToString().Trim());
+                sb.Length = 0;
+            }
+            else
+            {
+                sb.Append(c);
+            }
+        }
+        if (sb.Length > 0) parts.Add(sb.ToString().Trim());
+        return parts.ToArray();
+    }
+
     /// <summary>
     /// Plays the next text in queue.
     /// </summary>
     public void PlayNext()
     {
+        if (dialogueRoutine != null) 
+        { 
+            StopCoroutine(dialogueRoutine); 
+            dialogueRoutine = null;
+        }
+        
+        fastForwardPulse = false;
+        fastForwardHold = false;
+        advanceRequested = false;
+        
         if (dialogueQueue.Count > 0)
         {
-            if (dialogueRoutine != null) StopCoroutine(dialogueRoutine);
             BeginSpeaking();
         }
-    }
-    void Update()
-    {
-        fastForwardHold = Input.GetKey(FastForwardKey);
-        if (Input.GetKeyDown(FastForwardKey))
+        else
         {
-            // Only request a one-shot fast-forward if a dialogue core is playing
-            if (dialogueRoutine != null)
-                fastForwardPulse = true; // will be consumed in RunDialogue
-        }
-        if (Input.GetKeyDown(currentAdvanceKey))
-        {
-            // only go to next dialogue if current is done
-            if (dialogueRoutine == null)
-                PlayNext();
-            
+            dialogueText.text = "";
         }
     }
-    void OnDisable()
+    /// <summary>
+    /// Skips the current typewriter effect but stays on the current dialogue.
+    /// </summary>
+    public void SkipToEndOfCurrentDialogue()
     {
         if (dialogueRoutine != null)
         {
-        StopCoroutine(dialogueRoutine);
-        dialogueRoutine = null;
+            foreach (var effect in activeEffects)
+            {
+                if (effect is TextEffectTypewriter typewriter)
+                {
+                    typewriter.CompleteInstantly();
+                }
+            }
+            
+            dialogueText.maxVisibleCharacters = dialogueText.textInfo.characterCount;
+            dialogueText.ForceMeshUpdate();
+            
         }
+    }
+
+    private IEnumerator DelayedPlayNext()
+    {
+        yield return new WaitForEndOfFrame();
+        PlayNext();
+    }
+    private float pressTime;
+    void Update()
+    {
+        if (Input.GetKeyDown(FastForwardKey))
+        {
+            pressTime = Time.time;
+            if (dialogueRoutine != null)
+            {
+                fastForwardPulse = true;
+                fastForwardHold = true;
+                SkipToEndOfCurrentDialogue();
+            }
+        }
+        if (Input.GetKey(FastForwardKey))
+        {
+            if ((Time.time - pressTime) > 0.15)
+                fastForwardHold = true;
+        }
+        else
+        {
+            fastForwardHold = false;
+        }
+        
+        if (Input.GetKeyDown(currentAdvanceKey))
+        {
+            if (dialogueRoutine != null)
+            {
+                advanceRequested = true;
+            }
+            else
+            {
+                fastForwardHold = false;
+                fastForwardPulse = false;
+                PlayNext();
+            }
+        }
+    }
+    private bool IsCharacterRevealed(int charIndex, List<TextEffectTypewriter> typewriters)
+    {
+        if (typewriters == null || typewriters.Count == 0) return true;
+        
+        foreach (var tt in typewriters)
+        {
+            if (charIndex >= tt.startIndex && charIndex <= tt.endIndex)
+            {
+                return tt.revealed > 0 && charIndex <= tt.startIndex + tt.revealed - 1;
+            }
+        }
+        
+        return true;
+    }
+    void OnDisable()
+    {
+        StopDialogueRoutine();
     }
     /// <summary>
     /// Disables this below functionality.
@@ -507,6 +725,8 @@ public class Dialogue : MonoBehaviour
 
         bool insideTag = false;
         string tagBuffer = "";
+
+        int visIndex = 0;
 
         for (int i = 0; i < input.Length; i++)
         {
@@ -537,11 +757,11 @@ public class Dialogue : MonoBehaviour
                 if (tagName == "pause")
                 {
                     float d = ParseFloat(paramStr, 1f);
-                    pauses.Add(new TextEffectPause(d) { startIndex = sb.Length });
+                    pauses.Add(new TextEffectPause(d) { startIndex = visIndex });
                 }
                 else if (!closing)
                 {
-                    openTags.Push((tagName, sb.Length, paramStr));
+                    openTags.Push((tagName, visIndex, paramStr));
                 }
                 else
                 {
@@ -553,16 +773,20 @@ public class Dialogue : MonoBehaviour
                         {
                             Debug.LogWarning($"Mismatched tag: opened <{openName}> but closed </{tagName}>");
                             // Option 1: ignore the closing tag, op 2 is to process them somehow. but nah.
-                            continue;                            
+                            continue;
                         }
                         else
                         {
                             var eff = MakeEffect(openName, pStr);
                             if (eff != null)
                             {
-                                eff.startIndex = startIdx;
-                                eff.endIndex = sb.Length - 1;
-                                effects.Add(eff);
+                                int endIdx = visIndex - 1;
+                                if (endIdx >= startIdx)
+                                {
+                                    eff.startIndex = startIdx;
+                                    eff.endIndex = endIdx;
+                                    effects.Add(eff);
+                                }
                             }
                         }
                     }
@@ -577,6 +801,7 @@ public class Dialogue : MonoBehaviour
             else
             {
                 sb.Append(c);
+                visIndex++;
             }
         }
 
@@ -586,6 +811,28 @@ public class Dialogue : MonoBehaviour
 
     TextEffect MakeEffect(string name, string paramStr)
     {
+        // defaults if no paramstr passed.
+        if (string.IsNullOrEmpty(paramStr))
+        {
+            switch (name)
+            {
+                case "typewriter": return new TextEffectTypewriter(30f);
+                case "wavy": return new TextEffectWavy(5f, 5f);
+                case "shake": return new TextEffectShake(2f, 2f);
+                case "color": return new TextEffectColor(Color.white);
+                case "colortransition": return new TextEffectColorTransition(Color.white, Color.black, 2f);
+                case "magnify": return new TextEffectMagnify(3f, 2f, 5f);
+                case "quake": return new TextEffectQuake(5f);
+                case "drop": return new TextEffectDrop(2f, 10f, -90f);
+                case "rain": return new TextEffectRain(2f, 10f, -90f);
+                case "construct": return new TextEffectConstruct(50f, 1f);
+                case "slam": return new TextEffectSlam(3f, 2);
+                case "explode": return new TextEffectExplode(50f, 9.8f);
+                case "collapse": return new TextEffectCollapse(30f, 20f);
+                case "colorgradient": return new TextEffectColorGradient(Color.white, Color.black, 0, 0f);
+                default: return null;
+            }
+        }
         switch (name)
         {
             case "pause":
@@ -615,12 +862,13 @@ public class Dialogue : MonoBehaviour
 
             case "colortransition":
                 {
-                    var parts = paramStr.Split(',');
+                    // var parts = paramStr.Split(',');
+                    var parts = SplitTopLevelArgs(paramStr);
                     if (parts.Length >= 2)
                     {
                         Color c1 = ParseColor(parts[0]);
                         Color c2 = ParseColor(parts[1]);
-                        float dur = parts.Length > 2 ? ParseFloat(parts[2], 1f) : 1f;
+                        float dur = parts.Length > 2 ? ParseFloat(parts[2], 2f) : 2f;
                         return new TextEffectColorTransition(c1, c2, dur);
                     }
                     break;
@@ -634,6 +882,83 @@ public class Dialogue : MonoBehaviour
                     float len = ma.Length > 2 ? ParseFloat(ma[2], 5f) : 5f;
                     return new TextEffectMagnify(ms, maxSize, len);
                 }
+            case "scale":
+                {
+                    string[] ma = paramStr.Split(',');
+                    float ms = ma.Length > 0 ? ParseFloat(ma[0], 3f) : 3f;
+                    float maxSize = ma.Length > 1 ? ParseFloat(ma[1], 2f) : 2f;
+                    return new TextEffectMagScale(ms, maxSize);
+                }
+            case "bloat":
+                {
+                    string[] ma = paramStr.Split(',');
+                    float ms = ma.Length > 0 ? ParseFloat(ma[0], 3f) : 3f;
+                    float maxSize = ma.Length > 1 ? ParseFloat(ma[1], 2f) : 2f;
+                    float len = ma.Length > 2 ? ParseFloat(ma[2], 5f) : 5f;
+                    return new TextEffectBloat(ms, maxSize, len);
+                }
+            case "colorgradient":
+                {
+                    var parts = SplitTopLevelArgs(paramStr);
+                    if (parts.Length >= 2)
+                    {
+                        Color c1 = ParseColor(parts[0]);
+                        Color c2 = ParseColor(parts[1]);
+                        int center = parts.Length > 2 ? (int)ParseFloat(parts[2], 0f) : 0;
+                        float angle = parts.Length > 3 ? ParseFloat(parts[3], 0f) : 0f;
+                        return new TextEffectColorGradient(c1, c2, center, angle);
+                    }
+                    break;
+                }
+            case "quake":
+                {
+                    return new TextEffectQuake(ParseFloat(paramStr, 5f));
+                }
+            case "drop":
+                {
+                    var parts = paramStr.Split(',');
+                    float speed = parts.Length > 0 ? ParseFloat(parts[0], 2f) : 2f;
+                    float bounce = parts.Length > 1 ? ParseFloat(parts[1], 10f) : 10f;
+                    float angle = parts.Length > 2 ? ParseFloat(parts[2], -90f) : -90f;
+                    return new TextEffectDrop(speed, bounce, angle);
+                }
+            case "rain":
+                {
+                    var parts = paramStr.Split(',');
+                    float speed = parts.Length > 0 ? ParseFloat(parts[0], 2f) : 2f;
+                    float bounce = parts.Length > 1 ? ParseFloat(parts[1], 10f) : 10f;
+                    float angle = parts.Length > 2 ? ParseFloat(parts[2], -90f) : -90f;
+                    return new TextEffectRain(speed, bounce, angle);
+                }
+            case "construct":
+                {
+                    var parts = paramStr.Split(',');
+                    float length = parts.Length > 0 ? ParseFloat(parts[0], 50f) : 50f;
+                    float speed = parts.Length > 1 ? ParseFloat(parts[1], 1f) : 1f;
+                    return new TextEffectConstruct(length, speed);
+                }
+            case "slam":
+                {
+                    var parts = paramStr.Split(',');
+                    float speed = parts.Length > 0 ? ParseFloat(parts[0], 3f) : 3f;
+                    int bounces = parts.Length > 1 ? (int)ParseFloat(parts[1], 2f) : 2;
+                    return new TextEffectSlam(speed, bounces);
+                }
+            case "explode":
+                {
+                    var parts = paramStr.Split(',');
+                    float force = parts.Length > 0 ? ParseFloat(parts[0], 50f) : 50f;
+                    float gravity = parts.Length > 1 ? ParseFloat(parts[1], 9.8f) : 9.8f;
+                    return new TextEffectExplode(force, gravity);
+                }
+            case "collapse":
+                {
+                    var parts = paramStr.Split(',');
+                    float rotation = parts.Length > 0 ? ParseFloat(parts[0], 30f) : 30f;
+                    float drop = parts.Length > 1 ? ParseFloat(parts[1], 20f) : 20f;
+                    return new TextEffectCollapse(rotation, drop);
+                }
+
         }
         return null;
     }
@@ -657,8 +982,13 @@ public class Dialogue : MonoBehaviour
     }
     float ParseFloat(string str, float def = 0f)
     {
+        if (string.IsNullOrEmpty(str) || string.IsNullOrWhiteSpace(str))
+        return def;
+            
         float v;
-        if (float.TryParse(str, out v)) return v;
+        if (float.TryParse(str.Trim(), out v)) 
+            return v;
+            
         return def;
     }
 }
@@ -711,9 +1041,15 @@ public class TextEffectWavy : TextEffect
     {
         for (int i = startIndex; i <= endIndex && i < info.characterCount; i++)
         {
+            // dont process alpha-0 chars.
+            int mat = info.characterInfo[i].materialReferenceIndex;
+            int vIndex = info.characterInfo[i].vertexIndex;
+            var cols = info.meshInfo[mat].colors32;
+            if (cols == null || cols.Length <= vIndex) continue;
+            if (cols[vIndex].a == 0) continue;
+            
             if (!info.characterInfo[i].isVisible) continue;
             var verts = info.meshInfo[info.characterInfo[i].materialReferenceIndex].vertices;
-            int vIndex = info.characterInfo[i].vertexIndex;
             Vector3 offset = new Vector3(0, Mathf.Sin(time * waveSpeed + i) * amplitude, 0);
             for (int j = 0; j < 4; j++)
                 verts[vIndex + j] = orig[info.characterInfo[i].materialReferenceIndex].vertices[vIndex + j] + offset;
@@ -731,17 +1067,21 @@ public class TextEffectShake : TextEffect
     {
         for (int i = startIndex; i <= endIndex && i < info.characterCount; i++)
         {
-            if (i == startIndex) Debug.Log($"Wavy applies to char {i}, isVisible={info.characterInfo[i].isVisible}");
-            if (!info.characterInfo[i].isVisible) continue;
-            var verts = info.meshInfo[info.characterInfo[i].materialReferenceIndex].vertices;
+            int mat = info.characterInfo[i].materialReferenceIndex;
             int vIndex = info.characterInfo[i].vertexIndex;
+            var cols = info.meshInfo[mat].colors32;
+            if (cols == null || cols.Length <= vIndex) continue;
+            if (cols[vIndex].a == 0) continue;
+
+            if (!info.characterInfo[i].isVisible) continue;
+            var verts = info.meshInfo[mat].vertices;
             Vector3 offset = new Vector3(
-            (Mathf.PerlinNoise(i, time * 3f) - 0.5f) * strengthX,
-            (Mathf.PerlinNoise(i + 100, time * 3f) - 0.5f) * strengthY,
-            0
+                (Mathf.PerlinNoise(i, time * 3f) - 0.5f) * strengthX,
+                (Mathf.PerlinNoise(i + 100, time * 3f) - 0.5f) * strengthY,
+                0
             );
             for (int j = 0; j < 4; j++)
-                verts[vIndex + j] = orig[info.characterInfo[i].materialReferenceIndex].vertices[vIndex + j] + offset;
+                verts[vIndex + j] = orig[mat].vertices[vIndex + j] + offset;
         }
     }
 }
@@ -756,66 +1096,628 @@ public class TextEffectColor : TextEffect
     {
         for (int i = startIndex; i <= endIndex && i < info.characterCount; i++)
         {
-            if (!info.characterInfo[i].isVisible) continue;
-            var colors = info.meshInfo[info.characterInfo[i].materialReferenceIndex].colors32;
+            int mat = info.characterInfo[i].materialReferenceIndex;
             int vIndex = info.characterInfo[i].vertexIndex;
+            var cols = info.meshInfo[mat].colors32;
+            if (cols == null || cols.Length <= vIndex) continue;
+            if (cols[vIndex].a == 0) continue;
+
+            if (!info.characterInfo[i].isVisible) continue;
             for (int j = 0; j < 4; j++)
-                colors[vIndex + j] = color;
+                cols[vIndex + j] = color;
         }
     }
 }
 
 /// <summary>
-/// literrally a color gradient but i named it transition lmao.
+/// makes text color change gradually
 /// </summary>
 public class TextEffectColorTransition : TextEffect
 {
     Color a, b;
-    float speed;
-    public TextEffectColorTransition(Color c1, Color c2, float spd) { a = c1; b = c2; speed = spd; }
+    float duration;
+    float timeOffset;
+    
+    public TextEffectColorTransition(Color c1, Color c2, float dur) 
+    { 
+        a = c1; 
+        b = c2; 
+        duration = Mathf.Max(0.1f, dur);
+        timeOffset = Random.Range(0f, duration); // Random offset for variety
+    }
 
     public override void Apply(TextMeshProUGUI tmp, TMP_TextInfo info, TMP_MeshInfo[] orig, float time)
     {
-        Color c = Color.Lerp(a, b, (Mathf.Sin(time * speed) + 1f) * 0.5f);
+        float t = (Mathf.Sin((time + timeOffset) * (2 * Mathf.PI / duration)) + 1f) * 0.5f;
+        Color c = Color.Lerp(a, b, t);
+        
         for (int i = startIndex; i <= endIndex && i < info.characterCount; i++)
         {
+            var charInfo = info.characterInfo[i];
+            if (!charInfo.isVisible) continue;
+
+            int mat = charInfo.materialReferenceIndex;
+            int vIndex = charInfo.vertexIndex;
+            var cols = info.meshInfo[mat].colors32;
+            if (cols == null || cols.Length <= vIndex) continue;
+            if (cols[vIndex].a == 0) continue;
+
+            for (int j = 0; j < 4; j++)
+                cols[vIndex + j] = c;
+        }
+    }
+}
+/// <summary>
+/// Static gradient of colors.
+/// </summary>
+public class TextEffectColorGradient : TextEffect
+{
+    Color a, b;
+    int center;
+    float angle;
+    
+    public TextEffectColorGradient(Color c1, Color c2, int centerIndex = 0, float ang = 0f)
+    {
+        a = c1;
+        b = c2;
+        center = centerIndex;
+        angle = ang * Mathf.Deg2Rad; // Convert to radians
+    }
+
+    public override void Apply(TextMeshProUGUI tmp, TMP_TextInfo info, TMP_MeshInfo[] orig, float time)
+    {
+        if (info.characterCount == 0) return;
+        
+        Vector2 direction = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+        
+        float minDist = float.MaxValue;
+        float maxDist = float.MinValue;
+        List<float> distances = new List<float>();
+        
+        for (int i = startIndex; i <= endIndex && i < info.characterCount; i++)
+        {
+            var charInfo = info.characterInfo[i];
+            if (!charInfo.isVisible) continue;
+            
+            Vector2 charPos = new Vector2(
+                (charInfo.bottomLeft.x + charInfo.topRight.x) * 0.5f,
+                (charInfo.bottomLeft.y + charInfo.topRight.y) * 0.5f
+            );
+            
+            Vector2 centerPos = Vector2.zero;
+            if (center >= 0 && center < info.characterCount)
+            {
+                var centerChar = info.characterInfo[center];
+                centerPos = new Vector2(
+                    (centerChar.bottomLeft.x + centerChar.topRight.x) * 0.5f,
+                    (centerChar.bottomLeft.y + centerChar.topRight.y) * 0.5f
+                );
+            }
+            
+            float dist = Vector2.Dot(charPos - centerPos, direction);
+            distances.Add(dist);
+            minDist = Mathf.Min(minDist, dist);
+            maxDist = Mathf.Max(maxDist, dist);
+        }
+        
+        if (Mathf.Approximately(minDist, maxDist)) return;
+        
+        int distIndex = 0;
+        for (int i = startIndex; i <= endIndex && i < info.characterCount; i++)
+        {
+            var charInfo = info.characterInfo[i];
+            if (!charInfo.isVisible) continue;
+            
+            float t = Mathf.InverseLerp(minDist, maxDist, distances[distIndex++]);
+            Color c = Color.Lerp(a, b, t);
+            
+            int mat = charInfo.materialReferenceIndex;
+            int vIndex = charInfo.vertexIndex;
+            var cols = info.meshInfo[mat].colors32;
+            if (cols == null || cols.Length <= vIndex) continue;
+
+            for (int j = 0; j < 4; j++)
+                cols[vIndex + j] = c;
+        }
+    }
+}
+public class TextEffectQuake : TextEffect
+{
+    float intensity;
+    Vector3[] originalPositions;
+    bool initialized = false;
+
+    public TextEffectQuake(float intensity = 5f)
+    {
+        this.intensity = intensity;
+    }
+
+    public override void Apply(TextMeshProUGUI tmp, TMP_TextInfo info, TMP_MeshInfo[] orig, float time)
+    {
+        if (!initialized)
+        {
+            initialized = true;
+            originalPositions = new Vector3[info.characterCount * 4];
+            for (int i = 0; i < info.characterCount; i++)
+            {
+                if (i >= orig.Length) continue;
+                for (int j = 0; j < 4; j++)
+                {
+                    originalPositions[i * 4 + j] = orig[info.characterInfo[i].materialReferenceIndex].vertices[info.characterInfo[i].vertexIndex + j];
+                }
+            }
+        }
+
+        for (int i = startIndex; i <= endIndex && i < info.characterCount; i++)
+        {
+            var charInfo = info.characterInfo[i];
+            if (!charInfo.isVisible) continue;
+
+            int mat = charInfo.materialReferenceIndex;
+            int vIndex = charInfo.vertexIndex;
+            var verts = info.meshInfo[mat].vertices;
+
+            Vector3 offset = new Vector3(
+                Mathf.PerlinNoise(i * 0.1f, time * 10f) - 0.5f,
+                Mathf.PerlinNoise(i * 0.1f + 100f, time * 10f) - 0.5f,
+                0
+            ) * intensity * 2f;
+
+            for (int j = 0; j < 4; j++)
+            {
+                Vector3 origPos = originalPositions[i * 4 + j];
+                verts[vIndex + j] = origPos + offset;
+            }
+        }
+    }
+}
+public class TextEffectDrop : TextEffect
+{
+    float speed;
+    float bounceAmount;
+    float angle;
+    float[] dropTimings;
+    bool initialized = false;
+
+    public TextEffectDrop(float speed = 2f, float bounceAmount = 10f, float angle = -90f)
+    {
+        this.speed = speed;
+        this.bounceAmount = bounceAmount;
+        this.angle = angle * Mathf.Deg2Rad;
+    }
+
+    public override void Apply(TextMeshProUGUI tmp, TMP_TextInfo info, TMP_MeshInfo[] orig, float time)
+    {
+        if (!initialized)
+        {
+            initialized = true;
+            dropTimings = new float[endIndex - startIndex + 1];
+            // All characters drop together
+            for (int i = 0; i < dropTimings.Length; i++)
+            {
+                dropTimings[i] = time;
+            }
+        }
+
+        Vector2 dropDirection = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+
+        for (int i = startIndex; i <= endIndex && i < info.characterCount; i++)
+        {
+            var charInfo = info.characterInfo[i];
+            if (!charInfo.isVisible) continue;
+
+            int mat = charInfo.materialReferenceIndex;
+            int vIndex = charInfo.vertexIndex;
+            var verts = info.meshInfo[mat].vertices;
+
+            float elapsed = time - dropTimings[i - startIndex];
+            float dropProgress = Mathf.Clamp01(elapsed * speed);
+
+            // Bouncing effect
+            float bounce = Mathf.Sin(dropProgress * Mathf.PI * 4f) * (1f - dropProgress) * bounceAmount;
+            Vector2 offset = dropDirection * (dropProgress * 100f + bounce);
+
+            for (int j = 0; j < 4; j++)
+            {
+                Vector3 origPos = orig[mat].vertices[vIndex + j];
+                verts[vIndex + j] = origPos + (Vector3)offset;
+            }
+        }
+    }
+}
+public class TextEffectRain : TextEffect
+{
+    float speed;
+    float bounceAmount;
+    float angle;
+    float[] dropTimings;
+    bool initialized = false;
+
+    public TextEffectRain(float speed = 2f, float bounceAmount = 10f, float angle = -90f)
+    {
+        this.speed = speed;
+        this.bounceAmount = bounceAmount;
+        this.angle = angle * Mathf.Deg2Rad;
+    }
+
+    public override void Apply(TextMeshProUGUI tmp, TMP_TextInfo info, TMP_MeshInfo[] orig, float time)
+    {
+        if (!initialized)
+        {
+            initialized = true;
+            dropTimings = new float[endIndex - startIndex + 1];
+            // Random drop timings for each character
+            for (int i = 0; i < dropTimings.Length; i++)
+            {
+                dropTimings[i] = time + Random.Range(0f, 2f); // Staggered start times
+            }
+        }
+
+        Vector2 dropDirection = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+
+        for (int i = startIndex; i <= endIndex && i < info.characterCount; i++)
+        {
+            var charInfo = info.characterInfo[i];
+            if (!charInfo.isVisible) continue;
+
+            int mat = charInfo.materialReferenceIndex;
+            int vIndex = charInfo.vertexIndex;
+            var verts = info.meshInfo[mat].vertices;
+
+            float elapsed = Mathf.Max(0f, time - dropTimings[i - startIndex]);
+            float dropProgress = Mathf.Clamp01(elapsed * speed);
+
+            float bounce = Mathf.Sin(dropProgress * Mathf.PI * 4f) * (1f - dropProgress) * bounceAmount;
+            Vector2 offset = dropDirection * (dropProgress * 100f + bounce);
+
+            for (int j = 0; j < 4; j++)
+            {
+                Vector3 origPos = orig[mat].vertices[vIndex + j];
+                verts[vIndex + j] = origPos + (Vector3)offset;
+            }
+        }
+    }
+}
+public class TextEffectConstruct : TextEffect
+{
+    float length;
+    float speed;
+    float[] constructTimings;
+    bool initialized = false;
+
+    public TextEffectConstruct(float length = 50f, float speed = 1f)
+    {
+        this.length = length;
+        this.speed = speed;
+    }
+
+    public override void Apply(TextMeshProUGUI tmp, TMP_TextInfo info, TMP_MeshInfo[] orig, float time)
+    {
+        if (!initialized)
+        {
+            initialized = true;
+            constructTimings = new float[endIndex - startIndex + 1];
+            int centerIndex = startIndex + (endIndex - startIndex) / 2;
+
+            for (int i = startIndex; i <= endIndex; i++)
+            {
+                float distanceFromCenter = Mathf.Abs(i - centerIndex);
+                constructTimings[i - startIndex] = time + (distanceFromCenter * 0.1f);
+            }
+        }
+
+        for (int i = startIndex; i <= endIndex && i < info.characterCount; i++)
+        {
+            var charInfo = info.characterInfo[i];
+            if (!charInfo.isVisible) continue;
+
+            int mat = charInfo.materialReferenceIndex;
+            int vIndex = charInfo.vertexIndex;
+            var verts = info.meshInfo[mat].vertices;
+
+            float elapsed = Mathf.Max(0f, time - constructTimings[i - startIndex]);
+            float constructProgress = Mathf.Clamp01(elapsed * speed);
+
+            Vector3 center = (orig[mat].vertices[vIndex] + orig[mat].vertices[vIndex + 2]) * 0.5f;
+            Vector3 scatterDirection = (orig[mat].vertices[vIndex] - center).normalized;
+            Vector3 startPos = center + scatterDirection * length;
+
+            for (int j = 0; j < 4; j++)
+            {
+                Vector3 origPos = orig[mat].vertices[vIndex + j];
+                Vector3 targetPos = origPos;
+                Vector3 currentStartPos = startPos + (origPos - center);
+                verts[vIndex + j] = Vector3.Lerp(currentStartPos, targetPos, constructProgress);
+            }
+        }
+    }
+}
+public class TextEffectSlam : TextEffect
+{
+    float speed;
+    int bounceCount;
+    float[] slamTimings;
+    bool initialized = false;
+
+    public TextEffectSlam(float speed = 3f, int bounceCount = 2)
+    {
+        this.speed = speed;
+        this.bounceCount = bounceCount;
+    }
+
+    public override void Apply(TextMeshProUGUI tmp, TMP_TextInfo info, TMP_MeshInfo[] orig, float time)
+    {
+        if (!initialized)
+        {
+            initialized = true;
+            slamTimings = new float[endIndex - startIndex + 1];
+            for (int i = 0; i < slamTimings.Length; i++)
+            {
+                slamTimings[i] = time;
+            }
+        }
+
+        for (int i = startIndex; i <= endIndex && i < info.characterCount; i++)
+        {
+            var charInfo = info.characterInfo[i];
+            if (!charInfo.isVisible) continue;
+
+            int mat = charInfo.materialReferenceIndex;
+            int vIndex = charInfo.vertexIndex;
+            var verts = info.meshInfo[mat].vertices;
+
+            float elapsed = time - slamTimings[i - startIndex];
+            float slamProgress = Mathf.Clamp01(elapsed * speed);
+
+            float scale = 1f;
+            if (slamProgress < 0.3f)
+            {
+                scale = Mathf.Lerp(3f, 1f, slamProgress / 0.3f);
+            }
+            else
+            {
+                float bounceProgress = (slamProgress - 0.3f) / 0.7f;
+                scale = 1f + Mathf.Sin(bounceProgress * Mathf.PI * bounceCount) * 0.3f * (1f - bounceProgress);
+            }
+
+            Vector3 center = (orig[mat].vertices[vIndex] + orig[mat].vertices[vIndex + 2]) * 0.5f;
+
+            for (int j = 0; j < 4; j++)
+            {
+                Vector3 origPos = orig[mat].vertices[vIndex + j];
+                verts[vIndex + j] = center + (origPos - center) * scale;
+            }
+        }
+    }
+}
+public class TextEffectExplode : TextEffect
+{
+    float explosionForce;
+    float gravity;
+    float delay = 3; //todo add as param
+    Vector2[] velocities;
+    bool initialized = false;
+
+    public TextEffectExplode(float explosionForce = 50f, float gravity = 9.8f)
+    {
+        this.explosionForce = explosionForce;
+        this.gravity = gravity;
+    }
+    // todo delay explosion.
+    public override void Apply(TextMeshProUGUI tmp, TMP_TextInfo info, TMP_MeshInfo[] orig, float time)
+    {
+        if (!initialized)
+        {
+            initialized = true;
+            velocities = new Vector2[endIndex - startIndex + 1];
+            Vector2 center = Vector2.zero;
+            int count = 0;
+
+            for (int i = startIndex; i <= endIndex && i < info.characterCount; i++)
+            {
+                var charInfo = info.characterInfo[i];
+                Vector2 charCenter = new Vector2(
+                    (charInfo.bottomLeft.x + charInfo.topRight.x) * 0.5f,
+                    (charInfo.bottomLeft.y + charInfo.topRight.y) * 0.5f
+                );
+                center += charCenter;
+                count++;
+            }
+            if (count > 0) center /= count;
+
+            for (int i = 0; i < velocities.Length; i++)
+            {
+                Vector2 direction = Random.insideUnitCircle.normalized;
+                velocities[i] = direction * explosionForce * Random.Range(0.5f, 1.5f);
+            }
+        }
+
+        for (int i = startIndex; i <= endIndex && i < info.characterCount; i++)
+        {
+            var charInfo = info.characterInfo[i];
+            if (!charInfo.isVisible) continue;
+
+            int mat = charInfo.materialReferenceIndex;
+            int vIndex = charInfo.vertexIndex;
+            var verts = info.meshInfo[mat].vertices;
+
+            float elapsed = time;
+            velocities[i - startIndex].y -= gravity * elapsed;
+
+            Vector2 displacement = velocities[i - startIndex] * elapsed;
+
+            for (int j = 0; j < 4; j++)
+            {
+                Vector3 origPos = orig[mat].vertices[vIndex + j];
+                verts[vIndex + j] = origPos + (Vector3)displacement;
+            }
+        }
+    }
+}
+public class TextEffectCollapse : TextEffect
+{
+    float rotationIntensity;
+    float dropDistance;
+    float[] rotations;
+    bool initialized = false;
+    
+    public TextEffectCollapse(float rotationIntensity = 30f, float dropDistance = 20f)
+    {
+        this.rotationIntensity = rotationIntensity;
+        this.dropDistance = dropDistance;
+    }
+
+    public override void Apply(TextMeshProUGUI tmp, TMP_TextInfo info, TMP_MeshInfo[] orig, float time)
+    {
+        if (!initialized)
+        {
+            initialized = true;
+            rotations = new float[endIndex - startIndex + 1];
+            for (int i = 0; i < rotations.Length; i++)
+            {
+                rotations[i] = Random.Range(-rotationIntensity, rotationIntensity);
+            }
+        }
+        
+        float collapseProgress = Mathf.Clamp01(time * 2f);
+        
+        for (int i = startIndex; i <= endIndex && i < info.characterCount; i++)
+        {
+            var charInfo = info.characterInfo[i];
+            if (!charInfo.isVisible) continue;
+
+            int mat = charInfo.materialReferenceIndex;
+            int vIndex = charInfo.vertexIndex;
+            var verts = info.meshInfo[mat].vertices;
+            
+            // Apply rotation and drop
+            float rotation = rotations[i - startIndex] * collapseProgress;
+            float drop = dropDistance * collapseProgress;
+            
+            Vector3 center = (orig[mat].vertices[vIndex] + orig[mat].vertices[vIndex + 2]) * 0.5f;
+            Quaternion rot = Quaternion.Euler(0, 0, rotation);
+            
+            for (int j = 0; j < 4; j++)
+            {
+                Vector3 origPos = orig[mat].vertices[vIndex + j];
+                Vector3 rotatedPos = center + rot * (origPos - center);
+                Vector3 finalPos = rotatedPos + Vector3.down * drop;
+                verts[vIndex + j] = finalPos;
+            }
+        }
+    }
+}
+public class TextEffectBloat : TextEffect
+{
+    float magSpeed, maxScale, length;
+    public TextEffectBloat(float speed, float scale, float len) { magSpeed = speed; maxScale = scale; length = len; }
+
+    public override void Apply(TextMeshProUGUI tmp, TMP_TextInfo info, TMP_MeshInfo[] orig, float time)
+    {
+        for (int i = startIndex; i <= endIndex && i < info.characterCount; i++)
+        {
+            int mat = info.characterInfo[i].materialReferenceIndex;
+            int vIndex = info.characterInfo[i].vertexIndex;
+            var cols = info.meshInfo[mat].colors32;
+            if (cols == null || cols.Length <= vIndex) continue;
+            if (cols[vIndex].a == 0) continue;
+
             if (!info.characterInfo[i].isVisible) continue;
-            var colors = info.meshInfo[info.characterInfo[i].materialReferenceIndex].colors32;
+            float phase = (time * magSpeed + i) % length / length;
+            float scale = 1f + Mathf.Sin(phase * Mathf.PI * 2f) * (maxScale - 1f);
+
+            var verts = info.meshInfo[mat].vertices;
+
+            Vector3 center = Vector3.zero;
+            for (int j = 0; j < 4; j++)
+                center += orig[mat].vertices[vIndex + j];
+            center /= 4f;
+
+            for (int j = 0; j < 4; j++)
+                verts[vIndex + j] = center + (orig[mat].vertices[vIndex + j] - center) * scale;
+        }
+    }
+}
+public class TextEffectMagScale : TextEffect
+{
+    float magSpeed, maxScale;
+    public TextEffectMagScale(float speed, float scale) { magSpeed = speed; maxScale = scale; }
+
+    public override void Apply(TextMeshProUGUI tmp, TMP_TextInfo info, TMP_MeshInfo[] orig, float time)
+    {
+        Vector3 center = Vector3.zero;
+        int count = 0;
+        for (int i = startIndex; i <= endIndex && i < info.characterCount; i++)
+        {
+            var verts = info.meshInfo[info.characterInfo[i].materialReferenceIndex].vertices;
             int vIndex = info.characterInfo[i].vertexIndex;
             for (int j = 0; j < 4; j++)
-                colors[vIndex + j] = c;
+                center += verts[vIndex + j];
+            count += 4;
         }
+        center /= Mathf.Max(1, count);
+
+        float scale = 1f + (Mathf.Sin(time * magSpeed) * 0.5f + 0.5f) * (maxScale - 1f);
+        for (int i = startIndex; i <= endIndex && i < info.characterCount; i++)
+        {
+            int mat = info.characterInfo[i].materialReferenceIndex;
+            int vIndex = info.characterInfo[i].vertexIndex;
+            var verts = info.meshInfo[mat].vertices;
+            if (!info.characterInfo[i].isVisible) continue;
+
+            for (int j = 0; j < 4; j++)
+                verts[vIndex + j] = center + (verts[vIndex + j] - center) * scale;
+        }
+
     }
 }
 
 
 public class TextEffectMagnify : TextEffect
 {
-    float magSpeed, maxScale, length;
-    public TextEffectMagnify(float speed, float scale, float len) { magSpeed = speed; maxScale = scale; length = len; }
+    float speed, maxScale, falloff;
+    public TextEffectMagnify(float speed, float scale, float len)
+    {
+        this.speed = speed; maxScale = scale; falloff = len;
+    }
 
     public override void Apply(TextMeshProUGUI tmp, TMP_TextInfo info, TMP_MeshInfo[] orig, float time)
     {
-        for (int i = startIndex; i <= endIndex && i < info.characterCount; i++)
+        int span = endIndex - startIndex + 1;
+        float lensPos = startIndex + (time * speed % span);
+        if (lensPos > endIndex + falloff)
         {
-            if (!info.characterInfo[i].isVisible) continue;
-            float phase = (time * magSpeed + i) % length / length;
-            float scale = 1f + Mathf.Sin(phase * Mathf.PI * 2f) * (maxScale - 1f);
+            lensPos = startIndex - falloff;
+        }
+        for (int i = startIndex; i <= endIndex; i++)
+        {
+            var charInfo = info.characterInfo[i];
+            if (!charInfo.isVisible) continue;
 
-            var verts = info.meshInfo[info.characterInfo[i].materialReferenceIndex].vertices;
-            int vIndex = info.characterInfo[i].vertexIndex;
+            int mat = charInfo.materialReferenceIndex;
+            int vIndex = charInfo.vertexIndex;
+            var verts = info.meshInfo[mat].vertices;
+            Vector3[] origVerts = orig[mat].vertices;
 
-            Vector3 center = Vector3.zero;
+            float dist = Mathf.Abs(i - lensPos);
+
+            if (dist > falloff)
+            {
+                for (int j = 0; j < 4; j++)
+                    verts[vIndex + j] = origVerts[vIndex + j];
+                continue;
+            }
+            
+
+            float t = 1f - (dist / falloff);
+            t = Mathf.SmoothStep(0f, 1f, t);
+            float scale = Mathf.Lerp(1f, maxScale, t);
+            Vector3 center = (origVerts[vIndex] + origVerts[vIndex + 2]) / 2f;
             for (int j = 0; j < 4; j++)
-                center += orig[info.characterInfo[i].materialReferenceIndex].vertices[vIndex + j];
-            center /= 4f;
-
-            for (int j = 0; j < 4; j++)
-                verts[vIndex + j] = center + (orig[info.characterInfo[i].materialReferenceIndex].vertices[vIndex + j] - center) * scale;
+                verts[vIndex + j] = center + (origVerts[vIndex + j] - center) * scale;
         }
     }
 }
-
 public class TextEffectPause : TextEffect
 {
     float duration;
@@ -828,4 +1730,3 @@ public class TextEffectPause : TextEffect
 
 
 
-// for future anims idea: dropdown, construct, slam, expand, collapse.
