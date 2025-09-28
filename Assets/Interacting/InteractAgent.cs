@@ -27,15 +27,29 @@ public class InteractAgent : MonoBehaviour
 		defaultInteractAgent.Add(toAdd);
 	}
 
-	private void Update(){
-		foreach(Interactable i in targets){
-			i.OnNotOver();
-		}
+	private void Update()
+	{
 		Interactable nearest = FindNearest();
-		if(nearest != null){
-			if(CheckPlayerInteraction()) nearest.Interact();
+		if (nearest != null)
+		{
+			if (CheckPlayerInteraction())
+				nearest.Interact();
 			nearest.OnOver();
 		}
+		foreach (Interactable i in targets)
+		{
+			if (i.Equals(nearest)) continue;
+			i.OnNotOver();
+		}
+		
+		// foreach(Interactable i in targets){
+		// 	i.OnNotOver();
+		// }
+		// Interactable nearest = FindNearest();
+		// if(nearest != null){
+		// 	if(CheckPlayerInteraction()) nearest.Interact();
+		// 	nearest.OnOver();
+		// }
 	}
 
 	//Conditionally returns the nearest Interactable within the set of Interactables that this InteractAgent can interact with. 

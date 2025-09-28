@@ -2,7 +2,6 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    public int MAX_INTERACT_DISTANCE = 10;
     public int MOVE_SPEED = 5;
 
     private Rigidbody2D rb;
@@ -18,11 +17,6 @@ public class Player : MonoBehaviour
     void Update()
     {
         Move();
-
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            //TryInteract();
-        }
     }
 
     void Move()
@@ -52,33 +46,4 @@ public class Player : MonoBehaviour
         }
     }
 
-    //void TryInteract()
-    //{
-    //    // get closest interactable within max interact dist and tries to interact.
-
-    //    Interactable[] interactables = FindObjectsOfType<Interactable>();
-    //    Interactable closest = null;
-    //    float closestDist = Mathf.Infinity;
-
-    //    foreach (var obj in interactables)
-    //    {
-    //        float dist = Vector2.Distance(transform.position, obj.transform.position);
-    //        if (dist < closestDist)
-    //        {
-    //            closestDist = dist;
-    //            closest = obj;
-    //        }
-    //    }
-
-    //    if (closest != null && closestDist <= MAX_INTERACT_DISTANCE)
-    //    {
-    //        Interact(closest);
-    //    }
-    //}
-
-    //void Interact(Interactable interactable)
-    //{
-    //    if (interactable == null) return;
-    //    interactable.OnInteract();
-    //}
 }
