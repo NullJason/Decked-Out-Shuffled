@@ -1,6 +1,9 @@
 using UnityEngine;
 using UnityEngine.UI;
 
+//Something a player can click on to select it. 
+//See also: class UserInput, the class in charge of detecting the player's most recent selections. 
+
 public class ClickSelectable : Selectable
 {
 	[SerializeField]

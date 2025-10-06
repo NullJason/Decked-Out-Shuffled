@@ -2,7 +2,6 @@ using UnityEngine;
 using System.Collections.Generic;
 
 //A UserInput is a system designed to get user input. 
-//TODO: Test
 //TODO: Make abstract parent class Input, and sibling class WeightedInput (for ai behaviour). 
 //
 //On creation, a Selectable announces itself to a UserInput, where its reference is stored in a HashSet. 
