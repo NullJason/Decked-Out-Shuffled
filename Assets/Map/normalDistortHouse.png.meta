@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: d12d0d362e28f7d499b9b9d3b9faa125
+guid: c0176a6d27e61804382001824ead010a
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 6368554912768999587
-    second: bubbleHighlight_0
+      213: -5142916179043255520
+    second: normalDistortHouse_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -113,13 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: bubbleHighlight_0
+      name: normalDistortHouse_0
       rect:
         serializedVersion: 2
-        x: 5
-        y: 98
-        width: 286
-        height: 121
+        x: 45
+        y: 49
+        width: 215
+        height: 251
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 3a04a2c73f6a16850800000000000000
-      internalID: 6368554912768999587
+      spriteID: 02b7486cbf0b0a8b0800000000000000
+      internalID: -5142916179043255520
       vertices: []
       indices: 
       edges: []
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      bubbleHighlight_0: 6368554912768999587
+      normalDistortHouse_0: -5142916179043255520
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

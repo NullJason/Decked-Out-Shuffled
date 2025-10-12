@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class OopsiesDialogueDefaultText : MonoBehaviour
 {
-    string defaultOopsiesText = "Wassup, You ain't supposed to see this text right here! It seems the <wavy>Someone</wavy> got lazy! Go bother them to fix this!";
+    string defaultOopsiesText = "Wassup, You ain't supposed to see this text right here! It seems <wavy>SOMEONE</wavy> got lazy! Go bother them to fix this!";
     public string oopsiesText;
     private void OnEnable() {
         Dialogue mono;

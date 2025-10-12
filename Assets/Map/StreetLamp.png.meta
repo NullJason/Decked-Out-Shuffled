@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: d12d0d362e28f7d499b9b9d3b9faa125
+guid: fcb256685327a89478097ef3b5c37294
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 6368554912768999587
-    second: bubbleHighlight_0
+      213: -7989769126081834795
+    second: StreetLamp_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -113,13 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: bubbleHighlight_0
+      name: StreetLamp_0
       rect:
         serializedVersion: 2
-        x: 5
-        y: 98
-        width: 286
-        height: 121
+        x: 22
+        y: 14
+        width: 101
+        height: 222
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 3a04a2c73f6a16850800000000000000
-      internalID: 6368554912768999587
+      spriteID: 5d0528abf43ae1190800000000000000
+      internalID: -7989769126081834795
       vertices: []
       indices: 
       edges: []
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      bubbleHighlight_0: 6368554912768999587
+      StreetLamp_0: -7989769126081834795
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
