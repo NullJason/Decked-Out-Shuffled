@@ -1,17 +1,18 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class SmallTalkInteraction : Interaction
 {
     [SerializeField] private Canvas dialogueCanvas;
     [SerializeField] private Dialogue dialogueMono;
+    [SerializeField] private Color dialogueBoxColor;
+    [SerializeField] private Color dialogueTextColor;
+    [SerializeField] private DialogueResponse dialogueResponses;
     private bool isNull()
     {
         return dialogueCanvas == null || dialogueMono == null;
     }
 
-    /// <summary>
-    /// enable main dialog box, as long as the dialog box is currently open do not trigger again.
-    /// </summary>
     private protected override void StuffToDo()
     {
         Debug.Log("Enabling main dialog from small talk.");
