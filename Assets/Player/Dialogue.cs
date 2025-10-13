@@ -98,7 +98,10 @@ public class Dialogue : MonoBehaviour
         return TMPAllowedTags.Contains(tagName);
     }
 
-
+    public int GetDialogueQueueSize()
+    {
+        return dialogueQueue.Count;
+    }
 
     void Start()
     {

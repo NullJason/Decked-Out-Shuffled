@@ -1,0 +1,658 @@
+fileFormatVersion: 2
+guid: 00ff02901904a9649b9d930822a8698c
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 2141074247106831680
+    second: Entity1_idle-Sheet1_0
+  - first:
+      213: 6953284009950549777
+    second: Entity1_idle-Sheet1_1
+  - first:
+      213: 4887427588818774503
+    second: Entity1_idle-Sheet1_2
+  - first:
+      213: -2209499582117347873
+    second: Entity1_idle-Sheet1_3
+  - first:
+      213: -6601912825170914802
+    second: Entity1_idle-Sheet1_4
+  - first:
+      213: 4028856428748916284
+    second: Entity1_idle-Sheet1_5
+  - first:
+      213: -4970237293042756822
+    second: Entity1_idle-Sheet1_6
+  - first:
+      213: -7566733463164716216
+    second: Entity1_idle-Sheet1_7
+  - first:
+      213: 6945459490317073477
+    second: Entity1_idle-Sheet1_8
+  - first:
+      213: -835681516752476311
+    second: Entity1_idle-Sheet1_9
+  - first:
+      213: -2096027889406200223
+    second: Entity1_idle-Sheet1_10
+  - first:
+      213: 6986301326211933589
+    second: Entity1_idle-Sheet1_11
+  - first:
+      213: 6913500851752121546
+    second: Entity1_idle-Sheet1_12
+  - first:
+      213: 6462371335754483460
+    second: Entity1_idle-Sheet1_13
+  - first:
+      213: 4793216711698990596
+    second: Entity1_idle-Sheet1_14
+  - first:
+      213: -7930882956058713412
+    second: Entity1_idle-Sheet1_15
+  - first:
+      213: 9098414239198246812
+    second: Entity1_idle-Sheet1_16
+  - first:
+      213: 798727071768003206
+    second: Entity1_idle-Sheet1_17
+  - first:
+      213: -3448392661173445158
+    second: Entity1_idle-Sheet1_18
+  - first:
+      213: 3471262127332678407
+    second: Entity1_idle-Sheet1_19
+  - first:
+      213: -1758557799276195435
+    second: Entity1_idle-Sheet1_20
+  - first:
+      213: -3811209035182263007
+    second: Entity1_idle-Sheet1_21
+  - first:
+      213: -1090949659822809626
+    second: Entity1_idle-Sheet1_22
+  - first:
+      213: -2510247998106365769
+    second: Entity1_idle-Sheet1_23
+  - first:
+      213: -1952056616102911748
+    second: Entity1_idle-Sheet1_24
+  - first:
+      213: -6998344074779727069
+    second: Entity1_idle-Sheet1_25
+  - first:
+      213: -7188754393697971901
+    second: Entity1_idle-Sheet1_26
+  - first:
+      213: -8613419603559273775
+    second: Entity1_idle-Sheet1_27
+  - first:
+      213: 3615155214395874356
+    second: Entity1_idle-Sheet1_28
+  - first:
+      213: -8304055573131731427
+    second: Entity1_idle-Sheet1_29
+  - first:
+      213: 2944112659969448659
+    second: Entity1_idle-Sheet1_30
+  - first:
+      213: 3569206925676303791
+    second: Entity1_idle-Sheet1_31
+  - first:
+      213: 5218733270230086167
+    second: Entity1_idle-Sheet1_32
+  - first:
+      213: 4230511105426284012
+    second: Entity1_idle-Sheet1_33
+  - first:
+      213: 5047494443400214746
+    second: Entity1_idle-Sheet1_34
+  - first:
+      213: 2833054700975556030
+    second: Entity1_idle-Sheet1_35
+  - first:
+      213: 2878284312518843682
+    second: Entity1_idle-Sheet1_36
+  - first:
+      213: 5711937651540965305
+    second: Entity1_idle-Sheet1_37
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WindowsStoreApps
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Entity1_idle-Sheet1_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 600
+        width: 200
+        height: 200
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0452a801faf96bd10800000000000000
+      internalID: 2141074247106831680
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Entity1_idle-Sheet1_1
+      rect:
+        serializedVersion: 2
+        x: 200
+        y: 600
+        width: 200
+        height: 200
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 117918b87f60f7060800000000000000
+      internalID: 6953284009950549777
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Entity1_idle-Sheet1_2
+      rect:
+        serializedVersion: 2
+        x: 400
+        y: 600
+        width: 200
+        height: 200
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7e9acf05f71a3d340800000000000000
+      internalID: 4887427588818774503
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Entity1_idle-Sheet1_3
+      rect:
+        serializedVersion: 2
+        x: 600
+        y: 600
+        width: 200
+        height: 200
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fdd758426d74651e0800000000000000
+      internalID: -2209499582117347873
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Entity1_idle-Sheet1_4
+      rect:
+        serializedVersion: 2
+        x: 800
+        y: 600
+        width: 200
+        height: 200
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e029791934b4164a0800000000000000
+      internalID: -6601912825170914802
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Entity1_idle-Sheet1_5
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 400
+        width: 200
+        height: 200
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c36c0ae739f59e730800000000000000
+      internalID: 4028856428748916284
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Entity1_idle-Sheet1_6
+      rect:
+        serializedVersion: 2
+        x: 200
+        y: 400
+        width: 200
+        height: 200
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a2399c2f38b260bb0800000000000000
+      internalID: -4970237293042756822
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Entity1_idle-Sheet1_7
+      rect:
+        serializedVersion: 2
+        x: 400
+        y: 400
+        width: 200
+        height: 200
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 84b710a61009df690800000000000000
+      internalID: -7566733463164716216
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Entity1_idle-Sheet1_8
+      rect:
+        serializedVersion: 2
+        x: 600
+        y: 400
+        width: 200
+        height: 200
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 54cf63a9b9a336060800000000000000
+      internalID: 6945459490317073477
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Entity1_idle-Sheet1_9
+      rect:
+        serializedVersion: 2
+        x: 800
+        y: 400
+        width: 200
+        height: 200
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 967eb9096101764f0800000000000000
+      internalID: -835681516752476311
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Entity1_idle-Sheet1_10
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 200
+        width: 200
+        height: 200
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 166b1a46db969e2e0800000000000000
+      internalID: -2096027889406200223
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Entity1_idle-Sheet1_11
+      rect:
+        serializedVersion: 2
+        x: 200
+        y: 200
+        width: 200
+        height: 200
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 595e3ba8a0454f060800000000000000
+      internalID: 6986301326211933589
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Entity1_idle-Sheet1_12
+      rect:
+        serializedVersion: 2
+        x: 400
+        y: 200
+        width: 200
+        height: 200
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ac4bb073560b1ff50800000000000000
+      internalID: 6913500851752121546
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Entity1_idle-Sheet1_13
+      rect:
+        serializedVersion: 2
+        x: 600
+        y: 200
+        width: 200
+        height: 200
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4070052ad74fea950800000000000000
+      internalID: 6462371335754483460
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Entity1_idle-Sheet1_14
+      rect:
+        serializedVersion: 2
+        x: 800
+        y: 200
+        width: 200
+        height: 200
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 406c848243de48240800000000000000
+      internalID: 4793216711698990596
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Entity1_idle-Sheet1_15
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 200
+        height: 200
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cb2abe898f7dfe190800000000000000
+      internalID: -7930882956058713412
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Entity1_idle-Sheet1_16
+      rect:
+        serializedVersion: 2
+        x: 200
+        y: 0
+        width: 200
+        height: 200
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c9774ca8b8f044e70800000000000000
+      internalID: 9098414239198246812
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Entity1_idle-Sheet1_17
+      rect:
+        serializedVersion: 2
+        x: 400
+        y: 0
+        width: 200
+        height: 200
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 68248393a06a51b00800000000000000
+      internalID: 798727071768003206
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 3700a704a5666f445b0fe8722b0cc253
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Entity1_idle-Sheet1_0: 2141074247106831680
+      Entity1_idle-Sheet1_1: 6953284009950549777
+      Entity1_idle-Sheet1_10: -2096027889406200223
+      Entity1_idle-Sheet1_11: 6986301326211933589
+      Entity1_idle-Sheet1_12: 6913500851752121546
+      Entity1_idle-Sheet1_13: 6462371335754483460
+      Entity1_idle-Sheet1_14: 4793216711698990596
+      Entity1_idle-Sheet1_15: -7930882956058713412
+      Entity1_idle-Sheet1_16: 9098414239198246812
+      Entity1_idle-Sheet1_17: 798727071768003206
+      Entity1_idle-Sheet1_2: 4887427588818774503
+      Entity1_idle-Sheet1_3: -2209499582117347873
+      Entity1_idle-Sheet1_4: -6601912825170914802
+      Entity1_idle-Sheet1_5: 4028856428748916284
+      Entity1_idle-Sheet1_6: -4970237293042756822
+      Entity1_idle-Sheet1_7: -7566733463164716216
+      Entity1_idle-Sheet1_8: 6945459490317073477
+      Entity1_idle-Sheet1_9: -835681516752476311
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

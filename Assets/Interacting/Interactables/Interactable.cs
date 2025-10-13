@@ -11,7 +11,7 @@ public class Interactable : MonoBehaviour{
 	}
 
 	public void Interact(){
-		interaction.Trigger();
+		if (interaction != null) interaction.Trigger(); else Debug.Log("No Interaction avaliable.");
 	}
 
 	public virtual void OnOver(){
