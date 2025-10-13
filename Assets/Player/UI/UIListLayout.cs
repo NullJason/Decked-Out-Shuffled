@@ -39,6 +39,25 @@ public class UIListLayout : MonoBehaviour
     public AlignHorizontal alignX = AlignHorizontal.Left;
     public AlignVertical alignY = AlignVertical.Top;
 
+    [Header("Container Scaling")]
+    public bool scaleHorizontal = false; // Adjust container width to fit content
+    public bool scaleVertical = false;   // Adjust container height to fit content
+    public float minWidth = 0f;          // Minimum width when scaling horizontally
+    public float minHeight = 0f;         // Minimum height when scaling vertically
+    public float maxWidth = 10000f;      // Maximum width when scaling horizontally  
+    public float maxHeight = 10000f;     // Maximum height when scaling vertically
+    
+    [System.Flags]
+    public enum ScaleDirection
+    {
+        Left = 1,
+        Right = 2,
+        Top = 4,
+        Bottom = 8,
+        Center = 16
+    }
+    public ScaleDirection scaleDirection = ScaleDirection.Center;
+
     [Header("Rotation")]
     [Range(-180f, 180f)] public float rotationDegrees = 0f; // rotate layout around container pivot
     public bool rotateChildrenWithList = false; // if true, apply rotation to children localEulerAngles.z
@@ -54,6 +73,60 @@ public class UIListLayout : MonoBehaviour
     public bool setSizeDeltaToChild = false; // if uniformCellSize true, optionally set child's sizeDelta to cellSize when applying
     public bool ignoreInactiveChildren = true;
 
+    // Child tracking for auto-updates
+    private int lastChildCount = 0;
+    private List<Transform> trackedChildren = new List<Transform>();
+    private Vector3 lastContainerPosition;
+
+    void Start()
+    {
+        UpdateChildTracking();
+        ApplyLayout();
+    }
+
+    void OnEnable()
+    {
+        UpdateChildTracking();
+        lastContainerPosition = transform.localPosition;
+        ApplyLayout();
+    }
+
+    void Update()
+    {
+        // Check for new children in runtime
+        if (Application.isPlaying && transform.childCount != lastChildCount)
+        {
+            UpdateChildTracking();
+            ApplyLayout();
+        }
+    }
+
+    void OnTransformChildrenChanged()
+    {
+        // This is called when children are added/removed in the editor
+        UpdateChildTracking();
+        
+#if UNITY_EDITOR
+        if (autoApplyInEditor && !Application.isPlaying)
+        {
+            // Small delay to ensure new child is properly initialized
+            EditorApplication.delayCall += () => {
+                if (this != null) ApplyLayout();
+            };
+        }
+#endif
+    }
+
+    void UpdateChildTracking()
+    {
+        lastChildCount = transform.childCount;
+        trackedChildren.Clear();
+        for (int i = 0; i < transform.childCount; i++)
+        {
+            trackedChildren.Add(transform.GetChild(i));
+        }
+    }
+
     // ========== Public API ==========
     public void ApplyLayout()
     {
@@ -63,8 +136,19 @@ public class UIListLayout : MonoBehaviour
         List<RectTransform> children = GatherChildren(container);
         if (children.Count == 0) return;
 
+        // Store original container position for scaling direction
+        Vector3 originalPosition = container.localPosition;
+        
         // compute positions in local space (container local)
         List<Rect> childRects = GetChildRects(children);
+        
+        // Calculate required size first
+        Vector2 requiredSize = CalculateRequiredSize(container, childRects);
+        
+        // Apply container scaling if enabled
+        ApplyContainerScaling(container, requiredSize, originalPosition);
+        
+        // Now compute positions with potentially updated container size
         List<Vector2> positions = ComputeLayoutPositions(container, childRects);
 
         // Apply positions and optional rotations/sizes
@@ -90,6 +174,256 @@ public class UIListLayout : MonoBehaviour
                 Vector2 size = cellSize;
                 child.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, size.x);
                 child.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, size.y);
+            }
+        }
+        
+        lastContainerPosition = container.localPosition;
+    }
+
+    // Calculate the required size for the container based on content
+    private Vector2 CalculateRequiredSize(RectTransform container, List<Rect> childRects)
+    {
+        if (childRects.Count == 0) return new Vector2(container.rect.width, container.rect.height);
+
+        bool isTable = horizontal && vertical;
+        int cols = 1, rows = 1;
+
+        if (isTable)
+        {
+            if (tableConstraint == Constraint.FixedColumnCount)
+            {
+                cols = Mathf.Max(1, constraintCount);
+                rows = Mathf.CeilToInt((float)childRects.Count / cols);
+            }
+            else if (tableConstraint == Constraint.FixedRowCount)
+            {
+                rows = Mathf.Max(1, constraintCount);
+                cols = Mathf.CeilToInt((float)childRects.Count / rows);
+            }
+            else // Flexible -> try to wrap by container width
+            {
+                float availableWidth = container.rect.width - paddingLeft - paddingRight;
+                cols = CalculateFlexibleColumns(childRects, availableWidth);
+                rows = Mathf.CeilToInt((float)childRects.Count / cols);
+            }
+        }
+        else
+        {
+            cols = horizontal ? childRects.Count : 1;
+            rows = vertical ? childRects.Count : 1;
+        }
+
+        // Calculate column widths and row heights for table layout
+        float[] colWidths = new float[cols];
+        float[] rowHeights = new float[rows];
+        
+        if (isTable)
+        {
+            for (int r = 0; r < rows; r++)
+            {
+                for (int c = 0; c < cols; c++)
+                {
+                    int idx = r * cols + c;
+                    if (idx >= childRects.Count) break;
+                    colWidths[c] = Mathf.Max(colWidths[c], childRects[idx].width);
+                    rowHeights[r] = Mathf.Max(rowHeights[r], childRects[idx].height);
+                }
+            }
+        }
+
+        // Calculate total required size
+        float requiredWidth = 0f;
+        float requiredHeight = 0f;
+
+        if (isTable)
+        {
+            // Table layout size calculation
+            requiredWidth = paddingLeft + paddingRight;
+            for (int c = 0; c < cols; c++) 
+                requiredWidth += colWidths[c];
+            requiredWidth += spacingX * Mathf.Max(0, cols - 1);
+
+            requiredHeight = paddingTop + paddingBottom;
+            for (int r = 0; r < rows; r++) 
+                requiredHeight += rowHeights[r];
+            requiredHeight += spacingY * Mathf.Max(0, rows - 1);
+        }
+        else
+        {
+            // Single-axis layout size calculation
+            if (horizontal)
+            {
+                requiredWidth = paddingLeft + paddingRight;
+                for (int i = 0; i < childRects.Count; i++)
+                {
+                    if (i > 0) requiredWidth += spacingX;
+                    requiredWidth += childRects[i].width + indentPerItem * i;
+                }
+                
+                // Height is max child height plus padding
+                float maxChildHeight = 0f;
+                for (int i = 0; i < childRects.Count; i++) 
+                    maxChildHeight = Mathf.Max(maxChildHeight, childRects[i].height);
+                requiredHeight = paddingTop + paddingBottom + maxChildHeight;
+            }
+            else // vertical only
+            {
+                requiredHeight = paddingTop + paddingBottom;
+                for (int i = 0; i < childRects.Count; i++)
+                {
+                    if (i > 0) requiredHeight += spacingY;
+                    requiredHeight += childRects[i].height + indentPerItem * i;
+                }
+                
+                // Width is max child width plus padding
+                float maxChildWidth = 0f;
+                for (int i = 0; i < childRects.Count; i++) 
+                    maxChildWidth = Mathf.Max(maxChildWidth, childRects[i].width);
+                requiredWidth = paddingLeft + paddingRight + maxChildWidth;
+            }
+        }
+
+        return new Vector2(requiredWidth, requiredHeight);
+    }
+
+    // Calculate flexible columns for table layout
+    private int CalculateFlexibleColumns(List<Rect> childRects, float availableWidth)
+    {
+        if (childRects.Count == 0) return 1;
+        
+        int maxCols = childRects.Count;
+        int bestCols = 1;
+        
+        for (int testCols = 1; testCols <= maxCols; testCols++)
+        {
+            int testRows = Mathf.CeilToInt((float)childRects.Count / testCols);
+            
+            // Calculate required width for this column configuration
+            float[] colWidths = new float[testCols];
+            for (int r = 0; r < testRows; r++)
+            {
+                for (int c = 0; c < testCols; c++)
+                {
+                    int idx = r * testCols + c;
+                    if (idx >= childRects.Count) break;
+                    colWidths[c] = Mathf.Max(colWidths[c], childRects[idx].width);
+                }
+            }
+            
+            float totalWidth = paddingLeft + paddingRight;
+            for (int c = 0; c < testCols; c++) 
+                totalWidth += colWidths[c];
+            totalWidth += spacingX * Mathf.Max(0, testCols - 1);
+            
+            // If this fits or it's the first iteration, use it
+            if (totalWidth <= availableWidth || testCols == 1)
+            {
+                bestCols = testCols;
+            }
+            else
+            {
+                // Once we exceed available width, use the previous configuration
+                break;
+            }
+        }
+        
+        return bestCols;
+    }
+
+    // Apply container scaling based on calculated required size
+    private void ApplyContainerScaling(RectTransform container, Vector2 requiredSize, Vector3 originalPosition)
+    {
+        Vector2 newSize = container.rect.size;
+        Vector3 newPosition = container.localPosition;
+        bool sizeChanged = false;
+        bool positionChanged = false;
+
+        if (scaleHorizontal)
+        {
+            float newWidth = Mathf.Clamp(requiredSize.x, minWidth, maxWidth);
+            if (Mathf.Abs(newWidth - container.rect.width) > 0.01f)
+            {
+                float widthDelta = newWidth - container.rect.width;
+                
+                // Apply scaling direction
+                if (scaleDirection.HasFlag(ScaleDirection.Center))
+                {
+                    // Center scaling - adjust position to maintain center
+                    newPosition.x = originalPosition.x - widthDelta * 0.5f * container.pivot.x;
+                }
+                else
+                {
+                    // Directional scaling
+                    if (scaleDirection.HasFlag(ScaleDirection.Left) && !scaleDirection.HasFlag(ScaleDirection.Right))
+                    {
+                        // Scale to left - move left by widthDelta
+                        newPosition.x = originalPosition.x - widthDelta * (1f - container.pivot.x);
+                    }
+                    else if (scaleDirection.HasFlag(ScaleDirection.Right) && !scaleDirection.HasFlag(ScaleDirection.Left))
+                    {
+                        // Scale to right - position unchanged
+                        newPosition.x = originalPosition.x + widthDelta * container.pivot.x;
+                    }
+                    else if (scaleDirection.HasFlag(ScaleDirection.Left) && scaleDirection.HasFlag(ScaleDirection.Right))
+                    {
+                        // Scale both directions - maintain center
+                        newPosition.x = originalPosition.x - widthDelta * 0.5f * container.pivot.x;
+                    }
+                }
+                
+                newSize.x = newWidth;
+                sizeChanged = true;
+                positionChanged = true;
+            }
+        }
+
+        if (scaleVertical)
+        {
+            float newHeight = Mathf.Clamp(requiredSize.y, minHeight, maxHeight);
+            if (Mathf.Abs(newHeight - container.rect.height) > 0.01f)
+            {
+                float heightDelta = newHeight - container.rect.height;
+                
+                // Apply scaling direction
+                if (scaleDirection.HasFlag(ScaleDirection.Center))
+                {
+                    // Center scaling - adjust position to maintain center
+                    newPosition.y = originalPosition.y - heightDelta * 0.5f * container.pivot.y;
+                }
+                else
+                {
+                    // Directional scaling
+                    if (scaleDirection.HasFlag(ScaleDirection.Top) && !scaleDirection.HasFlag(ScaleDirection.Bottom))
+                    {
+                        // Scale to top - move up by heightDelta
+                        newPosition.y = originalPosition.y + heightDelta * (1f - container.pivot.y);
+                    }
+                    else if (scaleDirection.HasFlag(ScaleDirection.Bottom) && !scaleDirection.HasFlag(ScaleDirection.Top))
+                    {
+                        // Scale to bottom - position unchanged
+                        newPosition.y = originalPosition.y - heightDelta * container.pivot.y;
+                    }
+                    else if (scaleDirection.HasFlag(ScaleDirection.Top) && scaleDirection.HasFlag(ScaleDirection.Bottom))
+                    {
+                        // Scale both directions - maintain center
+                        newPosition.y = originalPosition.y - heightDelta * 0.5f * container.pivot.y;
+                    }
+                }
+                
+                newSize.y = newHeight;
+                sizeChanged = true;
+                positionChanged = true;
+            }
+        }
+
+        if (sizeChanged)
+        {
+            container.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, newSize.x);
+            container.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, newSize.y);
+            
+            if (positionChanged)
+            {
+                container.localPosition = newPosition;
             }
         }
     }
@@ -130,10 +464,6 @@ public class UIListLayout : MonoBehaviour
                         if (le.preferredHeight > 0) h = le.preferredHeight;
                     }
                 }
-                else
-                {
-                    // try Text/ContentSizeFitter? We'll assume rect is fine
-                }
             }
 
             if (uniformCellSize)
@@ -154,14 +484,10 @@ public class UIListLayout : MonoBehaviour
 
         float containerWidth = container.rect.width;
         float containerHeight = container.rect.height;
-        float xStart = paddingLeft;
-        float yStart = -paddingTop; // Unity UI's Y goes up for anchoredPosition; anchoredPosition.y positive moves up. We'll treat top as negative offsets.
-
-        // We'll position relative to container pivot (RectTransform anchoredPosition is relative to pivot).
-        // First compute raw positions in 'unrotated local coordinates with pivot at (0,0) center' then translate to anchoredPosition.
-        // Easier approach: compute positions with origin at top-left corner (local space where top-left = (-pivot.x*width, (1-pivot.y)*height) ), then convert.
-
-        Vector2 topLeftLocal = new Vector2(-container.pivot.x * containerWidth, (1f - container.pivot.y) * containerHeight);
+        
+        // Calculate available space between padding
+        float availableWidth = containerWidth - paddingLeft - paddingRight;
+        float availableHeight = containerHeight - paddingTop - paddingBottom;
 
         // Table/grid flow: compute columns/rows
         bool isTable = horizontal && vertical;
@@ -179,32 +505,10 @@ public class UIListLayout : MonoBehaviour
                 rows = Mathf.Max(1, constraintCount);
                 cols = Mathf.CeilToInt((float)childRects.Count / rows);
             }
-            else // Flexible -> try to wrap by container width, fall back to single row
+            else // Flexible -> try to wrap by container width
             {
-                // naive wrapping: place horizontally until width exceeded
-                List<float> rowWidths = new List<float>();
-                cols = 0;
-                float curW = 0;
-                int curCols = 0;
-                for (int i = 0; i < childRects.Count; i++)
-                {
-                    float w = childRects[i].width;
-                    if (curCols == 0) curW = paddingLeft + w;
-                    else curW += spacingX + w;
-                    curCols++;
-                    // if next would exceed container width, close row
-                    bool last = (i == childRects.Count - 1);
-                    bool exceed = !last && (curW + childRects[i + 1].width + paddingRight + spacingX > containerWidth);
-                    if (exceed || last)
-                    {
-                        rowWidths.Add(curW);
-                        cols = Math.Max(cols, curCols);
-                        curCols = 0;
-                        curW = 0;
-                    }
-                }
-                if (rowWidths.Count == 0) rowWidths.Add(0);
-                rows = rowWidths.Count;
+                cols = CalculateFlexibleColumns(childRects, availableWidth);
+                rows = Mathf.CeilToInt((float)childRects.Count / cols);
             }
         }
         else
@@ -228,11 +532,6 @@ public class UIListLayout : MonoBehaviour
                     rowHeights[r] = Mathf.Max(rowHeights[r], childRects[idx].height);
                 }
             }
-        }
-        else
-        {
-            // not table: colWidths each child width, rowHeights each child height
-            // but we will still place sequentially
         }
 
         // total content size
@@ -281,37 +580,42 @@ public class UIListLayout : MonoBehaviour
             }
         }
 
-        // We'll anchor content within container according to alignment settings
-        // compute content origin (top-left) in local coordinates
-        float originX = topLeftLocal.x;
-        float originY = topLeftLocal.y;
+        // FIXED ALIGNMENT: Calculate content origin properly accounting for container pivot
+        Vector2 pivotOffset = new Vector2(
+            -container.pivot.x * containerWidth,
+            (1f - container.pivot.y) * containerHeight
+        );
 
-        // horizontal alignment: Left / Center / Right
+        // Calculate starting position based on alignment
+        float startX = pivotOffset.x;
+        float startY = pivotOffset.y;
+
+        // Horizontal alignment
         if (alignX == AlignHorizontal.Left)
         {
-            originX += paddingLeft;
+            startX += paddingLeft;
         }
         else if (alignX == AlignHorizontal.Center)
         {
-            originX += (containerWidth - totalWidth) * 0.5f + paddingLeft;
+            startX += (containerWidth - totalWidth) * 0.5f;
         }
         else // Right
         {
-            originX += (containerWidth - totalWidth) + paddingLeft;
+            startX += containerWidth - totalWidth - paddingRight;
         }
 
-        // vertical alignment: Top / Middle / Bottom
+        // Vertical alignment
         if (alignY == AlignVertical.Top)
         {
-            originY -= paddingTop;
+            startY -= paddingTop;
         }
         else if (alignY == AlignVertical.Middle)
         {
-            originY -= (containerHeight - totalHeight) * 0.5f + paddingTop;
+            startY -= (containerHeight - totalHeight) * 0.5f;
         }
         else // Bottom
         {
-            originY -= (containerHeight - totalHeight) + paddingTop;
+            startY -= containerHeight - totalHeight - paddingBottom;
         }
 
         // Fill positions:
@@ -321,18 +625,17 @@ public class UIListLayout : MonoBehaviour
             float[] colX = new float[cols];
             float[] rowY = new float[rows];
 
-            float curX = originX;
+            float curX = startX;
             for (int c = 0; c < cols; c++)
             {
-                colX[c] = curX + colWidths[c] * 0.5f; // we'll align child center to cell center horizontally
+                colX[c] = curX + colWidths[c] * 0.5f;
                 curX += colWidths[c] + spacingX;
             }
 
-            float curY = originY;
+            float curY = startY;
             for (int r = 0; r < rows; r++)
             {
-                // rowY[r] should be center Y of that row
-                rowY[r] = curY - (rowHeights[r] * 0.5f);
+                rowY[r] = curY - rowHeights[r] * 0.5f;
                 curY -= (rowHeights[r] + spacingY);
             }
 
@@ -341,11 +644,6 @@ public class UIListLayout : MonoBehaviour
                 int r = i / cols;
                 int c = i % cols;
                 Vector2 center = new Vector2(colX[c], rowY[r]);
-                // child pivot matters: we return anchoredPosition such that child's anchoredPosition = center considering child's pivot.
-                RectTransform child = (RectTransform)transform.GetChild(i);
-                Vector2 childPivot = child.pivot;
-                // candidate anchored pos currently is center relative to container local; anchoredPosition uses pivot as reference (center).
-                // This is acceptable: anchoredPosition is the position of the pivot in local space.
                 positions.Add(center);
             }
         }
@@ -353,20 +651,20 @@ public class UIListLayout : MonoBehaviour
         {
             if (horizontal)
             {
-                float curX = originX;
+                float curX = startX;
                 for (int i = 0; i < childRects.Count; i++)
                 {
                     float w = childRects[i].width;
                     float h = childRects[i].height;
-                    // place child center vertically according to alignY
-                    float centerY = originY - (totalHeight - paddingTop - paddingBottom) * 0.5f;
-                    // But better: compute based on alignY for single row:
+                    
+                    // Calculate Y position based on vertical alignment
+                    float centerY = startY;
                     if (alignY == AlignVertical.Top)
-                        centerY = originY - h * 0.5f;
+                        centerY -= h * 0.5f;
                     else if (alignY == AlignVertical.Middle)
-                        centerY = topLeftLocal.y - (containerHeight * 0.5f);
+                        centerY -= containerHeight * 0.5f;
                     else // Bottom
-                        centerY = originY - (totalHeight - paddingBottom) + h * 0.5f;
+                        centerY -= containerHeight - h * 0.5f;
 
                     Vector2 center = new Vector2(curX + w * 0.5f, centerY);
                     positions.Add(center);
@@ -375,19 +673,20 @@ public class UIListLayout : MonoBehaviour
             }
             else // vertical
             {
-                float curY = originY;
+                float curY = startY;
                 for (int i = 0; i < childRects.Count; i++)
                 {
                     float w = childRects[i].width;
                     float h = childRects[i].height;
-                    // horizontal alignment within vertical list:
-                    float centerX = originX + (totalWidth - paddingLeft - paddingRight) * 0.5f;
+                    
+                    // Calculate X position based on horizontal alignment
+                    float centerX = startX;
                     if (alignX == AlignHorizontal.Left)
-                        centerX = originX + w * 0.5f;
+                        centerX += w * 0.5f;
                     else if (alignX == AlignHorizontal.Center)
-                        centerX = topLeftLocal.x + (containerWidth * 0.5f);
+                        centerX += containerWidth * 0.5f;
                     else // Right
-                        centerX = originX + (totalWidth - paddingRight) - w * 0.5f;
+                        centerX += containerWidth - w * 0.5f;
 
                     Vector2 center = new Vector2(centerX, curY - h * 0.5f);
                     positions.Add(center);
@@ -400,18 +699,16 @@ public class UIListLayout : MonoBehaviour
         if (Mathf.Abs(rotationDegrees) > 0.0001f)
         {
             float rad = rotationDegrees * Mathf.Deg2Rad;
-            Vector2 pivotLocal = Vector2.zero; // container pivot in local coordinates is (0,0)
-            // However anchoredPosition is relative to container local origin. We want to rotate positions around the container's pivot point
-            // container pivot local coordinates = ( (0 - container.pivot.x*width), (0 + (1-pivot.y)*height) )? Actually we used topLeftLocal earlier.
-            // Simpler: compute pivot point in local coords at container.TransformPoint(Vector3.zero)?? anchoredPosition is local; the pivot point in local coords is zero for anchoredPosition positions (pivot of parent). So rotate around Vector2.zero.
+            Vector2 pivot = new Vector2(-container.pivot.x * containerWidth, (1f - container.pivot.y) * containerHeight);
+            
             for (int i = 0; i < positions.Count; i++)
             {
-                Vector2 p = positions[i];
+                Vector2 p = positions[i] - pivot;
                 float x = p.x;
                 float y = p.y;
                 float rx = x * Mathf.Cos(rad) - y * Mathf.Sin(rad);
                 float ry = x * Mathf.Sin(rad) + y * Mathf.Cos(rad);
-                positions[i] = new Vector2(rx, ry);
+                positions[i] = new Vector2(rx, ry) + pivot;
             }
         }
 
@@ -424,10 +721,11 @@ public class UIListLayout : MonoBehaviour
 #if UNITY_EDITOR
         if (autoApplyInEditor && !Application.isPlaying)
         {
-            // apply layout in editor (do not register undo)
-            ApplyLayout();
-            // Force scene repaint
-            UnityEditor.SceneView.RepaintAll();
+            UpdateChildTracking();
+            // Use delay call to ensure all properties are set
+            EditorApplication.delayCall += () => {
+                if (this != null) ApplyLayout();
+            };
         }
 #endif
     }
@@ -448,6 +746,7 @@ public class UIListLayoutEditor : Editor
     SerializedProperty spacingX, spacingY, indentPerItem, paddingLeft, paddingRight, paddingTop, paddingBottom;
     SerializedProperty tableConstraint, constraintCount, uniformCellSize, cellSize;
     SerializedProperty useChildPreferredSize, alignX, alignY;
+    SerializedProperty scaleHorizontal, scaleVertical, minWidth, minHeight, maxWidth, maxHeight, scaleDirection;
     SerializedProperty rotationDegrees, rotateChildrenWithList;
     SerializedProperty showPreview, previewAlpha, previewColor, autoApplyInEditor;
     SerializedProperty setSizeDeltaToChild, ignoreInactiveChildren;
@@ -471,6 +770,13 @@ public class UIListLayoutEditor : Editor
         useChildPreferredSize = serializedObject.FindProperty("useChildPreferredSize");
         alignX = serializedObject.FindProperty("alignX");
         alignY = serializedObject.FindProperty("alignY");
+        scaleHorizontal = serializedObject.FindProperty("scaleHorizontal");
+        scaleVertical = serializedObject.FindProperty("scaleVertical");
+        minWidth = serializedObject.FindProperty("minWidth");
+        minHeight = serializedObject.FindProperty("minHeight");
+        maxWidth = serializedObject.FindProperty("maxWidth");
+        maxHeight = serializedObject.FindProperty("maxHeight");
+        scaleDirection = serializedObject.FindProperty("scaleDirection");
         rotationDegrees = serializedObject.FindProperty("rotationDegrees");
         rotateChildrenWithList = serializedObject.FindProperty("rotateChildrenWithList");
         showPreview = serializedObject.FindProperty("showPreview");
@@ -479,12 +785,97 @@ public class UIListLayoutEditor : Editor
         autoApplyInEditor = serializedObject.FindProperty("autoApplyInEditor");
         setSizeDeltaToChild = serializedObject.FindProperty("setSizeDeltaToChild");
         ignoreInactiveChildren = serializedObject.FindProperty("ignoreInactiveChildren");
-        SceneView.duringSceneGui += OnSceneGUI;
+        
+        // FIXED: Use the correct delegate signature
+        SceneView.duringSceneGui += DuringSceneGUI;
     }
 
     void OnDisable()
     {
-        SceneView.duringSceneGui -= OnSceneGUI;
+        SceneView.duringSceneGui -= DuringSceneGUI;
+    }
+
+    // FIXED: Correct method signature for SceneView delegate
+    void DuringSceneGUI(SceneView sceneView)
+    {
+        if (t == null) return;
+        if (!t.showPreview) return;
+        
+        RectTransform container = t.transform as RectTransform;
+        if (container == null) return;
+
+        List<RectTransform> children = new List<RectTransform>();
+        for (int i = 0; i < container.childCount; i++)
+        {
+            var ch = container.GetChild(i) as RectTransform;
+            if (ch == null) continue;
+            if (t.ignoreInactiveChildren && !ch.gameObject.activeInHierarchy) continue;
+            children.Add(ch);
+        }
+        if (children.Count == 0) return;
+
+        var childRects = t.GetChildRects(children);
+        var positions = t.ComputeLayoutPositions(container, childRects);
+
+        Handles.BeginGUI();
+        Color fill = t.previewColor;
+        fill.a = t.previewAlpha;
+        Color outline = t.previewColor;
+        outline.a = Mathf.Clamp01(t.previewAlpha + 0.2f);
+
+        for (int i = 0; i < children.Count; i++)
+        {
+            RectTransform child = children[i];
+            Vector2 posLocal = positions[i];
+            Vector2 size = new Vector2(childRects[i].width, childRects[i].height);
+            Vector2 pivot = child.pivot;
+            
+            Vector2 center = posLocal;
+            Vector2 bottomLeft = center + new Vector2(-size.x * pivot.x, -size.y * pivot.y);
+            
+            Vector2[] corners = new Vector2[4];
+            corners[0] = new Vector2(bottomLeft.x, bottomLeft.y);
+            corners[1] = new Vector2(bottomLeft.x + size.x, bottomLeft.y);
+            corners[2] = new Vector2(bottomLeft.x + size.x, bottomLeft.y + size.y);
+            corners[3] = new Vector2(bottomLeft.x, bottomLeft.y + size.y);
+
+            if (Mathf.Abs(t.rotationDegrees) > 0.001f)
+            {
+                float rad = t.rotationDegrees * Mathf.Deg2Rad;
+                Vector2 containerPivot = new Vector2(-container.pivot.x * container.rect.width, (1f - container.pivot.y) * container.rect.height);
+                
+                for (int c = 0; c < 4; c++)
+                {
+                    Vector2 p = corners[c] - containerPivot;
+                    float x = p.x;
+                    float y = p.y;
+                    float rx = x * Mathf.Cos(rad) - y * Mathf.Sin(rad);
+                    float ry = x * Mathf.Sin(rad) + y * Mathf.Cos(rad);
+                    corners[c] = new Vector2(rx, ry) + containerPivot;
+                }
+            }
+
+            Vector2[] guiPts2 = new Vector2[4];
+            for (int c = 0; c < 4; c++)
+            {
+                Vector3 world = container.TransformPoint(corners[c]);
+                Vector2 screenP = HandleUtility.WorldToGUIPoint(world);
+                guiPts2[c] = screenP;
+            }
+
+            Vector3[] guiPts3 = new Vector3[guiPts2.Length];
+            for (int k = 0; k < guiPts2.Length; k++)
+                guiPts3[k] = new Vector3(guiPts2[k].x, guiPts2[k].y, 0f);
+
+            #if UNITY_2021_1_OR_NEWER
+            Handles.DrawSolidRectangleWithOutline(guiPts3, fill, outline);
+            #else
+            Handles.DrawAAConvexPolygon(guiPts3);
+            Handles.DrawPolyLine(guiPts3[0], guiPts3[1], guiPts3[2], guiPts3[3], guiPts3[0]);
+            #endif
+        }
+
+        Handles.EndGUI();
     }
 
     public override void OnInspectorGUI()
@@ -509,18 +900,104 @@ public class UIListLayoutEditor : Editor
         EditorGUILayout.EndHorizontal();
 
         EditorGUILayout.Space();
-        EditorGUILayout.LabelField("Table Settings (when both H+V)", EditorStyles.boldLabel);
-        EditorGUILayout.PropertyField(tableConstraint);
-        if ((UIListLayout.Constraint)tableConstraint.enumValueIndex != UIListLayout.Constraint.Flexible)
-            EditorGUILayout.PropertyField(constraintCount);
-        EditorGUILayout.PropertyField(uniformCellSize);
-        if (uniformCellSize.boolValue) EditorGUILayout.PropertyField(cellSize);
+        
+        // Show table settings only when both horizontal and vertical are enabled
+        if (t.horizontal && t.vertical)
+        {
+            EditorGUILayout.LabelField("Table Settings", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(tableConstraint);
+            if ((UIListLayout.Constraint)tableConstraint.enumValueIndex != UIListLayout.Constraint.Flexible)
+                EditorGUILayout.PropertyField(constraintCount);
+            EditorGUILayout.PropertyField(uniformCellSize);
+            if (uniformCellSize.boolValue) 
+                EditorGUILayout.PropertyField(cellSize);
+        }
 
         EditorGUILayout.Space();
         EditorGUILayout.LabelField("Sizing & Alignment", EditorStyles.boldLabel);
         EditorGUILayout.PropertyField(useChildPreferredSize);
         EditorGUILayout.PropertyField(alignX);
         EditorGUILayout.PropertyField(alignY);
+
+        EditorGUILayout.Space();
+        EditorGUILayout.LabelField("Container Scaling", EditorStyles.boldLabel);
+        EditorGUILayout.PropertyField(scaleHorizontal);
+        EditorGUILayout.PropertyField(scaleVertical);
+        
+        if (t.scaleHorizontal || t.scaleVertical)
+        {
+            // Scale direction with smart selection logic
+            UIListLayout.ScaleDirection currentDirection = (UIListLayout.ScaleDirection)scaleDirection.intValue;
+            UIListLayout.ScaleDirection newDirection = currentDirection;
+            
+            EditorGUILayout.BeginVertical("box");
+            EditorGUILayout.LabelField("Scale Direction", EditorStyles.miniBoldLabel);
+            
+            bool centerSelected = (currentDirection & UIListLayout.ScaleDirection.Center) != 0;
+            bool newCenterSelected = EditorGUILayout.Toggle("Center", centerSelected);
+            
+            if (newCenterSelected && !centerSelected)
+            {
+                // Center selected - deselect all others
+                newDirection = UIListLayout.ScaleDirection.Center;
+            }
+            else if (!newCenterSelected && centerSelected)
+            {
+                // Center deselected - select nothing
+                newDirection = 0;
+            }
+            
+            if (!newCenterSelected)
+            {
+                EditorGUI.indentLevel++;
+                
+                bool leftSelected = (currentDirection & UIListLayout.ScaleDirection.Left) != 0;
+                bool rightSelected = (currentDirection & UIListLayout.ScaleDirection.Right) != 0;
+                bool topSelected = (currentDirection & UIListLayout.ScaleDirection.Top) != 0;
+                bool bottomSelected = (currentDirection & UIListLayout.ScaleDirection.Bottom) != 0;
+                
+                EditorGUILayout.BeginHorizontal();
+                bool newLeftSelected = EditorGUILayout.ToggleLeft("Left", leftSelected, GUILayout.Width(60));
+                bool newRightSelected = EditorGUILayout.ToggleLeft("Right", rightSelected, GUILayout.Width(60));
+                EditorGUILayout.EndHorizontal();
+                
+                EditorGUILayout.BeginHorizontal();
+                bool newTopSelected = EditorGUILayout.ToggleLeft("Top", topSelected, GUILayout.Width(60));
+                bool newBottomSelected = EditorGUILayout.ToggleLeft("Bottom", bottomSelected, GUILayout.Width(60));
+                EditorGUILayout.EndHorizontal();
+                
+                // Update direction based on selections
+                newDirection = 0;
+                if (newLeftSelected) newDirection |= UIListLayout.ScaleDirection.Left;
+                if (newRightSelected) newDirection |= UIListLayout.ScaleDirection.Right;
+                if (newTopSelected) newDirection |= UIListLayout.ScaleDirection.Top;
+                if (newBottomSelected) newDirection |= UIListLayout.ScaleDirection.Bottom;
+                
+                // If all horizontal and vertical directions are selected, automatically select Center
+                if ((newLeftSelected && newRightSelected && t.scaleHorizontal) || 
+                    (newTopSelected && newBottomSelected && t.scaleVertical))
+                {
+                    newDirection = UIListLayout.ScaleDirection.Center;
+                }
+                
+                EditorGUI.indentLevel--;
+            }
+            
+            scaleDirection.intValue = (int)newDirection;
+            EditorGUILayout.EndVertical();
+            
+            if (t.scaleHorizontal)
+            {
+                EditorGUILayout.PropertyField(minWidth);
+                EditorGUILayout.PropertyField(maxWidth);
+            }
+            
+            if (t.scaleVertical)
+            {
+                EditorGUILayout.PropertyField(minHeight);
+                EditorGUILayout.PropertyField(maxHeight);
+            }
+        }
 
         EditorGUILayout.Space();
         EditorGUILayout.LabelField("Rotation", EditorStyles.boldLabel);
@@ -554,94 +1031,6 @@ public class UIListLayoutEditor : Editor
         EditorGUILayout.EndHorizontal();
 
         serializedObject.ApplyModifiedProperties();
-    }
-
-    void OnSceneGUI(SceneView sv)
-    {
-        if (t == null) return;
-        if (!t.showPreview) return;
-        // compute layout preview
-        RectTransform container = t.transform as RectTransform;
-        if (container == null) return;
-
-        // Gather children (mirror same logic)
-        List<RectTransform> children = new List<RectTransform>();
-        for (int i = 0; i < container.childCount; i++)
-        {
-            var ch = container.GetChild(i) as RectTransform;
-            if (ch == null) continue;
-            if (t.ignoreInactiveChildren && !ch.gameObject.activeInHierarchy) continue;
-            children.Add(ch);
-        }
-        if (children.Count == 0) return;
-
-        // compute child rects and positions via the component's methods
-        var childRects = t.GetChildRects(children);
-        var positions = t.ComputeLayoutPositions(container, childRects);
-
-        // Draw translucent rectangles in world space
-        Handles.BeginGUI();
-        Color fill = t.previewColor;
-        fill.a = t.previewAlpha;
-        Color outline = t.previewColor;
-        outline.a = Mathf.Clamp01(t.previewAlpha + 0.2f);
-
-        for (int i = 0; i < children.Count; i++)
-        {
-            RectTransform child = children[i];
-            Vector2 posLocal = positions[i]; // anchoredPosition candidate (pivot point)
-            // compute corners of the child's rect in container local space using child's pivot and size
-            Vector2 size = new Vector2(childRects[i].width, childRects[i].height);
-            Vector2 pivot = child.pivot;
-            // compute bottom-left local point of rect (in container local space):
-            Vector2 center = posLocal;
-            Vector2 bottomLeft = center + new Vector2(-size.x * (0.5f - (pivot.x - 0.5f)), -size.y * (0.5f - (pivot.y - 0.5f)));
-            // produce 4 corners in container local space
-            Vector3[] corners = new Vector3[4];
-            corners[0] = new Vector3(bottomLeft.x, bottomLeft.y); // bl
-            corners[1] = new Vector3(bottomLeft.x + size.x, bottomLeft.y); // br
-            corners[2] = new Vector3(bottomLeft.x + size.x, bottomLeft.y + size.y); // tr
-            corners[3] = new Vector3(bottomLeft.x, bottomLeft.y + size.y); // tl
-
-            // apply rotation around container pivot if needed:
-            if (Mathf.Abs(t.rotationDegrees) > 0.001f)
-            {
-                float rad = t.rotationDegrees * Mathf.Deg2Rad;
-                for (int c = 0; c < 4; c++)
-                {
-                    float x = corners[c].x;
-                    float y = corners[c].y;
-                    float rx = x * Mathf.Cos(rad) - y * Mathf.Sin(rad);
-                    float ry = x * Mathf.Sin(rad) + y * Mathf.Cos(rad);
-                    corners[c] = new Vector3(rx, ry);
-                }
-            }
-
-            // transform container-local corners to world, then to GUI (screen) coords
-            Vector2[] guiPts2 = new Vector2[4];
-            for (int c = 0; c < 4; c++)
-            {
-                Vector3 world = container.TransformPoint(corners[c]);
-                Vector2 screenP = HandleUtility.WorldToGUIPoint(world);
-                guiPts2[c] = screenP;
-            }
-
-            // Convert Vector2[] -> Vector3[] for Handles API
-            Vector3[] guiPts3 = new Vector3[guiPts2.Length];
-            for (int k = 0; k < guiPts2.Length; k++)
-                guiPts3[k] = new Vector3(guiPts2[k].x, guiPts2[k].y, 0f);
-
-            // Draw. Use DrawSolidRectangleWithOutline if available, otherwise fallback to convex polygon
-            #if UNITY_2021_1_OR_NEWER
-            Handles.DrawSolidRectangleWithOutline(guiPts3, fill, outline);
-            #else
-            // older versions may not have the Vector3[] overload; try AA convex polygon + outline
-            Handles.DrawAAConvexPolygon(guiPts3);
-            Handles.DrawPolyLine(guiPts3[0], guiPts3[1], guiPts3[2], guiPts3[3], guiPts3[0]);
-            #endif
-        }
-
-        Handles.EndGUI();
     }
 }
 #endif

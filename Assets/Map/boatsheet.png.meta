@@ -1,61 +1,37 @@
 fileFormatVersion: 2
-guid: d558ef758444ca9449cd0efc97639116
+guid: 88e048b734172a046b19ef224b3d4750
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -3528621296188344791
-    second: PlayerSprite_idle-Sheet_0
+      213: -5951055231162670643
+    second: bubbleHighlightPop-Sheet_0
   - first:
-      213: 2365641820184036330
-    second: PlayerSprite_idle-Sheet_1
+      213: -4099136440358721686
+    second: bubbleHighlightPop-Sheet_1
   - first:
-      213: 4114329204223429897
-    second: PlayerSprite_idle-Sheet_2
+      213: 4519201443872311485
+    second: bubbleHighlightPop-Sheet_2
   - first:
-      213: 7623249544845236302
-    second: PlayerSprite_idle-Sheet_3
+      213: 981016171804403218
+    second: bubbleHighlightPop-Sheet_3
   - first:
-      213: 5223098829296984485
-    second: PlayerSprite_idle-Sheet_4
+      213: 4241397835071034974
+    second: bubbleHighlightPop-Sheet_4
   - first:
-      213: 257500020568755850
-    second: PlayerSprite_idle-Sheet_5
+      213: -3745822346287777738
+    second: bubbleHighlightPop-Sheet_5
   - first:
-      213: -1779622258184363835
-    second: PlayerSprite_idle-Sheet_6
+      213: 1366498350898216404
+    second: bubbleHighlightPop-Sheet_6
   - first:
-      213: -7453481946457715213
-    second: PlayerSprite_idle-Sheet_7
+      213: -157203396502257959
+    second: bubbleHighlightPop-Sheet_7
   - first:
-      213: -2296941562540512600
-    second: PlayerSprite_idle-Sheet_8
+      213: -4408244536950084852
+    second: bubbleHighlightPop-Sheet_8
   - first:
-      213: 4340739280235117591
-    second: PlayerSprite_idle-Sheet_9
-  - first:
-      213: 2168225978936423772
-    second: PlayerSprite_idle-Sheet_10
-  - first:
-      213: 2672227648931329109
-    second: PlayerSprite_idle-Sheet_11
-  - first:
-      213: -6735086489818574029
-    second: PlayerSprite_idle-Sheet_12
-  - first:
-      213: -7409774885908700490
-    second: PlayerSprite_idle-Sheet_13
-  - first:
-      213: -3713737783325062562
-    second: PlayerSprite_idle-Sheet_14
-  - first:
-      213: 7925522310977505621
-    second: PlayerSprite_idle-Sheet_15
-  - first:
-      213: -6708081560805306830
-    second: PlayerSprite_idle-Sheet_16
-  - first:
-      213: 3896425038744968772
-    second: PlayerSprite_idle-Sheet_17
+      213: 6619227704670525125
+    second: bubbleHighlightPop-Sheet_9
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -164,265 +140,243 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: PlayerSprite_idle-Sheet_0
+      name: boatsheet_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 600
+        width: 300
+        height: 300
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ece12f0a13c90f243ae47fa3a7eed7bf
+      internalID: -457549790
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: boatsheet_1
+      rect:
+        serializedVersion: 2
+        x: 300
+        y: 600
+        width: 300
+        height: 300
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: af9758dc24251b247ad433fd39f86b88
+      internalID: -1048455496
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: boatsheet_2
+      rect:
+        serializedVersion: 2
+        x: 600
+        y: 600
+        width: 300
+        height: 300
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 42e8bf615389cc84aaf46c77c1c7078a
+      internalID: 1210708999
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: boatsheet_3
+      rect:
+        serializedVersion: 2
+        x: 900
+        y: 600
+        width: 300
+        height: 300
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d410d76cf1eecef4ca1b0c8a92b79b2f
+      internalID: -276336893
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: boatsheet_4
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 300
+        width: 300
+        height: 300
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 87e08e7e9c17ccd40884586f5f03652a
+      internalID: -376108916
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: boatsheet_5
+      rect:
+        serializedVersion: 2
+        x: 300
+        y: 300
+        width: 300
+        height: 300
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: efa9f61fe9c2e474c9c993214a4484f1
+      internalID: -1805118192
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: boatsheet_6
+      rect:
+        serializedVersion: 2
+        x: 600
+        y: 300
+        width: 300
+        height: 300
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8d05f7a76b96600478884f7d8b6cc401
+      internalID: -1004324731
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: boatsheet_7
+      rect:
+        serializedVersion: 2
+        x: 900
+        y: 300
+        width: 300
+        height: 300
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 115a14e3e35156444bec2c8a80317c1a
+      internalID: 97365791
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: boatsheet_8
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 200
-        height: 200
+        width: 300
+        height: 300
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 926b0d560a1d70fc0800000000000000
-      internalID: -3528621296188344791
+      spriteID: 8fc16ae69e5940541aa4433aceccda1a
+      internalID: 671136512
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: PlayerSprite_idle-Sheet_1
+      name: boatsheet_9
       rect:
         serializedVersion: 2
-        x: 200
+        x: 300
         y: 0
-        width: 200
-        height: 200
+        width: 300
+        height: 300
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: ae3c0e5a3b274d020800000000000000
-      internalID: 2365641820184036330
+      spriteID: 2457b1b894a40904aa68a550d56c703b
+      internalID: -436936476
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: PlayerSprite_idle-Sheet_2
-      rect:
-        serializedVersion: 2
-        x: 400
-        y: 0
-        width: 200
-        height: 200
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 90dc0c2dc98091930800000000000000
-      internalID: 4114329204223429897
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: PlayerSprite_idle-Sheet_3
+      name: boatsheet_10
       rect:
         serializedVersion: 2
         x: 600
         y: 0
-        width: 200
-        height: 200
+        width: 300
+        height: 300
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: e4898a242193bc960800000000000000
-      internalID: 7623249544845236302
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: PlayerSprite_idle-Sheet_4
-      rect:
-        serializedVersion: 2
-        x: 800
-        y: 0
-        width: 200
-        height: 200
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 5a1610b46bc2c7840800000000000000
-      internalID: 5223098829296984485
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: PlayerSprite_idle-Sheet_5
-      rect:
-        serializedVersion: 2
-        x: 1000
-        y: 0
-        width: 200
-        height: 200
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: a8e08a787e2d29300800000000000000
-      internalID: 257500020568755850
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: PlayerSprite_idle-Sheet_6
-      rect:
-        serializedVersion: 2
-        x: 1200
-        y: 0
-        width: 200
-        height: 200
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 5c0ea8a2cf28d47e0800000000000000
-      internalID: -1779622258184363835
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: PlayerSprite_idle-Sheet_7
-      rect:
-        serializedVersion: 2
-        x: 1400
-        y: 0
-        width: 200
-        height: 200
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 3fdc991f8a9ef8890800000000000000
-      internalID: -7453481946457715213
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: PlayerSprite_idle-Sheet_8
-      rect:
-        serializedVersion: 2
-        x: 1600
-        y: 0
-        width: 200
-        height: 200
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 8aa21fe81df9f10e0800000000000000
-      internalID: -2296941562540512600
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: PlayerSprite_idle-Sheet_9
-      rect:
-        serializedVersion: 2
-        x: 1800
-        y: 0
-        width: 200
-        height: 200
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 71cbffc80676d3c30800000000000000
-      internalID: 4340739280235117591
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: PlayerSprite_idle-Sheet_10
-      rect:
-        serializedVersion: 2
-        x: 2000
-        y: 0
-        width: 200
-        height: 200
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: c5577434a06171e10800000000000000
-      internalID: 2168225978936423772
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: PlayerSprite_idle-Sheet_11
-      rect:
-        serializedVersion: 2
-        x: 2200
-        y: 0
-        width: 200
-        height: 200
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 554778d73e8a51520800000000000000
-      internalID: 2672227648931329109
+      spriteID: be932c7e20539be4e90fc6cab5eef256
+      internalID: -2021048976
       vertices: []
       indices: 
       edges: []
@@ -431,7 +385,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 894b6eeabfd99d147b61b9d1e96a8b13
+    spriteID: 355f9264c726d5943805c232d891c3ad
     internalID: 0
     vertices: []
     indices: 
@@ -441,18 +395,17 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      PlayerSprite_idle-Sheet_0: -3528621296188344791
-      PlayerSprite_idle-Sheet_1: 2365641820184036330
-      PlayerSprite_idle-Sheet_10: 2168225978936423772
-      PlayerSprite_idle-Sheet_11: 2672227648931329109
-      PlayerSprite_idle-Sheet_2: 4114329204223429897
-      PlayerSprite_idle-Sheet_3: 7623249544845236302
-      PlayerSprite_idle-Sheet_4: 5223098829296984485
-      PlayerSprite_idle-Sheet_5: 257500020568755850
-      PlayerSprite_idle-Sheet_6: -1779622258184363835
-      PlayerSprite_idle-Sheet_7: -7453481946457715213
-      PlayerSprite_idle-Sheet_8: -2296941562540512600
-      PlayerSprite_idle-Sheet_9: 4340739280235117591
+      boatsheet_0: -457549790
+      boatsheet_1: -1048455496
+      boatsheet_10: -2021048976
+      boatsheet_2: 1210708999
+      boatsheet_3: -276336893
+      boatsheet_4: -376108916
+      boatsheet_5: -1805118192
+      boatsheet_6: -1004324731
+      boatsheet_7: 97365791
+      boatsheet_8: 671136512
+      boatsheet_9: -436936476
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

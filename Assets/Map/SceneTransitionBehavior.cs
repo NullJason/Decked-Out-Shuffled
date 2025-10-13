@@ -10,6 +10,10 @@ public class SceneTransitionBehaviour : MonoBehaviour
 {
     private static SceneTransitionBehaviour _instance;
     private static readonly string ManagerName = "SceneTransitionManager";
+    void Awake()
+    {
+        EnsureExists();
+    }
 
     // Ensure there's exactly one instance in the game 
     public static SceneTransitionBehaviour EnsureExists()
@@ -20,6 +24,7 @@ public class SceneTransitionBehaviour : MonoBehaviour
         if (existing != null)
         {
             _instance = existing.GetComponent<SceneTransitionBehaviour>();
+            DontDestroyOnLoad(existing);
             if (_instance != null) return _instance;
         }
 

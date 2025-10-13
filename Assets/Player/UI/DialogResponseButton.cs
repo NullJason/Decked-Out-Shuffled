@@ -20,6 +20,7 @@ public class DialogResponseButton : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        Debug.Log("TODO: Dialogue response editor+class.");
         if (isNull())
         {
             DialogueCanvas = GetComponentInParent<Canvas>();
