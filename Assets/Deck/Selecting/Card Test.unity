@@ -169,7 +169,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a3f806fd203ef774cb39f620bed7491c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dialogueText: {fileID: 0}
+  dialogueText: {fileID: 27522290}
   Font: {fileID: 0}
   FontSize: 0
   DefaultFontColor: {r: 1, g: 1, b: 1, a: 1}
@@ -977,7 +977,7 @@ MonoBehaviour:
   - {fileID: 554516657}
   - {fileID: 1158330025}
   - {fileID: 2059558922}
-  dialogue: {fileID: 0}
+  dialogue: {fileID: 27522289}
 --- !u!1001 &1125991473
 PrefabInstance:
   m_ObjectHideFlags: 0
