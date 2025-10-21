@@ -6,17 +6,9 @@ using UnityEngine.UI;
 public class DialogueResponse : MonoBehaviour
 {
     [SerializeField] private DialogueTree dialogueTree;
-    [SerializeField] private GameObject responseButtonPrefab;
-    [SerializeField] private Dialogue dialogueManager;
-    [SerializeField] private DialogueResponseCache DRButtonCache; // the displayed cached buttons. should be under the container.
-    [SerializeField] private bool StartOnEnable = false;
-
+    [SerializeField] private DialogueResponseCache DRButtonCache; 
     private Dictionary<string, DialogueNode> nodeLookup;
     private DialogueNode currentNode;
-    void OnEnable()
-    {
-        if (StartOnEnable) InitializeDialogue();
-    }
 
     public void InitializeDialogue()
     {
@@ -50,6 +42,8 @@ public class DialogueResponse : MonoBehaviour
 
     private void DisplayCurrentNode()
     {
+        if (currentNode.choices.Count != 0) DRButtonCache.SetContainerActiveState(true);
+        else DRButtonCache.SetContainerActiveState(false);
         DRButtonCache.DoDialogue(currentNode.dialogueText, currentNode.characterHeadshotID);
         DRButtonCache.UpdateSize(currentNode);
     }

@@ -7,7 +7,7 @@ public class SmallTalkInteraction : Interaction
     [SerializeField] private Dialogue dialogueMono;
     [SerializeField] private Color dialogueBoxColor;
     [SerializeField] private Color dialogueTextColor;
-    // [SerializeField] private DialogueResponse dialogueResponses;
+    [SerializeField] private DialogueResponse dialogueResponse;
     private bool isNull()
     {
         return dialogueCanvas == null || dialogueMono == null;
@@ -21,6 +21,7 @@ public class SmallTalkInteraction : Interaction
         {
             dialogueCanvas.enabled = true;
             dialogueMono.gameObject.SetActive(true);    
+            dialogueResponse.InitializeDialogue();
         }
     }
 }

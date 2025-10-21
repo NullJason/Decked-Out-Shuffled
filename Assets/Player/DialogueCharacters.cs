@@ -8,6 +8,8 @@ public class DialogueCharacters:MonoBehaviour
 
     public Sprite GetImage(int id)
     {
+        int len = CharacterHeadshotImage.Length;
+        if (len == 0 || len <= id || id < 0) return null;
         return CharacterHeadshotImage[id];
     }
     void Start()

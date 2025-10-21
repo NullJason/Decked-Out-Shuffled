@@ -8,21 +8,27 @@ using UnityEngine.UI;
 /// </summary>
 public class DialogueResponseCache : MonoBehaviour
 {
+    [SerializeField] private GameObject ButtonContainer;
     [SerializeField] private GameObject ButtonPrefab;
     [SerializeField] private Dialogue mainDialogueMono;
     [SerializeField] private Sprite MainProgressionBranch_Icon;
     [SerializeField] private Sprite DefaultProgressionBranch_Icon;
     private List<GameObject> ButtonCache = new List<GameObject>();
     private DialogueResponse CurrentDR;
-    private DialogueCharacters dialogueCharacters;
-    void Start()
+    [SerializeField] private DialogueCharacters dialogueCharacters;
+    void OnEnable()
     {
         if (ButtonPrefab == null) Debug.Log("BUTTON PREFAB HASN'T BEEN SET!");
         dialogueCharacters = FindFirstObjectByType<DialogueCharacters>();
+        if (ButtonContainer == null) ButtonContainer = GetComponentInChildren<UIListLayout>().gameObject;
     }
     public void SetDR(DialogueResponse dr)
     {
         CurrentDR = dr;
+    }
+    public void SetContainerActiveState(bool state)
+    {
+        ButtonContainer.SetActive(state);
     }
     public void UpdateSize(DialogueNode currentNode)
     {
@@ -31,7 +37,7 @@ public class DialogueResponseCache : MonoBehaviour
         {
             for (int i = ButtonCache.Count; i < amount; i++)
             {
-                GameObject buttonObj = Instantiate(ButtonPrefab, transform);
+                GameObject buttonObj = Instantiate(ButtonPrefab, ButtonContainer.transform);
                 ButtonCache.Add(buttonObj);
             }
             UpdateResponseButtons(currentNode);
@@ -50,7 +56,7 @@ public class DialogueResponseCache : MonoBehaviour
     {
         int b = -1;
         int highestLayer = -1000;
-        Image priorityButtonImg = null;
+        ButtonPriorityImg priorityButtonImg = null;
         foreach (var choice in currentNode.choices)
         {
             b++;
@@ -67,14 +73,15 @@ public class DialogueResponseCache : MonoBehaviour
 
             //sortorder stuff
             int currentButtonLayer = choice.sortOrder;
+            ButtonPriorityImg currentBPI = buttonObj.GetComponentInChildren<ButtonPriorityImg>();
             if (highestLayer < currentButtonLayer)
             {
-                priorityButtonImg = buttonObj.GetComponentInChildren<Image>();
+                priorityButtonImg = currentBPI;
                 highestLayer = currentButtonLayer;
             }
-            else buttonObj.GetComponentInChildren<Image>().sprite = DefaultProgressionBranch_Icon;
+            else currentBPI.SetButtonSideImage(DefaultProgressionBranch_Icon);
         }
-        if(priorityButtonImg != null) priorityButtonImg.sprite = MainProgressionBranch_Icon;
+        if(priorityButtonImg != null) priorityButtonImg.SetButtonSideImage(MainProgressionBranch_Icon);
     }
     private void OnChoiceSelected(string targetNodeID, MonoBehaviour buttonAction = null)
     {
@@ -95,8 +102,11 @@ public class DialogueResponseCache : MonoBehaviour
     }
     public void DoDialogue(string dialogueText, int characterHeadshotID)
     {
-        Sprite cHeadshot = dialogueCharacters.GetImage(characterHeadshotID);
-        mainDialogueMono.SetHeadshot(cHeadshot);
+        if (dialogueCharacters != null)
+        {
+            Sprite cHeadshot = dialogueCharacters.GetImage(characterHeadshotID);
+            mainDialogueMono.SetHeadshot(cHeadshot);
+        }
         mainDialogueMono.Play(dialogueText);
     }
 }
