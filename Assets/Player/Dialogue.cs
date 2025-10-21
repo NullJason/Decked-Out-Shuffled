@@ -35,6 +35,8 @@ using UnityEngine.UI;
 public class Dialogue : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI dialogueText;
+    [SerializeField] private string InitialDialogueText = "";
+    [SerializeField] private Transform CharacterHeadshotTransform;
 
     // If these variables aren't set then nothing will happen to the text style.
     [SerializeField] private TMP_FontAsset Font;
@@ -45,9 +47,6 @@ public class Dialogue : MonoBehaviour
     [SerializeField] private bool RequeueOnDisable = false; // puts dequeued dialog back in. (repeatable dialog)
     [SerializeField] private bool CanReplay = true;
     private bool HasPlayed = false;
-
-    private Dictionary<int, Queue<(string text, KeyCode key)>> ResponseToDialog = new Dictionary<int, Queue<(string text, KeyCode key)>>();
-    private Dictionary<int, List<ResponseButton>> ResponseButtons = new Dictionary<int, List<ResponseButton>>();
 
     private Queue<(string text, KeyCode key)> dialogueQueue = new Queue<(string, KeyCode)>();
     private List<TextEffect> activeEffects = new List<TextEffect>();
@@ -62,7 +61,7 @@ public class Dialogue : MonoBehaviour
     private bool fastForwardHold = false;   // true while FF key held
     private bool fastForwardPulse = false;  // one-shot FF (press)
 
-    // ignore tmp tags
+    // ignore common tmp tags
     private static readonly HashSet<string> TMPAllowedTags = new HashSet<string>
     {
         "b","/b",
@@ -106,11 +105,22 @@ public class Dialogue : MonoBehaviour
     void Start()
     {
         if (dialogueText == null)
+        {
             dialogueText = GetComponent<TextMeshProUGUI>();
+            if (InitialDialogueText!=null && InitialDialogueText != " " && InitialDialogueText != "")
+            {
+                QueueDialogue(InitialDialogueText);
+                PlayNext();
+            }
+        }
     }
-
+    /// <summary>
+    /// Sets autoplay, < 0 disables this, > 0 waits this amount before next.
+    /// </summary>
+    /// <param name="wait_Time">Time For next dialogue</param>
     public void SetAutoPlay(float wait_Time)
     {
+        if (AutoPlayWait == 0) AutoPlayWait = -1;
         AutoPlayWait = wait_Time;
     }
     /// <summary>
@@ -156,83 +166,16 @@ public class Dialogue : MonoBehaviour
         dialogueQueue.Enqueue((newText, keyc));
     }
 
-    /// <summary>
-    /// sets the current dialogue queue to a predetermined Response.
-    /// </summary>
-    /// <param name="id"> The selected response's id </param>
-    public void DoResponse(int nextResponseID)
+    public void SetHeadshot(Sprite img)
     {
-        Queue<(string, KeyCode)> original;
-        if (ResponseToDialog.TryGetValue(nextResponseID, out original)) {
-            dialogueQueue = new Queue<(string, KeyCode)>(original);
-            List<ResponseButton> bs;
-            if (ResponseButtons.TryGetValue(nextResponseID, out bs)) {
-                foreach (ResponseButton b in bs)
-                {
-                    b.GetButton.gameObject.SetActive(true);
-                }
-            }
-        }
-    }
-    public void AddResponseButton(Button b, int thisID, int nextID)
-    {
-        ResponseButton rb = new ResponseButton(b, thisID, nextID);
-        List<ResponseButton> rbList;
-        if (!ResponseButtons.TryGetValue(thisID, out rbList)){
-            rbList = new List<ResponseButton>();
-            ResponseButtons.Add(thisID, rbList);  
-        }
-        rbList.Add(rb);
-        b.onClick.AddListener(() => OnAnyResponseButtonClicked(rb));
-    }
-    public void OnAnyResponseButtonClicked(ResponseButton rb)
-    {
-        foreach (ResponseButton frb in ResponseButtons[rb.GetID]) {
-            frb.GetButton.gameObject.SetActive(false);
-        }
-        if (rb.GetNextID < 0) ExitDialogue();
-        else DoResponse(rb.GetNextID);
+        CharacterHeadshotTransform.GetComponent<Image>().sprite = img;
     }
     public void ExitDialogue()
     {
         gameObject.SetActive(false);
         dialogueRoutine = null;
     }
-    /// <summary>
-    /// Adds a response to the dictionary.
-    /// </summary>
-    /// <param name="id"> the ResponseID. Quits dialogue if < 0 </param>
-    /// <param name="key"> the Keycode </param>
-    public void AddToResponse(int id, string text, int key = 0)
-    {
-        Queue<(string, KeyCode)> newQueue;
-        if (ResponseToDialog.TryGetValue(id, out newQueue))
-        {
-            if (key <= 0)
-            {
-                newQueue.Enqueue((text, DefaultAdvanceKey));
-            }
-            else
-            {
-                KeyCode keyc = (KeyCode)key;
-                newQueue.Enqueue((text, keyc));
-            }
-        }
-        else { AddResponse(id); AddToResponse(id, text, key); }
-    }
-    public void AddToResponse(int id, string text, KeyCode key)
-    {
-        Queue<(string, KeyCode)> newQueue;
-        if (ResponseToDialog.TryGetValue(id, out newQueue))
-        {
-            newQueue.Enqueue((text, key));  
-        }
-        else { AddResponse(id); AddToResponse(id, text, key); }
-    }
-    private void AddResponse(int id)
-    {
-        ResponseToDialog.Add(id, new Queue<(string text, KeyCode key)>());
-    }
+    
     void StopDialogueRoutine()
     {
         if (dialogueRoutine != null)
@@ -303,23 +246,27 @@ public class Dialogue : MonoBehaviour
 
         ParseTags(txt, out string clean, out activeEffects);
 
-        // DEBUG: dump parsed text + effects
-        // string debuginfo = $"CleanText: \"{clean}\"\n";
-        // foreach (var e in activeEffects)
-        // {
-        //     debuginfo += $"Effect: {e.GetType().Name} start={e.startIndex} end={e.endIndex}\n";
-        //     if (e is TextEffectTypewriter typewriter)
-        //     {
-        //         debuginfo += $"  Pauses: {typewriter.pauseIndices.Count}\n";
-        //         for (int i = 0; i < typewriter.pauseIndices.Count; i++)
-        //         {
-        //             debuginfo += $"    Pause at {typewriter.pauseIndices[i]} dur={typewriter.pauseDurations[i]}\n";
-        //         }
-        //     }
-        // }
-        // Debug.Log(debuginfo);
+
         advanceRequested = false;
         dialogueRoutine = StartCoroutine(RunDialogue(clean));
+    }
+    public void DebugPrint(string cleantxt)
+    {
+        // DEBUG: dump parsed text + effects
+        string debuginfo = $"CleanText: \"{cleantxt}\"\n";
+        foreach (var e in activeEffects)
+        {
+            debuginfo += $"Effect: {e.GetType().Name} start={e.startIndex} end={e.endIndex}\n";
+            if (e is TextEffectTypewriter typewriter)
+            {
+                debuginfo += $"  Pauses: {typewriter.pauseIndices.Count}\n";
+                for (int i = 0; i < typewriter.pauseIndices.Count; i++)
+                {
+                    debuginfo += $"    Pause at {typewriter.pauseIndices[i]} dur={typewriter.pauseDurations[i]}\n";
+                }
+            }
+        }
+        Debug.Log(debuginfo);
     }
     IEnumerator RunDialogue(string text)
     {
@@ -372,26 +319,7 @@ public class Dialogue : MonoBehaviour
                     }
                 }
             }
-            // else if (pauseTimeRemaining <= 0f)
-            // {
-            //     foreach (var tt in typewriters)
-            //     {
-            //         if (tt.revealed < (tt.endIndex - tt.startIndex + 1))
-            //         {
-            //             tt.UpdateProgress(delta);
-            //         }
-            //     }
-            // TextEffectTypewriter earliest = null;
-            // foreach (var tt in typewriters)
-            // {
-            //     if (tt.revealed < (tt.endIndex - tt.startIndex + 1))
-            //     {
-            //         earliest = tt;
-            //         break;
-            //     }
-            // }
-            // if (earliest != null) earliest.UpdateProgress(delta);
-            // }
+            
 
             dialogueText.ForceMeshUpdate();
             var info = dialogueText.textInfo;
@@ -423,105 +351,6 @@ public class Dialogue : MonoBehaviour
                 visibleMask[i] = isRevealed;
             }
 
-            // if (pauseIndex < pauseMarkers.Count && pauseTimeRemaining <= 0f)
-            // {
-            //     int pIdx = pauseMarkers[pauseIndex].startIndex;
-    
-            //     if (pIdx >= 0 && pIdx < totalChars && IsCharacterRevealed(pIdx, typewriters))
-            //     {
-            //         // Debug.Log($"[Dialogue] Pause triggered at char {pIdx} (dur={pauseMarkers[pauseIndex].Duration})");
-            //         pauseTimeRemaining = pauseMarkers[pauseIndex].Duration;
-
-            //         if (fastForwardHold || fastForwardPulse) 
-            //         {
-            //             pauseTimeRemaining = 0f;
-            //             if (fastForwardPulse) fastForwardPulse = false;
-            //         }
-
-            //         pauseIndex++;
-            //     }
-            // }
-            // if (pauseTimeRemaining > 0f)
-            // {
-            //     pauseTimeRemaining -= delta;
-            //     if (pauseTimeRemaining < 0f) pauseTimeRemaining = 0f;
-
-            //     t += delta;
-            //     dialogueText.ForceMeshUpdate();
-            //     info = dialogueText.textInfo;
-
-            //     // compute default color
-            //     Color ctm = DefaultFontColor;
-            //     Color32 defCol32 = new Color32(
-            //         (byte)Mathf.Clamp(Mathf.RoundToInt(ctm.r * 255f), 0, 255),
-            //         (byte)Mathf.Clamp(Mathf.RoundToInt(ctm.g * 255f), 0, 255),
-            //         (byte)Mathf.Clamp(Mathf.RoundToInt(ctm.b * 255f), 0, 255),
-            //         (byte)Mathf.Clamp(Mathf.RoundToInt(ctm.a * 255f), 0, 255)
-            //     );
-
-            //     // reset mesh colors to original/default like the normal path
-            //     for (int mi = 0; mi < info.meshInfo.Length; mi++)
-            //     {
-            //         var cols = info.meshInfo[mi].colors32;
-            //         var origCols = (originalInfo.Length > mi) ? originalInfo[mi].colors32 : null;
-            //         if (cols == null || cols.Length == 0) continue;
-
-            //         if (origCols != null && origCols.Length == cols.Length)
-            //         {
-            //             for (int k = 0; k < cols.Length; k++) cols[k] = origCols[k];
-            //         }
-            //         else
-            //         {
-            //             for (int k = 0; k < cols.Length; k++) cols[k] = defCol32;
-            //         }
-            //     }
-
-            //     // apply visibleMask: hide unrevealed characters by setting alpha = 0
-            //     if (info.characterCount > 0 && visibleMask != null)
-            //     {
-            //         for (int ci = 0; ci < info.characterCount; ci++)
-            //         {
-            //             int mat = info.characterInfo[ci].materialReferenceIndex;
-            //             int vIdx = info.characterInfo[ci].vertexIndex;
-            //             var cols = info.meshInfo[mat].colors32;
-            //             if (cols == null || cols.Length <= vIdx) continue;
-
-            //             if (ci < visibleMask.Length && visibleMask[ci])
-            //             {
-            //                 for (int q = 0; q < 4; q++) cols[vIdx + q] = defCol32;
-            //             }
-            //             else
-            //             {
-            //                 Color32 trans = defCol32;
-            //                 trans.a = 0;
-            //                 for (int q = 0; q < 4; q++) cols[vIdx + q] = trans;
-            //             }
-            //         }
-            //     }
-
-            //     // update other (non-typewriter) effects during pause, but clamp indices first
-            //     for (int i = 0; i < activeEffects.Count; i++)
-            //     {
-            //         var e = activeEffects[i];
-            //         if (e is TextEffectTypewriter) continue; // leave typewriter frozen
-            //         e.startIndex = Mathf.Clamp(e.startIndex, 0, Mathf.Max(0, info.characterCount - 1));
-            //         e.endIndex = Mathf.Clamp(e.endIndex, 0, Mathf.Max(0, info.characterCount - 1));
-            //         e.Apply(dialogueText, info, originalInfo, t);
-            //     }
-
-            //     // update geometry
-            //     for (int i = 0; i < info.meshInfo.Length; i++)
-            //     {
-            //         var meshInfo = info.meshInfo[i];
-            //         var mesh = meshInfo.mesh;
-            //         mesh.vertices = meshInfo.vertices;
-            //         mesh.colors32 = meshInfo.colors32;
-            //         dialogueText.UpdateGeometry(mesh, i);
-            //     }
-
-            //     yield return null;
-            //     continue; // skip remaining logic this frame
-            // }
 
             dialogueText.maxVisibleCharacters = info.characterCount;
             dialogueText.ForceMeshUpdate();
@@ -707,21 +536,17 @@ public class Dialogue : MonoBehaviour
         if (CanReplay && !HasPlayed)
         {
             HasPlayed = true;
-            int key = 0;
-            while (ResponseToDialog.ContainsKey(key))
-                key++;
-            ResponseToDialog.Add(key, new Queue<(string text, KeyCode key)>(dialogueQueue));
         }
         if (dialogueRoutine != null)
         {
             StopCoroutine(dialogueRoutine);
             dialogueRoutine = null;
         }
-        
+
         fastForwardPulse = false;
         fastForwardHold = false;
         advanceRequested = false;
-        
+
         if (dialogueQueue.Count > 0)
         {
             BeginSpeaking();
@@ -730,6 +555,25 @@ public class Dialogue : MonoBehaviour
         {
             dialogueText.text = "";
         }
+    }
+    /// <summary>
+    /// Clears queue and Plays this specific text. Will search for <break> tags. text after a <break> will be queued.
+    /// </summary>
+    /// <param name="txt"></param>
+    public void Play(string txt = "", float autoplay = -1)
+    {
+        Debug.Log("Playing text");
+        ClearDialogue();
+        SetAutoPlay(autoplay);
+        string[] parts = txt.Split(new string[] { "<break>" }, 0);
+
+        foreach (string part in parts)
+        {
+            string trimmed = part.Trim();
+            if (trimmed.Length > 0)
+                QueueDialogue(trimmed);
+        }
+        PlayNext();
     }
     /// <summary>
     /// Skips the current typewriter effect but stays on the current dialogue.
@@ -1893,19 +1737,3 @@ public class TextEffectPause : TextEffect
     public override void Apply(TextMeshProUGUI tmp, TMP_TextInfo info, TMP_MeshInfo[] orig, float t) { }
 }
 
-
-public class ResponseButton
-{
-    private Button button;
-    private int nextResponseID;
-    private int responseID;
-    public ResponseButton(Button b, int thisId, int nextId)
-    {
-        button = b;
-        responseID = thisId;
-        nextResponseID = nextId;
-    }
-    public Button GetButton => button;
-    public int GetNextID => nextResponseID;
-    public int GetID => responseID;
-}

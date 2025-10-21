@@ -39,6 +39,11 @@ public class UIListLayout : MonoBehaviour
     public AlignHorizontal alignX = AlignHorizontal.Left;
     public AlignVertical alignY = AlignVertical.Top;
 
+    [Header("Sorting & Direction")]
+    public bool sortByPriority = false;
+    public enum LayoutDirection { LeftToRight, RightToLeft, TopToBottom, BottomToTop }
+    public LayoutDirection layoutDirection = LayoutDirection.LeftToRight;
+    
     [Header("Container Scaling")]
     public bool scaleHorizontal = false; // Adjust container width to fit content
     public bool scaleVertical = false;   // Adjust container height to fit content
@@ -136,31 +141,19 @@ public class UIListLayout : MonoBehaviour
         List<RectTransform> children = GatherChildren(container);
         if (children.Count == 0) return;
 
-        // Store original container position for scaling direction
         Vector3 originalPosition = container.localPosition;
-        
-        // compute positions in local space (container local)
         List<Rect> childRects = GetChildRects(children);
-        
-        // Calculate required size first
         Vector2 requiredSize = CalculateRequiredSize(container, childRects);
-        
-        // Apply container scaling if enabled
         ApplyContainerScaling(container, requiredSize, originalPosition);
-        
-        // Now compute positions with potentially updated container size
         List<Vector2> positions = ComputeLayoutPositions(container, childRects);
 
-        // Apply positions and optional rotations/sizes
         for (int i = 0; i < children.Count; i++)
         {
             RectTransform child = children[i];
             Vector2 pos = positions[i];
 
-            // set anchored position (respecting pivot)
             child.anchoredPosition = pos;
 
-            // set rotation if requested
             if (rotateChildrenWithList)
             {
                 Vector3 e = child.localEulerAngles;
@@ -168,7 +161,6 @@ public class UIListLayout : MonoBehaviour
                 child.localEulerAngles = e;
             }
 
-            // optionally set sizeDelta
             if (uniformCellSize && setSizeDeltaToChild)
             {
                 Vector2 size = cellSize;
@@ -439,9 +431,90 @@ public class UIListLayout : MonoBehaviour
             if (ignoreInactiveChildren && !child.gameObject.activeInHierarchy) continue;
             list.Add(child);
         }
+        if (sortByPriority)
+        {
+            list = SortChildrenByPriority(list);
+        }
+
+        list = ApplyLayoutDirection(list);
+        
         return list;
     }
+    private List<RectTransform> SortChildrenByPriority(List<RectTransform> children)
+    {
+        var prioritizedChildren = new List<(RectTransform transform, int priority)>();
+        
+        foreach (var child in children)
+        {
+            var priorityComponent = child.GetComponent<ListPriority>();
+            int priority = 0;
+            
+            if (priorityComponent != null)
+            {
+                priority = priorityComponent.SortOrder;
+            }
+            else
+            {
+                priorityComponent = child.gameObject.AddComponent<ListPriority>();
+                priorityComponent.SortOrder = 0;
+            }
+            
+            prioritizedChildren.Add((child, priority));
+        }
+        
+        prioritizedChildren.Sort((a, b) => b.priority.CompareTo(a.priority));
+        
+        var sortedList = new List<RectTransform>();
+        foreach (var item in prioritizedChildren)
+        {
+            sortedList.Add(item.transform);
+        }
+        
+        return sortedList;
+    }
 
+    private List<RectTransform> ApplyLayoutDirection(List<RectTransform> children)
+    {
+        bool shouldReverse = false;
+
+        if (horizontal && !vertical)
+        {
+            shouldReverse = (layoutDirection == LayoutDirection.RightToLeft);
+        }
+        else if (vertical && !horizontal)
+        {
+            shouldReverse = (layoutDirection == LayoutDirection.BottomToTop);
+        }
+        else if (horizontal && vertical)
+        {
+            shouldReverse = (layoutDirection == LayoutDirection.RightToLeft);
+        }
+
+        if (shouldReverse)
+        {
+            children.Reverse();
+        }
+
+        return children;
+    }
+    [ContextMenu("Add ListPriority to All Children")]
+    public void AddListPriorityToAllChildren()
+    {
+        foreach (Transform child in transform)
+        {
+            if (child.GetComponent<ListPriority>() == null)
+            {
+                child.gameObject.AddComponent<ListPriority>();
+            }
+        }
+        
+    #if UNITY_EDITOR
+        if (!Application.isPlaying)
+        {
+            UnityEditor.EditorUtility.SetDirty(this);
+        }
+    #endif
+    }
     // Get child rectangle sizes (width, height) used for layout
     public List<Rect> GetChildRects(List<RectTransform> children)
     {
@@ -750,6 +823,7 @@ public class UIListLayoutEditor : Editor
     SerializedProperty rotationDegrees, rotateChildrenWithList;
     SerializedProperty showPreview, previewAlpha, previewColor, autoApplyInEditor;
     SerializedProperty setSizeDeltaToChild, ignoreInactiveChildren;
+    SerializedProperty sortByPriority, layoutDirection;
 
     void OnEnable()
     {
@@ -786,7 +860,9 @@ public class UIListLayoutEditor : Editor
         setSizeDeltaToChild = serializedObject.FindProperty("setSizeDeltaToChild");
         ignoreInactiveChildren = serializedObject.FindProperty("ignoreInactiveChildren");
         
-        // FIXED: Use the correct delegate signature
+        sortByPriority = serializedObject.FindProperty("sortByPriority");
+        layoutDirection = serializedObject.FindProperty("layoutDirection");
+
         SceneView.duringSceneGui += DuringSceneGUI;
     }
 
@@ -795,7 +871,6 @@ public class UIListLayoutEditor : Editor
         SceneView.duringSceneGui -= DuringSceneGUI;
     }
 
-    // FIXED: Correct method signature for SceneView delegate
     void DuringSceneGUI(SceneView sceneView)
     {
         if (t == null) return;
@@ -899,17 +974,15 @@ public class UIListLayoutEditor : Editor
         EditorGUILayout.PropertyField(paddingBottom);
         EditorGUILayout.EndHorizontal();
 
-        EditorGUILayout.Space();
-        
-        // Show table settings only when both horizontal and vertical are enabled
         if (t.horizontal && t.vertical)
         {
+            EditorGUILayout.Space();
             EditorGUILayout.LabelField("Table Settings", EditorStyles.boldLabel);
             EditorGUILayout.PropertyField(tableConstraint);
             if ((UIListLayout.Constraint)tableConstraint.enumValueIndex != UIListLayout.Constraint.Flexible)
                 EditorGUILayout.PropertyField(constraintCount);
             EditorGUILayout.PropertyField(uniformCellSize);
-            if (uniformCellSize.boolValue) 
+            if (uniformCellSize.boolValue)
                 EditorGUILayout.PropertyField(cellSize);
         }
 
@@ -923,19 +996,19 @@ public class UIListLayoutEditor : Editor
         EditorGUILayout.LabelField("Container Scaling", EditorStyles.boldLabel);
         EditorGUILayout.PropertyField(scaleHorizontal);
         EditorGUILayout.PropertyField(scaleVertical);
-        
+
         if (t.scaleHorizontal || t.scaleVertical)
         {
             // Scale direction with smart selection logic
             UIListLayout.ScaleDirection currentDirection = (UIListLayout.ScaleDirection)scaleDirection.intValue;
             UIListLayout.ScaleDirection newDirection = currentDirection;
-            
+
             EditorGUILayout.BeginVertical("box");
             EditorGUILayout.LabelField("Scale Direction", EditorStyles.miniBoldLabel);
-            
+
             bool centerSelected = (currentDirection & UIListLayout.ScaleDirection.Center) != 0;
             bool newCenterSelected = EditorGUILayout.Toggle("Center", centerSelected);
-            
+
             if (newCenterSelected && !centerSelected)
             {
                 // Center selected - deselect all others
@@ -946,58 +1019,90 @@ public class UIListLayoutEditor : Editor
                 // Center deselected - select nothing
                 newDirection = 0;
             }
-            
+
             if (!newCenterSelected)
             {
                 EditorGUI.indentLevel++;
-                
+
                 bool leftSelected = (currentDirection & UIListLayout.ScaleDirection.Left) != 0;
                 bool rightSelected = (currentDirection & UIListLayout.ScaleDirection.Right) != 0;
                 bool topSelected = (currentDirection & UIListLayout.ScaleDirection.Top) != 0;
                 bool bottomSelected = (currentDirection & UIListLayout.ScaleDirection.Bottom) != 0;
-                
+
                 EditorGUILayout.BeginHorizontal();
                 bool newLeftSelected = EditorGUILayout.ToggleLeft("Left", leftSelected, GUILayout.Width(60));
                 bool newRightSelected = EditorGUILayout.ToggleLeft("Right", rightSelected, GUILayout.Width(60));
                 EditorGUILayout.EndHorizontal();
-                
+
                 EditorGUILayout.BeginHorizontal();
                 bool newTopSelected = EditorGUILayout.ToggleLeft("Top", topSelected, GUILayout.Width(60));
                 bool newBottomSelected = EditorGUILayout.ToggleLeft("Bottom", bottomSelected, GUILayout.Width(60));
                 EditorGUILayout.EndHorizontal();
-                
+
                 // Update direction based on selections
                 newDirection = 0;
                 if (newLeftSelected) newDirection |= UIListLayout.ScaleDirection.Left;
                 if (newRightSelected) newDirection |= UIListLayout.ScaleDirection.Right;
                 if (newTopSelected) newDirection |= UIListLayout.ScaleDirection.Top;
                 if (newBottomSelected) newDirection |= UIListLayout.ScaleDirection.Bottom;
-                
+
                 // If all horizontal and vertical directions are selected, automatically select Center
-                if ((newLeftSelected && newRightSelected && t.scaleHorizontal) || 
+                if ((newLeftSelected && newRightSelected && t.scaleHorizontal) ||
                     (newTopSelected && newBottomSelected && t.scaleVertical))
                 {
                     newDirection = UIListLayout.ScaleDirection.Center;
                 }
-                
+
                 EditorGUI.indentLevel--;
             }
-            
+
             scaleDirection.intValue = (int)newDirection;
             EditorGUILayout.EndVertical();
-            
+
             if (t.scaleHorizontal)
             {
                 EditorGUILayout.PropertyField(minWidth);
                 EditorGUILayout.PropertyField(maxWidth);
             }
-            
+
             if (t.scaleVertical)
             {
                 EditorGUILayout.PropertyField(minHeight);
                 EditorGUILayout.PropertyField(maxHeight);
             }
         }
+
+        EditorGUILayout.Space();
+        // EditorGUILayout.BeginVertical("box");
+        EditorGUILayout.LabelField("Sorting & Direction", EditorStyles.boldLabel);
+        if (sortByPriority != null)
+        {
+            EditorGUILayout.PropertyField(sortByPriority);
+        }
+        else
+        {
+            EditorGUILayout.HelpBox("SortByPriority property not found!", MessageType.Error);
+        }
+        if (t.sortByPriority)
+        {
+            EditorGUI.indentLevel++;
+            EditorGUILayout.HelpBox("Children will be sorted by ListPriority component. Highest priority comes first.", MessageType.Info);
+            EditorGUI.indentLevel--;
+        }
+        
+        if (t.horizontal && !t.vertical)
+        {
+            EditorGUILayout.PropertyField(layoutDirection, new GUIContent("Horizontal Direction"));
+        }
+        else if (t.vertical && !t.horizontal)
+        {
+            EditorGUILayout.PropertyField(layoutDirection, new GUIContent("Vertical Direction"));
+        }
+        else if (t.horizontal && t.vertical)
+        {
+            EditorGUILayout.PropertyField(layoutDirection, new GUIContent("Flow Direction"));
+        }
+
 
         EditorGUILayout.Space();
         EditorGUILayout.LabelField("Rotation", EditorStyles.boldLabel);

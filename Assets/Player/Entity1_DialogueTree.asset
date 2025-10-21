@@ -1,0 +1,77 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 539d98a02bc3b254ba907657056872f4, type: 3}
+  m_Name: Entity1_DialogueTree
+  m_EditorClassIdentifier: 
+  startNodeID: StartNode
+  nodes:
+  - nodeID: StartNode
+    dialogueText: Heya! It seems you saw the message I left! Welcome to the Void
+      realm!
+    characterHeadshotID: 0
+    choices:
+    - sortOrder: 1
+      choiceText: Who Are You?
+      targetNodeID: Option1
+      buttonAction: {fileID: 0}
+    - sortOrder: 0
+      choiceText: Where Am I?
+      targetNodeID: c2
+      buttonAction: {fileID: 0}
+    graphPosition:
+      serializedVersion: 2
+      x: 125.762726
+      y: 98.18306
+      width: 350
+      height: 420
+  - nodeID: END
+    dialogueText: This conversation has ended.
+    characterHeadshotID: 0
+    choices: []
+    graphPosition:
+      serializedVersion: 2
+      x: 1001.63696
+      y: 333.87317
+      width: 350
+      height: 220
+  - nodeID: Option1
+    dialogueText: Me? Just some rando running a card shop here in this village! Whenever
+      someone is about to plop into [name of world], they first pass through here!
+      <break> I know you got some SoulCoins as a traveler bonus, so how bout it?
+      Wanna see what booster packs I got in stock?
+    characterHeadshotID: 0
+    choices:
+    - sortOrder: 0
+      choiceText: Cards?
+      targetNodeID: 
+      buttonAction: {fileID: 0}
+    - sortOrder: 0
+      choiceText: Whats your name?
+      targetNodeID: 
+      buttonAction: {fileID: 0}
+    graphPosition:
+      serializedVersion: 2
+      x: 590.2853
+      y: -119.42946
+      width: 350
+      height: 460
+  - nodeID: c2
+    dialogueText: 'Buddy ol, I dont realize if you noticed, but you ARE kinda incorporeal
+      right now! '
+    characterHeadshotID: 0
+    choices: []
+    graphPosition:
+      serializedVersion: 2
+      x: 555.022
+      y: 375.10822
+      width: 350
+      height: 220
