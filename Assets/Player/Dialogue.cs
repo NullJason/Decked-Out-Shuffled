@@ -1,8 +1,10 @@
+#pragma warning disable
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+
 
 /// <summary> 
 /// Generates text for dialogues or any styled text. This uses TMP.<br/>
@@ -530,7 +532,7 @@ public class Dialogue : MonoBehaviour
     /// <summary>
     /// Plays the next text in queue.
     /// </summary>
-    public void PlayNext()
+    public void PlayNext(bool disableOnComplete = false)
     {
         Debug.Log("Playing Next dialogue");
         if (CanReplay && !HasPlayed)
@@ -551,16 +553,16 @@ public class Dialogue : MonoBehaviour
         {
             BeginSpeaking();
         }
-        else
+        else if (disableOnComplete)
         {
-            dialogueText.text = "";
+            gameObject.SetActive(false);
         }
     }
     /// <summary>
     /// Clears queue and Plays this specific text. Will search for <break> tags. text after a <break> will be queued.
     /// </summary>
     /// <param name="txt"></param>
-    public void Play(string txt = "", float autoplay = -1)
+    public void Play(string txt = "", float autoplay = -1, bool disableOnComplete = false)
     {
         Debug.Log("Playing text");
         ClearDialogue();
@@ -573,7 +575,7 @@ public class Dialogue : MonoBehaviour
             if (trimmed.Length > 0)
                 QueueDialogue(trimmed);
         }
-        PlayNext();
+        PlayNext(disableOnComplete);
     }
     /// <summary>
     /// Skips the current typewriter effect but stays on the current dialogue.
@@ -655,6 +657,7 @@ public class Dialogue : MonoBehaviour
     void OnDisable()
     {
         StopDialogueRoutine();
+        ClearDialogue();
     }
     /// <summary>
     /// Disables this below functionality.

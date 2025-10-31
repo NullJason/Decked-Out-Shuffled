@@ -545,12 +545,24 @@ public class DialogueNodeEditor : EditorWindow
         float width = 350f; // Base width
         float height = 160f; // Base height 
         
+        // if (!string.IsNullOrEmpty(node.dialogueText))
+        // {
+        //     int lineCount = Mathf.Max(1, node.dialogueText.Length / 50); // Adjust chars per line based on width
+        //     height += Mathf.Max(40, lineCount * 16);
+        // }
         if (!string.IsNullOrEmpty(node.dialogueText))
         {
-            int lineCount = Mathf.Max(1, node.dialogueText.Length / 50); // Adjust chars per line based on width
-            height += Mathf.Max(40, lineCount * 16);
+            float textAreaWidth = width - 20; 
+            GUIContent textContent = new GUIContent(node.dialogueText);
+            float textHeight = EditorStyles.textArea.CalcHeight(textContent, textAreaWidth);
+            float minTextHeight = EditorGUIUtility.singleLineHeight * 3;
+            height += Mathf.Max(minTextHeight, textHeight);
         }
-        
+        else
+        {
+            // Default height when no text
+            height += EditorGUIUtility.singleLineHeight * 3;
+        }
         height += node.choices.Count * 100f;
         
         height += 20f;
@@ -619,10 +631,22 @@ public class DialogueNodeEditor : EditorWindow
             // Dialogue Text
             EditorGUILayout.LabelField("Dialogue Text:");
             
-            float availableWidth = worldContentRect.width - 20;
-            float textHeight = EditorStyles.textArea.CalcHeight(new GUIContent(node.dialogueText), availableWidth);
-            float minHeight = EditorStyles.textArea.lineHeight * 3;
-            node.dialogueText = EditorGUILayout.TextArea(node.dialogueText, GUILayout.Height(Mathf.Max(minHeight, textHeight)));
+            GUIStyle textAreaStyle = new GUIStyle(EditorStyles.textArea);
+            textAreaStyle.wordWrap = true; // This is the key line!
+
+            float textAreaWidth = worldContentRect.width - 20;
+            GUIContent textContent = new GUIContent(node.dialogueText);
+            float textHeight = textAreaStyle.CalcHeight(textContent, textAreaWidth);
+
+            float minTextHeight = EditorGUIUtility.singleLineHeight * 3;
+            float finalTextHeight = Mathf.Max(minTextHeight, textHeight);
+
+            node.dialogueText = EditorGUILayout.TextArea(node.dialogueText, textAreaStyle, 
+                GUILayout.Height(finalTextHeight));
+            // float availableWidth = worldContentRect.width - 20;
+            // float textHeight = EditorStyles.textArea.CalcHeight(new GUIContent(node.dialogueText), availableWidth);
+            // float minHeight = EditorStyles.textArea.lineHeight * 3;
+            // node.dialogueText = EditorGUILayout.TextArea(node.dialogueText, GUILayout.Height(Mathf.Max(minHeight, textHeight)));
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Choices:", EditorStyles.boldLabel);

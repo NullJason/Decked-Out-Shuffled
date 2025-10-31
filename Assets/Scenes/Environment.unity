@@ -781,6 +781,10 @@ PrefabInstance:
       propertyPath: agent
       value: 
       objectReference: {fileID: 2064206473911176052}
+    - target: {fileID: 8472333059218010714, guid: 47eadee8790932948afc4af69919f86d, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 8.299999
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

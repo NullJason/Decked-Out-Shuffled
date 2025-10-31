@@ -18,6 +18,8 @@ public class DialogueResponse : MonoBehaviour
             return;
         }
 
+        Debug.Log(dialogueTree.startNodeID);
+
         nodeLookup = new Dictionary<string, DialogueNode>();
         foreach (var node in dialogueTree.nodes)
         {

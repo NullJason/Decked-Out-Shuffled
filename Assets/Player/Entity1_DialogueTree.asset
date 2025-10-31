@@ -32,9 +32,9 @@ MonoBehaviour:
       x: 125.762726
       y: 98.18306
       width: 350
-      height: 420
+      height: 434
   - nodeID: END
-    dialogueText: This conversation has ended.
+    dialogueText: ...
     characterHeadshotID: 0
     choices: []
     graphPosition:
@@ -42,7 +42,7 @@ MonoBehaviour:
       x: 1001.63696
       y: 333.87317
       width: 350
-      height: 220
+      height: 234
   - nodeID: Option1
     dialogueText: Me? Just some rando running a card shop here in this village! Whenever
       someone is about to plop into [name of world], they first pass through here!
@@ -63,15 +63,19 @@ MonoBehaviour:
       x: 590.2853
       y: -119.42946
       width: 350
-      height: 460
+      height: 455.62
   - nodeID: c2
     dialogueText: 'Buddy ol, I dont realize if you noticed, but you ARE kinda incorporeal
       right now! '
     characterHeadshotID: 0
-    choices: []
+    choices:
+    - sortOrder: 0
+      choiceText: Oh...
+      targetNodeID: END
+      buttonAction: {fileID: 0}
     graphPosition:
       serializedVersion: 2
       x: 555.022
       y: 375.10822
       width: 350
-      height: 220
+      height: 334

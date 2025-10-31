@@ -11,8 +11,6 @@ public class DialogueResponseCache : MonoBehaviour
     [SerializeField] private GameObject ButtonContainer;
     [SerializeField] private GameObject ButtonPrefab;
     [SerializeField] private Dialogue mainDialogueMono;
-    [SerializeField] private Sprite MainProgressionBranch_Icon;
-    [SerializeField] private Sprite DefaultProgressionBranch_Icon;
     private List<GameObject> ButtonCache = new List<GameObject>();
     private DialogueResponse CurrentDR;
     [SerializeField] private DialogueCharacters dialogueCharacters;
@@ -35,6 +33,7 @@ public class DialogueResponseCache : MonoBehaviour
         int amount = currentNode.choices.Count;
         if (amount > ButtonCache.Count)
         {
+            Debug.Log($"Adding more buttons because of node {currentNode.nodeID}");
             for (int i = ButtonCache.Count; i < amount; i++)
             {
                 GameObject buttonObj = Instantiate(ButtonPrefab, ButtonContainer.transform);
@@ -44,12 +43,17 @@ public class DialogueResponseCache : MonoBehaviour
         }
         else if (amount < ButtonCache.Count)
         {
+            Debug.Log($"Removing buttons because of node {currentNode.nodeID}");
             UpdateResponseButtons(currentNode);
             for (int i = amount; i < ButtonCache.Count; i++)
             {
-                // todo: need to test if uilistlayout correctly ignores inactive children and activestate and 4 sort order.
                 ButtonCache[i].SetActive(false);
             }
+        }
+        else
+        {
+            Debug.Log($"same amount of buttons, {currentNode.nodeID}: {amount} Button Cached {ButtonCache.Count}");
+            UpdateResponseButtons(currentNode);
         }
     }
     private void UpdateResponseButtons(DialogueNode currentNode)
@@ -73,15 +77,15 @@ public class DialogueResponseCache : MonoBehaviour
 
             //sortorder stuff
             int currentButtonLayer = choice.sortOrder;
-            ButtonPriorityImg currentBPI = buttonObj.GetComponentInChildren<ButtonPriorityImg>();
+            ButtonPriorityImg currentBPI = buttonObj.GetComponentInChildren<ButtonPriorityImg>(true);
             if (highestLayer < currentButtonLayer)
             {
                 priorityButtonImg = currentBPI;
                 highestLayer = currentButtonLayer;
             }
-            else currentBPI.SetButtonSideImage(DefaultProgressionBranch_Icon);
+            else currentBPI.SetButtonSideImage();
         }
-        if(priorityButtonImg != null) priorityButtonImg.SetButtonSideImage(MainProgressionBranch_Icon);
+        if(priorityButtonImg != null && highestLayer != 0) priorityButtonImg.SetButtonSideImage(true);
     }
     private void OnChoiceSelected(string targetNodeID, MonoBehaviour buttonAction = null)
     {
@@ -107,6 +111,6 @@ public class DialogueResponseCache : MonoBehaviour
             Sprite cHeadshot = dialogueCharacters.GetImage(characterHeadshotID);
             mainDialogueMono.SetHeadshot(cHeadshot);
         }
-        mainDialogueMono.Play(dialogueText);
+        mainDialogueMono.Play(dialogueText, -1, true);
     }
 }

@@ -3,13 +3,15 @@ using UnityEngine.UI;
 
 public class ButtonPriorityImg : MonoBehaviour
 {
-    Image img;
-    void Start()
+    public RectTransform ImgRect;
+    public Image img;
+    public Sprite MainImg;
+    public Sprite SubImage;
+    public Vector2 Main_Size;
+    public Vector2 SubSize;
+    public void SetButtonSideImage(bool main = false)
     {
-        img = GetComponent<Image>();
-    }
-    public void SetButtonSideImage(Sprite sprite)
-    {
-        img.sprite = sprite;
+        if (main) { img.sprite = MainImg; ImgRect.sizeDelta = Main_Size; }
+        else { img.sprite = SubImage; ImgRect.sizeDelta = SubSize; }
     }
 }

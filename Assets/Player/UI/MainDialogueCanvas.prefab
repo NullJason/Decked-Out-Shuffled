@@ -277,8 +277,8 @@ MonoBehaviour:
   ButtonContainer: {fileID: 1356589753315274545}
   ButtonPrefab: {fileID: 3664774781203160531, guid: b28906673b1c5884fbba753a8d0853e4, type: 3}
   mainDialogueMono: {fileID: 4861825722007195242}
-  MainProgressionBranch_Icon: {fileID: 0}
-  DefaultProgressionBranch_Icon: {fileID: 0}
+  MainProgressionBranch_Icon: {fileID: -6815069252794124239, guid: c38a0361dc1605e4ea2f99a241cb508a, type: 3}
+  DefaultProgressionBranch_Icon: {fileID: -2532843354024351669, guid: a387978468ac0344aa833ac65e65157e, type: 3}
   dialogueCharacters: {fileID: 0}
 --- !u!1 &4419247143895187493
 GameObject:

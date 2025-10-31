@@ -99,7 +99,7 @@ public class UIListLayout : MonoBehaviour
     void Update()
     {
         // Check for new children in runtime
-        if (Application.isPlaying && transform.childCount != lastChildCount)
+        if (transform.childCount != lastChildCount)
         {
             UpdateChildTracking();
             ApplyLayout();
