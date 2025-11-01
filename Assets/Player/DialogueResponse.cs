@@ -9,9 +9,11 @@ public class DialogueResponse : MonoBehaviour
     [SerializeField] private DialogueResponseCache DRButtonCache; 
     private Dictionary<string, DialogueNode> nodeLookup;
     private DialogueNode currentNode;
-
-    public void InitializeDialogue()
+    public DialogueTree NPCDialogueTree {get{ return dialogueTree; }set{ dialogueTree = value; }}
+    public void InitializeDialogue(DialogueTree dt = null)
     {
+        if (dt != null) dialogueTree = dt;
+
         if (dialogueTree == null)
         {
             Debug.LogError("No Dialogue Tree assigned!");

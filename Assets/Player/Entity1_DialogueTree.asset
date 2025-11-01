@@ -23,16 +23,23 @@ MonoBehaviour:
       choiceText: Who Are You?
       targetNodeID: Option1
       buttonAction: {fileID: 0}
+      enabled: 1
     - sortOrder: 0
       choiceText: Where Am I?
       targetNodeID: c2
       buttonAction: {fileID: 0}
+      enabled: 1
+    - sortOrder: 0
+      choiceText: Where are your Windows?
+      targetNodeID: node_80b8ca25
+      buttonAction: {fileID: 0}
+      enabled: 1
     graphPosition:
       serializedVersion: 2
       x: 125.762726
       y: 98.18306
       width: 350
-      height: 434
+      height: 534
   - nodeID: END
     dialogueText: ...
     characterHeadshotID: 0
@@ -54,10 +61,12 @@ MonoBehaviour:
       choiceText: Cards?
       targetNodeID: 
       buttonAction: {fileID: 0}
+      enabled: 1
     - sortOrder: 0
       choiceText: Whats your name?
       targetNodeID: 
       buttonAction: {fileID: 0}
+      enabled: 1
     graphPosition:
       serializedVersion: 2
       x: 590.2853
@@ -73,9 +82,33 @@ MonoBehaviour:
       choiceText: Oh...
       targetNodeID: END
       buttonAction: {fileID: 0}
+      enabled: 1
     graphPosition:
       serializedVersion: 2
       x: 555.022
       y: 375.10822
       width: 350
       height: 334
+  - nodeID: node_80b8ca25
+    dialogueText: 'What? Don''t mind that...
+
+      <typewriter=30> <size=10>All
+      Of The Funds Went Into the Internal Shop</size></typewriter>'
+    characterHeadshotID: 0
+    choices: []
+    graphPosition:
+      serializedVersion: 2
+      x: 552.3692
+      y: 752.3313
+      width: 350
+      height: 234
+  - nodeID: Env3_StartNode
+    dialogueText: Hey again. nice to see you again? Gonna buy some cards? (please?)
+    characterHeadshotID: 0
+    choices: []
+    graphPosition:
+      serializedVersion: 2
+      x: 42.57187
+      y: 766.0133
+      width: 350
+      height: 234

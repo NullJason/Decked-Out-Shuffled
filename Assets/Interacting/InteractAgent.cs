@@ -8,6 +8,8 @@ public class InteractAgent : MonoBehaviour
 {
 	[SerializeField]
 	private static InteractAgent defaultInteractAgent;
+	[SerializeField] 
+	public static KeyCode Interact_Key = KeyCode.Space;
 
 	//A set of the known Interactables that will be able to interact with this InteractAgent. 
 	private HashSet<Interactable> targets;
@@ -69,6 +71,6 @@ public class InteractAgent : MonoBehaviour
 	}
 
 	private protected bool CheckPlayerInteraction(){
-		return Input.GetKeyDown(KeyCode.Space);
+		return Input.GetKeyDown(Interact_Key);
 	}
 }

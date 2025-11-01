@@ -71,8 +71,6 @@ public class LevelsManager : MonoBehaviour
             return;
         }
         Instance = this;
-        // Make sure LevelsManager persists with the Environment UI if you want it persistent:
-        // DontDestroyOnLoad(gameObject); // optional — comment/uncomment based on your needs
     }
 
     /// <summary>Get LevelData by id (returns null if not found)</summary>
@@ -116,7 +114,6 @@ public class LevelsManager : MonoBehaviour
         }
         else
         {
-            // If no parent, just ensure active
             lvl.container.SetActive(true);
         }
 

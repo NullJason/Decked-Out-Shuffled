@@ -194,7 +194,7 @@ public class Dialogue : MonoBehaviour
     /// Accepts a list of strings/single string as param 1
     /// Accepts a list of keys/single key as param 2
     /// </summary>
-    public void SetDialogue(string text, KeyCode key)
+    public void SetDialogue(string text, KeyCode key = KeyCode.None)
     {
         StopDialogueRoutine();
         ClearDialogue();
@@ -661,14 +661,14 @@ public class Dialogue : MonoBehaviour
     }
     /// <summary>
     /// Disables this below functionality.
-    /// The default key is used whenever no key is passed to QueueDialog() or SetDialog().
+    /// The default key is used whenever no key is passed to QueueDialogue() or SetDialogue().
     /// </summary>
     public void DisableDefaultKey()
     {
         DefaultAdvanceKey = KeyCode.None;
     }
     /// <summary>
-    /// The default key is used whenever no key is passed to QueueDialog() or SetDialog().
+    /// The default key is used whenever no key is passed to QueueDialogue() or SetDialogue().
     /// Setting default key to None will disable skipping for future dialog.
     /// </summary>
     public void SetDefaultKey(KeyCode key)

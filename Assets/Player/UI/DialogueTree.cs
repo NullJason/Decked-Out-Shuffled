@@ -9,6 +9,17 @@ public class DialogueNode
     public int characterHeadshotID;
     public List<DialogueChoice> choices = new List<DialogueChoice>();
     public Rect graphPosition;
+    public List<DialogueChoice> EnabledChoices
+    {
+        get {
+            List<DialogueChoice> enabledChoices = new List<DialogueChoice>();
+            foreach (DialogueChoice dc in choices)
+            {
+                if (dc.enabled) enabledChoices.Add(dc);
+            }
+            return enabledChoices;
+        }
+    }
 }
 
 [System.Serializable]
@@ -18,6 +29,7 @@ public class DialogueChoice
     public string choiceText;
     public string targetNodeID;
     public MonoBehaviour buttonAction;
+    public bool enabled = true;
 }
 
 [CreateAssetMenu(fileName = "DialogueTree", menuName = "Dialogue/Dialogue Tree")]

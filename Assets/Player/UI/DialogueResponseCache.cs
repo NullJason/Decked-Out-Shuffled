@@ -30,7 +30,8 @@ public class DialogueResponseCache : MonoBehaviour
     }
     public void UpdateSize(DialogueNode currentNode)
     {
-        int amount = currentNode.choices.Count;
+        List<DialogueChoice> enabledChoices = currentNode.EnabledChoices;
+        int amount = enabledChoices.Count;
         if (amount > ButtonCache.Count)
         {
             Debug.Log($"Adding more buttons because of node {currentNode.nodeID}");
@@ -39,12 +40,12 @@ public class DialogueResponseCache : MonoBehaviour
                 GameObject buttonObj = Instantiate(ButtonPrefab, ButtonContainer.transform);
                 ButtonCache.Add(buttonObj);
             }
-            UpdateResponseButtons(currentNode);
+            UpdateResponseButtons(enabledChoices);
         }
         else if (amount < ButtonCache.Count)
         {
             Debug.Log($"Removing buttons because of node {currentNode.nodeID}");
-            UpdateResponseButtons(currentNode);
+            UpdateResponseButtons(enabledChoices);
             for (int i = amount; i < ButtonCache.Count; i++)
             {
                 ButtonCache[i].SetActive(false);
@@ -53,15 +54,15 @@ public class DialogueResponseCache : MonoBehaviour
         else
         {
             Debug.Log($"same amount of buttons, {currentNode.nodeID}: {amount} Button Cached {ButtonCache.Count}");
-            UpdateResponseButtons(currentNode);
+            UpdateResponseButtons(enabledChoices);
         }
     }
-    private void UpdateResponseButtons(DialogueNode currentNode)
+    private void UpdateResponseButtons(List<DialogueChoice> enabledChoices)
     {
         int b = -1;
         int highestLayer = -1000;
         ButtonPriorityImg priorityButtonImg = null;
-        foreach (var choice in currentNode.choices)
+        foreach (var choice in enabledChoices)
         {
             b++;
             GameObject buttonObj = ButtonCache[b];
