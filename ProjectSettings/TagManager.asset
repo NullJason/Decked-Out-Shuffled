@@ -42,19 +42,16 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
-  - name: Floor
+  - name: SortBelow
     uniqueID: 3882351159
     locked: 0
-  - name: Player
+  - name: SortOnPlayer
     uniqueID: 345884419
     locked: 0
-  - name: Decor
+  - name: SortAbove
     uniqueID: 206117013
     locked: 0
-  - name: Entities
-    uniqueID: 3011539577
-    locked: 0
-  - name: DialogueCanvasLayer
+  - name: CanvasLayer
     uniqueID: 39783703
     locked: 0
   m_RenderingLayers:

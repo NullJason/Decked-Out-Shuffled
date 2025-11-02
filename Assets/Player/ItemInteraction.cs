@@ -4,34 +4,41 @@ using UnityEngine;
 
 public class ItemInteraction : Interaction
 {
-    [Header("Item fields")]
-    [SerializeField] private Canvas dialogueCanvas;
-    [SerializeField] private Dialogue dialogueMono;
-    [SerializeField] private Color dialogueBoxColor;
-    [SerializeField] private Color dialogueTextColor;
-    [SerializeField] private DialogueResponse dialogueResponse;
-    [SerializeField] bool UseItemDialogueTree = false;
+    [Header("Item Popup")]
+    [SerializeField] private Canvas ItemPopupDialogueCanvas; // small talk canvas
+    [SerializeField] private Dialogue ItemPopupDialogueMono;
+    [SerializeField] private bool AlterInteractablePopupOnTryInteract = false;
+    [SerializeField] private InteractableItem interactableItem;
+    [SerializeField] private string NewPopup = "It seems to be Locked.";
+    // [SerializeField] private int PopupWaitCount, amount of times to interact before popup changes
+
+    [Header("Item Main Dialogue")]
+    [SerializeField] private Dialogue MainDialogue;
+    [SerializeField] private DialogueResponse ItemDialogueResponse;
+    [SerializeField] private bool UseItemDialogueTree = false;
     [SerializeField] private DialogueTree ItemDialogueTree;
-    [SerializeField] private string SingleDialogueText = "Hello.";
+    [SerializeField] private string ItemDialogueText = "Hello. Are you interacting with me? Thanks.";
+    // [SerializeField] private int DialogueWaitCount, amount of times to interact before dialogue happens
+
+    [Header("Item Effects")]
     [SerializeField] private Animator item_animator;
     [SerializeField] private string item_animTriggerName;
     [SerializeField] private AudioSource item_audioSource;
     [SerializeField] private ParticleSystem item_particleSystem;
-    public bool AlterInteractablePopup = false;
-    public string NewPopup = "It seems to be Locked.";
+    
     private int TriggerHash;
     public bool CanInteract = false;
-    
+
 
     [Header("Alter NPC dialogue after interacting.")]
-    public DialogueTree NpcDialogueTree;
-    public DialogueResponse NpcDialogueResponse;
-    public bool AlterDialogueChoices = false;
-    public string DialogueNodeToAlter = "StartNode";
-    public List<int> ChoicesToAlter; // alter choices based on sort order, if any choices are within this sort order then toggles their bool states.
-    public InteractableItem interactableItem;
-    public bool AlterDialogueNodeText = false;
-    public string NewDialogueText = "I unlocked it for you";
+    [SerializeField] private bool AlterNpcDialogueOnTryInteract = false;
+    // [SerializeField] private bool AlterNpcDialogueOnInteractPassed = false;
+    [SerializeField] private DialogueTree NpcDialogueTree;
+    [SerializeField] private DialogueResponse NpcDialogueResponse;
+    [SerializeField] private string DialogueNodeToAlter = "StartNode";
+    [SerializeField] private string NewStartNodeID;
+    [SerializeField] private List<int> ChoicesToAlter; // alter choices based on sort order, if any choices are within this sort order then toggles their bool states.
+    [SerializeField] private string NewNodeDialogueText = "I unlocked it for you";
 
     private DialogueTree clonedDialogueTree;
     void Start()
@@ -41,59 +48,60 @@ public class ItemInteraction : Interaction
     public void SetState(bool state) { CanInteract = state; }
     private bool isNull()
     {
-        return dialogueCanvas == null || dialogueMono == null;
+        return ItemPopupDialogueCanvas == null || ItemPopupDialogueMono == null;
     }
 
     private protected override void StuffToDo()
     {
-        if (AlterInteractablePopup) interactableItem.ItemPopUpText = NewPopup;
+        if (AlterInteractablePopupOnTryInteract) interactableItem.ItemPopUpText = NewPopup;
 
-        // set dialogueResponse.dialogueTree to a clone containing these altercations. the cloned scriptable asset dialoguetree should be destroyed after the game ends. 
-        // dialogueTreeClone = ...
-        if (AlterDialogueChoices || AlterDialogueNodeText)
+        if (AlterNpcDialogueOnTryInteract)
         {
-            if (clonedDialogueTree != null) DialogueTreeDestroyer.DestroyTree(clonedDialogueTree);
-            DialogueTree clone = DialogueTreeDestroyer.CloneDialogueTree(NpcDialogueTree);
-            clonedDialogueTree = clone;
+            if (clonedDialogueTree != null) ApplyDialogueAlterations(clonedDialogueTree);
+            else
+            {
+                // gonna consider using obj pooling for SOs clones so it doesn't overwrite npc DT behavior in the case there are multpiple items altering the tree.
+                clonedDialogueTree = DialogueTreeDestroyer.CloneDialogueTree(NpcDialogueTree);
 
-            //alter
-            ApplyDialogueAlterations(clonedDialogueTree);
+                ApplyDialogueAlterations(clonedDialogueTree);
 
-            //set
-            NpcDialogueResponse.NPCDialogueTree = clonedDialogueTree;
+                NpcDialogueResponse.NPCDialogueTree = clonedDialogueTree;
+            }
         }
 
-        if (AlterDialogueChoices || AlterInteractablePopup || AlterDialogueNodeText) { AlterDialogueNodeText = false; AlterDialogueChoices = false; AlterInteractablePopup = false; return; }
+        if (AlterNpcDialogueOnTryInteract || AlterInteractablePopupOnTryInteract) { AlterNpcDialogueOnTryInteract = false; AlterInteractablePopupOnTryInteract = false; }
 
+        
+        
         if (isNull() || !CanInteract) return;
-        if (!dialogueMono.gameObject.activeSelf)
-        {
-            dialogueCanvas.enabled = true;
-            dialogueMono.gameObject.SetActive(true);
+        
 
-            // Note: for items that have multiple actions you can take. or for those with none do a single description/inspect upon interact.
-            if (UseItemDialogueTree) dialogueResponse.InitializeDialogue(ItemDialogueTree);
-            else { dialogueMono.SetDialogue(SingleDialogueText, InteractAgent.Interact_Key); dialogueMono.PlayNext(); }
+        // Note: for items that have multiple actions you can take. or for those with none do a single description/inspect upon interact.
+        if (UseItemDialogueTree) ItemDialogueResponse.InitializeDialogue(ItemDialogueTree);
+        else { MainDialogue.SetDialogue(ItemDialogueText, InteractAgent.Interact_Key); ItemPopupDialogueMono.PlayNext(); }
 
-            item_animator.SetTrigger(TriggerHash);
-            item_particleSystem.Play();
-        }
+        if (item_animator != null && TriggerHash != 0) item_animator.SetTrigger(TriggerHash);
+        if (item_particleSystem != null) item_particleSystem.Play();
+        if (item_audioSource != null) item_audioSource.Play();
+            
+        
     }
     /// <summary>
     /// Applies alterations to the cloned dialogue tree based on the inspector settings
     /// </summary>
     private void ApplyDialogueAlterations(DialogueTree tree)
     {
-        if (AlterDialogueNodeText && !string.IsNullOrEmpty(DialogueNodeToAlter))
+        if (!AlterNpcDialogueOnTryInteract) return;
+        if (!string.IsNullOrEmpty(DialogueNodeToAlter))
         {
             DialogueNode nodeToAlter = tree.GetNode(DialogueNodeToAlter);
             if (nodeToAlter != null)
             {
-                nodeToAlter.dialogueText = NewDialogueText;
+                nodeToAlter.dialogueText = NewNodeDialogueText;
             }
         }
-
-        if (AlterDialogueChoices && ChoicesToAlter != null && ChoicesToAlter.Count > 0)
+        if (!string.IsNullOrEmpty(NewStartNodeID)) tree.startNodeID = NewStartNodeID;
+        if (ChoicesToAlter != null && ChoicesToAlter.Count > 0)
         {
             DialogueNode nodeToAlter = tree.GetNode(DialogueNodeToAlter);
             if (nodeToAlter != null)

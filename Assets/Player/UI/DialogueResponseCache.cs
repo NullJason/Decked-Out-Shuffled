@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -14,6 +15,7 @@ public class DialogueResponseCache : MonoBehaviour
     private List<GameObject> ButtonCache = new List<GameObject>();
     private DialogueResponse CurrentDR;
     [SerializeField] private DialogueCharacters dialogueCharacters;
+    private float WaitForTextFinishTimeoutDuration = 15f; // dialogue shouldn't play this long in the first place. will immediately execute button method if passed.
     void OnEnable()
     {
         if (ButtonPrefab == null) Debug.Log("BUTTON PREFAB HASN'T BEEN SET!");
@@ -94,7 +96,8 @@ public class DialogueResponseCache : MonoBehaviour
 
         if (buttonAction != null)
         {
-            buttonAction.Invoke("DialogueButtonAction", 0f);
+            // buttonAction.Invoke("DialogueButtonAction", 0f);
+            StartCoroutine(TriggerDialogueButtonAction(buttonAction, "DialogueButtonAction"));
         }
 
         if (targetNodeID == "END" || !CurrentDR.NodeLookup.ContainsKey(targetNodeID))
@@ -104,6 +107,15 @@ public class DialogueResponseCache : MonoBehaviour
         }
 
         CurrentDR.StartDialogueFromNode(targetNodeID);
+    }
+    IEnumerator TriggerDialogueButtonAction(MonoBehaviour act, string method)
+    {
+        float startTime = Time.time;
+        while (!mainDialogueMono.FinishedDisplayingText && (Time.time - startTime < WaitForTextFinishTimeoutDuration))
+        {
+            yield return null;
+        }
+        act.Invoke(method, 0f);
     }
     public void DoDialogue(string dialogueText, int characterHeadshotID)
     {

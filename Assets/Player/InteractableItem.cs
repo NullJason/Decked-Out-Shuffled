@@ -5,7 +5,7 @@ public class InteractableItem : Interactable
     [SerializeField] private Canvas SmallTalkCanvas;
     [SerializeField] private Dialogue dialogueMono;
     [TextArea]
-    public static string PopUpText = "Interact [Space]";
+    public string PopUpText = "Interact [Space]";
     private bool played = false;
 
     public string ItemPopUpText {get{ return PopUpText; } set{ PopUpText = value; dialogueMono.SetDialogue(PopUpText); dialogueMono.PlayNext(); }}

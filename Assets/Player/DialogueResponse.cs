@@ -2,11 +2,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using System;
 
 public class DialogueResponse : MonoBehaviour
 {
     [SerializeField] private DialogueTree dialogueTree;
-    [SerializeField] private DialogueResponseCache DRButtonCache; 
+    [SerializeField] private string StartNodeID;
+    [SerializeField] private DialogueResponseCache DRButtonCache;
     private Dictionary<string, DialogueNode> nodeLookup;
     private DialogueNode currentNode;
     public DialogueTree NPCDialogueTree {get{ return dialogueTree; }set{ dialogueTree = value; }}
@@ -31,6 +33,8 @@ public class DialogueResponse : MonoBehaviour
         // give the cache a ref
         DRButtonCache.SetDR(this);
 
+        if (!String.IsNullOrEmpty(StartNodeID)) dialogueTree.startNodeID = StartNodeID;
+        
         StartDialogueFromNode(dialogueTree.startNodeID);
     }
 

@@ -46,8 +46,8 @@ MonoBehaviour:
     choices: []
     graphPosition:
       serializedVersion: 2
-      x: 1001.63696
-      y: 333.87317
+      x: 2607.1118
+      y: 598.7445
       width: 350
       height: 234
   - nodeID: Option1
@@ -57,14 +57,14 @@ MonoBehaviour:
       Wanna see what booster packs I got in stock?
     characterHeadshotID: 0
     choices:
-    - sortOrder: 0
+    - sortOrder: 1
       choiceText: Cards?
-      targetNodeID: 
+      targetNodeID: node_abf1d2a6
       buttonAction: {fileID: 0}
       enabled: 1
     - sortOrder: 0
       choiceText: Whats your name?
-      targetNodeID: 
+      targetNodeID: node_84ce0848
       buttonAction: {fileID: 0}
       enabled: 1
     graphPosition:
@@ -74,8 +74,8 @@ MonoBehaviour:
       width: 350
       height: 455.62
   - nodeID: c2
-    dialogueText: 'Buddy ol, I dont realize if you noticed, but you ARE kinda incorporeal
-      right now! '
+    dialogueText: Buddy ol, I dont realize if you noticed, but you ARE kinda incorporeal
+      right now! <break> Awkward... Let's try again...
     characterHeadshotID: 0
     choices:
     - sortOrder: 0
@@ -85,30 +85,107 @@ MonoBehaviour:
       enabled: 1
     graphPosition:
       serializedVersion: 2
-      x: 555.022
-      y: 375.10822
+      x: 585.36676
+      y: 391.6599
       width: 350
       height: 334
   - nodeID: node_80b8ca25
     dialogueText: 'What? Don''t mind that...
 
-      <typewriter=30> <size=10>All
-      Of The Funds Went Into the Internal Shop</size></typewriter>'
+      <typewriter=30> <size=8>All Of
+      The Funds Went into buying cards...</size></typewriter>'
     characterHeadshotID: 0
-    choices: []
+    choices:
+    - sortOrder: 0
+      choiceText: ...
+      targetNodeID: node_95da1835
+      buttonAction: {fileID: 0}
+      enabled: 1
     graphPosition:
       serializedVersion: 2
-      x: 552.3692
-      y: 752.3313
+      x: 542.36926
+      y: 767.33124
       width: 350
-      height: 234
-  - nodeID: Env3_StartNode
+      height: 334
+  - nodeID: Env3_StartNode Example
     dialogueText: Hey again. nice to see you again? Gonna buy some cards? (please?)
     characterHeadshotID: 0
     choices: []
     graphPosition:
       serializedVersion: 2
-      x: 42.57187
-      y: 766.0133
+      x: 92.17702
+      y: 1254.7626
       width: 350
       height: 234
+  - nodeID: node_abf1d2a6
+    dialogueText: "Its better if i show you directly. But more importantly, I don\u2019t
+      think I got your name! "
+    characterHeadshotID: 0
+    choices: []
+    graphPosition:
+      serializedVersion: 2
+      x: 1042.8262
+      y: -160.0287
+      width: 350
+      height: 234
+  - nodeID: follow
+    dialogueText: Your welcome! <break> We should really get going though, enter
+      my Card shop, I'll be waiting inside!
+    characterHeadshotID: 0
+    choices:
+    - sortOrder: 0
+      choiceText: Alright.
+      targetNodeID: END
+      buttonAction: {fileID: 0}
+      enabled: 1
+    graphPosition:
+      serializedVersion: 2
+      x: 1998.0022
+      y: 36.84945
+      width: 350
+      height: 334
+  - nodeID: node_9062b2e0
+    dialogueText: That's a nice name!
+    characterHeadshotID: 0
+    choices:
+    - sortOrder: 0
+      choiceText: Thanks!
+      targetNodeID: follow
+      buttonAction: {fileID: 0}
+      enabled: 1
+    graphPosition:
+      serializedVersion: 2
+      x: 1497.1849
+      y: -2.8636398
+      width: 350
+      height: 334
+  - nodeID: node_95da1835
+    dialogueText: :( Don't judge...
+    characterHeadshotID: 0
+    choices:
+    - sortOrder: 0
+      choiceText: ...
+      targetNodeID: END
+      buttonAction: {fileID: 0}
+      enabled: 1
+    graphPosition:
+      serializedVersion: 2
+      x: 989.5262
+      y: 792.6572
+      width: 350
+      height: 334
+  - nodeID: node_84ce0848
+    dialogueText: 'My name is [name]! '
+    characterHeadshotID: 0
+    choices:
+    - sortOrder: 0
+      choiceText: ...
+      targetNodeID: Option1
+      buttonAction: {fileID: 0}
+      enabled: 1
+    graphPosition:
+      serializedVersion: 2
+      x: 1018.7931
+      y: 130.42363
+      width: 350
+      height: 334

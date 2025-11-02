@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 49f9ec88dbedac942a430c37dbfafeb8
+guid: 60ba0f0f0ec27cd49a25a057196d7654
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -1923994175756728024
-    second: house_0
+      213: -7576364848207145089
+    second: ShadowTextBubble_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -48,7 +48,7 @@ TextureImporter:
   compressionQuality: 50
   spriteMode: 2
   spriteExtrude: 1
-  spriteMeshType: 1
+  spriteMeshType: 0
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
   spritePixelsToUnits: 100
@@ -113,23 +113,23 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: house_0
+      name: ShadowTextBubble_0
       rect:
         serializedVersion: 2
-        x: 45
-        y: 0
-        width: 215
-        height: 300
-      alignment: 9
-      pivot: {x: 0.5, y: 0.25}
-      border: {x: 0, y: 0, z: 0, w: 0}
+        x: 0
+        y: 68
+        width: 256
+        height: 132
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 103, y: 63, z: 106, w: 65}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 829891cad799c45e0800000000000000
-      internalID: -1923994175756728024
+      spriteID: f775bd5df485bd690800000000000000
+      internalID: -7576364848207145089
       vertices: []
       indices: 
       edges: []
@@ -138,7 +138,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: dc9e7660e620f8b48b6c8d17539c4fe7
+    spriteID: 684bb2ab1e47abc439861d12b42ef98c
     internalID: 0
     vertices: []
     indices: 
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      house_0: -1923994175756728024
+      ShadowTextBubble_0: -7576364848207145089
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

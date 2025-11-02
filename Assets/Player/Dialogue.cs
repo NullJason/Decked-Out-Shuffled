@@ -48,6 +48,7 @@ public class Dialogue : MonoBehaviour
     [SerializeField] private KeyCode DefaultAdvanceKey = KeyCode.Space; // set none to disable.
     [SerializeField] private bool RequeueOnDisable = false; // puts dequeued dialog back in. (repeatable dialog)
     [SerializeField] private bool CanReplay = true;
+    private bool TextCompletedPlaying = false;
     private bool HasPlayed = false;
 
     private Queue<(string text, KeyCode key)> dialogueQueue = new Queue<(string, KeyCode)>();
@@ -103,6 +104,8 @@ public class Dialogue : MonoBehaviour
     {
         return dialogueQueue.Count;
     }
+
+    public bool FinishedDisplayingText => TextCompletedPlaying;
 
     void Start()
     {
@@ -248,7 +251,6 @@ public class Dialogue : MonoBehaviour
 
         ParseTags(txt, out string clean, out activeEffects);
 
-
         advanceRequested = false;
         dialogueRoutine = StartCoroutine(RunDialogue(clean));
     }
@@ -272,6 +274,7 @@ public class Dialogue : MonoBehaviour
     }
     IEnumerator RunDialogue(string text)
     {
+        TextCompletedPlaying = false;
         dialogueText.text = text;
         dialogueText.ForceMeshUpdate();
 
@@ -288,6 +291,8 @@ public class Dialogue : MonoBehaviour
         bool dialogueComplete = false;
 
         float t = 0f;
+
+        if (typewriters.Count == 0) TextCompletedPlaying = true;
 
         while (!dialogueComplete)
         {
@@ -441,6 +446,8 @@ public class Dialogue : MonoBehaviour
                 yield return null;
                 continue;
             }
+
+            if(allVisible) TextCompletedPlaying = true;
 
             bool autoplayEnabled = AutoPlayWait > 0f;
             float autoplayEnd = autoplayEnabled ? Time.time + AutoPlayWait : 0f;
