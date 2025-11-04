@@ -12,6 +12,7 @@ public class DialogueResponseCache : MonoBehaviour
     [SerializeField] private GameObject ButtonContainer;
     [SerializeField] private GameObject ButtonPrefab;
     [SerializeField] private Dialogue mainDialogueMono;
+    [SerializeField] private DialogueActionManager dialogueActionManager;
     private List<GameObject> ButtonCache = new List<GameObject>();
     private DialogueResponse CurrentDR;
     [SerializeField] private DialogueCharacters dialogueCharacters;
@@ -90,14 +91,14 @@ public class DialogueResponseCache : MonoBehaviour
         }
         if(priorityButtonImg != null && highestLayer != 0) priorityButtonImg.SetButtonSideImage(true);
     }
-    private void OnChoiceSelected(string targetNodeID, MonoBehaviour buttonAction = null)
+    private void OnChoiceSelected(string targetNodeID, string buttonAction)
     {
         if (CurrentDR == null) Debug.Log("Current DialogueResponse is null, buttons won't work.");
 
         if (buttonAction != null)
         {
             // buttonAction.Invoke("DialogueButtonAction", 0f);
-            StartCoroutine(TriggerDialogueButtonAction(buttonAction, "DialogueButtonAction"));
+            StartCoroutine(TriggerDialogueButtonAction(buttonAction));
         }
 
         if (targetNodeID == "END" || !CurrentDR.NodeLookup.ContainsKey(targetNodeID))
@@ -108,14 +109,14 @@ public class DialogueResponseCache : MonoBehaviour
 
         CurrentDR.StartDialogueFromNode(targetNodeID);
     }
-    IEnumerator TriggerDialogueButtonAction(MonoBehaviour act, string method)
+    IEnumerator TriggerDialogueButtonAction(string act)
     {
         float startTime = Time.time;
         while (!mainDialogueMono.FinishedDisplayingText && (Time.time - startTime < WaitForTextFinishTimeoutDuration))
         {
             yield return null;
         }
-        act.Invoke(method, 0f);
+        dialogueActionManager.ExecuteAction(act);
     }
     public void DoDialogue(string dialogueText, int characterHeadshotID)
     {

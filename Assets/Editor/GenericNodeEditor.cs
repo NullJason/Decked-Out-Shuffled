@@ -1,11 +1,13 @@
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
+using System;
 
-public class DialogueNodeEditor : EditorWindow
+public class GenericNodeEditor : EditorWindow
 {
-    private DialogueTree currentTree;
-    private List<DialogueNode> nodes => currentTree?.nodes;
+    private ScriptableObject currentTree;
+    private INodeTree nodeTreeInterface;
+    private List<INode> nodes => nodeTreeInterface?.Nodes;
     
     private GUIStyle nodeStyle;
     private GUIStyle selectedNodeStyle;
@@ -14,9 +16,8 @@ public class DialogueNodeEditor : EditorWindow
     private GUIStyle nodeHeaderStyle;
     private GUIStyle resizeStyle;
     
-    private DialogueNode selectedNode;
-    private DialogueNode connectingFrom;
-    private int connectingChoiceIndex = -1;
+    private INode selectedNode;
+    private INode connectingFrom;
     private Vector2 panOffset;
     private bool isPanning;
     private Vector2 lastMousePosition;
@@ -28,33 +29,39 @@ public class DialogueNodeEditor : EditorWindow
     private Vector2 zoomPan = Vector2.zero;
     
     // Node resizing
-    private DialogueNode resizingNode;
+    private INode resizingNode;
     private Vector2 resizeStart;
     private Rect resizeStartRect;
     
     // Node dragging
-    private DialogueNode draggingNode;
+    private INode draggingNode;
     private Vector2 dragOffset;
     
-    // Port positions for connection lines
-    private Dictionary<DialogueChoice, Vector2> choicePortPositions = new Dictionary<DialogueChoice, Vector2>();
+    // Node type management
+    private Dictionary<System.Type, INodeDrawer> nodeDrawers = new Dictionary<System.Type, INodeDrawer>();
     
     // Style initialization flag
     private bool stylesInitialized = false;
     
     // Title bar height for dragging
     private const float TITLE_BAR_HEIGHT = 25f;
-    [MenuItem("Window/Dialogue Node Editor")]
+    
+    [MenuItem("Window/Generic Node Editor")]
     public static void OpenWindow()
     {
-        GetWindow<DialogueNodeEditor>("Dialogue Editor");
+        GetWindow<GenericNodeEditor>("Node Editor");
     }
 
     private void OnEnable()
     {
-        Debug.Log("Resize Handle currently doesn't work!");
-        Debug.Log("TODO: dialogue text box field should auto display downwards when text out of box.");
-        // note, don't init styles here, must wait ongui 
+        var dialogueDrawer = new DialogueINodeDrawer();
+        dialogueDrawer.OnChoicePortClicked = (node, choiceIndex) => {
+        connectingFrom = node;
+        // Store the choice index for connection
+    };
+        // Register node drawers for different types
+        nodeDrawers[typeof(DialogueINode)] = new DialogueINodeDrawer();
+        nodeDrawers[typeof(AchievementNode)] = new AchievementNodeDrawer();
     }
 
     private void InitializeStyles()
@@ -122,17 +129,15 @@ public class DialogueNodeEditor : EditorWindow
         
         if (currentTree == null)
         {
-            EditorGUILayout.HelpBox("No Dialogue Tree selected! Drag a DialogueTree asset into the field above.", MessageType.Info);
+            EditorGUILayout.HelpBox("No Node Tree selected! Drag a node tree asset into the field above.", MessageType.Info);
             return;
         }
 
         // Create default nodes if tree is empty
-        if (currentTree.nodes.Count == 0)
+        if (nodes == null || nodes.Count == 0)
         {
             CreateDefaultNodes();
         }
-
-        choicePortPositions.Clear();
 
         Rect zoomArea = new Rect(0, 20, position.width, position.height - 20);
         
@@ -149,17 +154,36 @@ public class DialogueNodeEditor : EditorWindow
 
         DrawZoomInfo();
 
-        DrawDebugInfo();
-
         if (GUI.changed) Repaint();
     }
 
     private void CreateDefaultNodes()
     {
-        if (currentTree == null) return;
+        if (nodeTreeInterface == null) return;
+
+        // Create a default node based on the tree type
+        if (currentTree is DialogueINodeTree)
+        {
+            CreateDialogueDefaultNodes();
+        }
+        else if (currentTree is AchievementTree)
+        {
+            CreateAchievementDefaultNodes();
+        }
+        else
+        {
+            // Generic fallback
+            CreateGenericDefaultNode();
+        }
+    }
+
+    private void CreateDialogueDefaultNodes()
+    {
+        DialogueINodeTree dialogueTree = currentTree as DialogueINodeTree;
+        if (dialogueTree == null) return;
 
         // Create StartNode
-        DialogueNode startNode = new DialogueNode
+        DialogueINode startNode = new DialogueINode
         {
             nodeID = "StartNode",
             dialogueText = "Welcome! This is the start of your dialogue.",
@@ -167,25 +191,66 @@ public class DialogueNodeEditor : EditorWindow
         };
 
         // Create END node
-        DialogueNode endNode = new DialogueNode
+        DialogueINode endNode = new DialogueINode
         {
             nodeID = "END", 
             dialogueText = "This conversation has ended.",
             graphPosition = new Rect(500, 200, 350, 200)
         };
 
-        currentTree.nodes.Add(startNode);
-        currentTree.nodes.Add(endNode);
-        currentTree.startNodeID = startNode.nodeID;
+        dialogueTree.nodes.Add(startNode);
+        dialogueTree.nodes.Add(endNode);
+        dialogueTree.startNodeID = startNode.nodeID;
 
         EditorUtility.SetDirty(currentTree);
-        Debug.Log("Created default StartNode and END nodes");
+    }
+
+    private void CreateAchievementDefaultNodes()
+    {
+        AchievementTree achievementTree = currentTree as AchievementTree;
+        if (achievementTree == null) return;
+
+        // Create a default achievement node
+        AchievementNode achievementNode = new AchievementNode
+        {
+            NodeID = "FirstAchievement",
+            TitleText = "First Steps",
+            DescriptionText = "Complete your first achievement!",
+            graphPosition = new Rect(100, 200, 400, 400)
+        };
+
+        achievementTree.nodes.Add(achievementNode);
+        achievementTree.startNodeID = achievementNode.NodeID;
+
+        EditorUtility.SetDirty(currentTree);
+    }
+
+    private void CreateGenericDefaultNode()
+    {
+        // Create a simple default node
+        var nodeType = nodeTreeInterface.Nodes.GetType().GetGenericArguments()[0];
+        INode defaultNode = Activator.CreateInstance(nodeType) as INode;
+        
+        if (defaultNode != null)
+        {
+            defaultNode.NodeID = "StartNode";
+            defaultNode.GraphPosition = new Rect(100, 200, 350, 200);
+            
+            // Use reflection to add to nodes list
+            var nodesProperty = currentTree.GetType().GetField("nodes");
+            if (nodesProperty != null)
+            {
+                var nodesList = nodesProperty.GetValue(currentTree) as System.Collections.IList;
+                nodesList?.Add(defaultNode);
+            }
+            
+            nodeTreeInterface.StartNodeID = defaultNode.NodeID;
+            EditorUtility.SetDirty(currentTree);
+        }
     }
 
     private void HandleEvents(Event e, Rect zoomArea)
     {
-        // lastMousePosition = e.mousePosition;
-        
         switch (e.type)
         {
             case EventType.MouseDown:
@@ -211,7 +276,7 @@ public class DialogueNodeEditor : EditorWindow
                             {
                                 resizingNode = node;
                                 resizeStart = ScreenToWorldPosition(lastMousePosition);
-                                resizeStartRect = node.graphPosition;
+                                resizeStartRect = node.GraphPosition;
                                 selectedNode = node;
                                 e.Use();
                                 return;
@@ -236,7 +301,7 @@ public class DialogueNodeEditor : EditorWindow
                             {
                                 draggingNode = node;
                                 selectedNode = node;
-                                dragOffset = ScreenToWorldPosition(lastMousePosition) - node.graphPosition.position;
+                                dragOffset = ScreenToWorldPosition(lastMousePosition) - node.GraphPosition.position;
                                 e.Use();
                                 return;
                             }
@@ -246,7 +311,6 @@ public class DialogueNodeEditor : EditorWindow
                     // If clicked on empty space, deselect everything
                     selectedNode = null;
                     connectingFrom = null;
-                    connectingChoiceIndex = -1;
                     GUI.changed = true;
                 }
                 else if (e.button == 1 || e.button == 2) // Right click or Middle mouse button
@@ -266,24 +330,12 @@ public class DialogueNodeEditor : EditorWindow
                             Rect screenRect = NodeToScreenRect(nodes[i]);
                             if (screenRect.Contains(lastMousePosition) && nodes[i] != connectingFrom)
                             {
-                                if (connectingChoiceIndex >= 0 && connectingChoiceIndex < connectingFrom.choices.Count)
-                                {
-                                    // Update existing choice
-                                    connectingFrom.choices[connectingChoiceIndex].targetNodeID = nodes[i].nodeID;
-                                }
-                                else
-                                {
-                                    // Create new choice
-                                    var newChoice = new DialogueChoice();
-                                    newChoice.targetNodeID = nodes[i].nodeID;
-                                    connectingFrom.choices.Add(newChoice);
-                                }
-                                EditorUtility.SetDirty(currentTree);
+                                // Handle connection based on node type
+                                HandleNodeConnection(connectingFrom, nodes[i]);
                                 break;
                             }
                         }
                         connectingFrom = null;
-                        connectingChoiceIndex = -1;
                         e.Use();
                     }
                     resizingNode = null;
@@ -301,10 +353,10 @@ public class DialogueNodeEditor : EditorWindow
                     // Handle node resizing
                     Vector2 worldMousePos = ScreenToWorldPosition(lastMousePosition);
                     Vector2 delta = worldMousePos - resizeStart;
-                    resizingNode.graphPosition = new Rect(
+                    resizingNode.GraphPosition = new Rect(
                         resizeStartRect.x,
                         resizeStartRect.y,
-                        Mathf.Max(350, resizeStartRect.width + delta.x), // Increased minimum width
+                        Mathf.Max(350, resizeStartRect.width + delta.x),
                         Mathf.Max(200, resizeStartRect.height + delta.y)
                     );
                     GUI.changed = true;
@@ -314,7 +366,10 @@ public class DialogueNodeEditor : EditorWindow
                 {
                     // Handle node dragging
                     Vector2 worldMousePos = ScreenToWorldPosition(lastMousePosition);
-                    draggingNode.graphPosition.position = worldMousePos - dragOffset;
+                    draggingNode.GraphPosition = new Rect(
+                        worldMousePos - dragOffset,
+                        draggingNode.GraphPosition.size
+                    );
                     GUI.changed = true;
                     e.Use();
                 }
@@ -350,7 +405,6 @@ public class DialogueNodeEditor : EditorWindow
                 else if (e.keyCode == KeyCode.Escape)
                 {
                     connectingFrom = null;
-                    connectingChoiceIndex = -1;
                     selectedNode = null;
                     resizingNode = null;
                     draggingNode = null;
@@ -366,14 +420,32 @@ public class DialogueNodeEditor : EditorWindow
                     ZoomAtPosition(lastMousePosition, -0.1f);
                     e.Use();
                 }
-                else if (e.keyCode == KeyCode.Escape) 
-                {
-                    zoomLevel = 1.0f;
-                    zoomPan = Vector2.zero;
-                    e.Use();
-                }
                 break;
         }
+    }
+
+    private void HandleNodeConnection(INode fromNode, INode toNode)
+    {
+        // Handle connections based on node type
+        if (fromNode is DialogueINode DialogueINode)
+        {
+            // For dialogue nodes, add a new choice
+            var newChoice = new DialogueChoice();
+            newChoice.targetNodeID = toNode.NodeID;
+            newChoice.choiceText = $"Go to {toNode.NodeID}";
+            DialogueINode.choices.Add(newChoice);
+        }
+        else if (fromNode is AchievementNode achievementNode)
+        {
+            // For achievement nodes, add to NextAchievements
+            if (achievementNode.NextAchievements == null)
+                achievementNode.NextAchievements = new List<string>();
+            
+            if (!achievementNode.NextAchievements.Contains(toNode.NodeID))
+                achievementNode.NextAchievements.Add(toNode.NodeID);
+        }
+        
+        EditorUtility.SetDirty(currentTree);
     }
 
     private Vector2 ScreenToWorldPosition(Vector2 screenPos, float customZoom = -1)
@@ -387,10 +459,10 @@ public class DialogueNodeEditor : EditorWindow
         return (worldPos * zoomLevel) + zoomPan;
     }
 
-    private Rect NodeToScreenRect(DialogueNode node)
+    private Rect NodeToScreenRect(INode node)
     {
-        Vector2 screenPos = WorldToScreenPosition(node.graphPosition.position);
-        Vector2 screenSize = node.graphPosition.size * zoomLevel;
+        Vector2 screenPos = WorldToScreenPosition(node.GraphPosition.position);
+        Vector2 screenSize = node.GraphPosition.size * zoomLevel;
         return new Rect(screenPos, screenSize);
     }
 
@@ -409,15 +481,15 @@ public class DialogueNodeEditor : EditorWindow
         GUILayout.BeginHorizontal(EditorStyles.toolbar);
         
         EditorGUI.BeginChangeCheck();
-        currentTree = (DialogueTree)EditorGUILayout.ObjectField(currentTree, typeof(DialogueTree), false);
+        currentTree = (ScriptableObject)EditorGUILayout.ObjectField(currentTree, typeof(ScriptableObject), false);
         if (EditorGUI.EndChangeCheck())
         {
             selectedNode = null;
             connectingFrom = null;
+            nodeTreeInterface = currentTree as INodeTree;
         }
         
         GUILayout.FlexibleSpace();
-
 
         if (GUILayout.Button("New Node", EditorStyles.toolbarButton))
         {
@@ -434,9 +506,7 @@ public class DialogueNodeEditor : EditorWindow
         {
             if (EditorUtility.DisplayDialog("Clear All Nodes", "Are you sure you want to delete all nodes?", "Yes", "No"))
             {
-                currentTree.nodes.Clear();
-                currentTree.startNodeID = "";
-                EditorUtility.SetDirty(currentTree);
+                ClearAllNodes();
             }
         }
         
@@ -444,10 +514,19 @@ public class DialogueNodeEditor : EditorWindow
         {
             EditorUtility.SetDirty(currentTree);
             AssetDatabase.SaveAssets();
-            Debug.Log("Dialogue Tree saved!");
+            Debug.Log("Node Tree saved!");
         }
         
         GUILayout.EndHorizontal();
+    }
+
+    private void ClearAllNodes()
+    {
+        if (nodeTreeInterface == null) return;
+        
+        nodes.Clear();
+        nodeTreeInterface.StartNodeID = "";
+        EditorUtility.SetDirty(currentTree);
     }
 
     private void DrawGrid(Rect area, float gridSpacing, float gridOpacity, Color gridColor)
@@ -506,26 +585,27 @@ public class DialogueNodeEditor : EditorWindow
 
         for (int i = 0; i < nodes.Count; i++)
         {
-            DialogueNode node = nodes[i];
+            INode node = nodes[i];
             
-            // Auto-resize node based on content
-            Vector2 requiredSize = CalculateRequiredNodeSize(node);
-            node.graphPosition.width = Mathf.Max(350, requiredSize.x); // Increased minimum width
-            node.graphPosition.height = Mathf.Max(200, requiredSize.y);
+            // Get node drawer for this type
+            INodeDrawer drawer = GetNodeDrawer(node.GetType());
+            if (drawer != null)
+            {
+                Vector2 requiredSize = drawer.CalculateRequiredSize(node);
+                node.GraphPosition = new Rect(
+                    node.GraphPosition.position,
+                    new Vector2(Mathf.Max(350, requiredSize.x), Mathf.Max(200, requiredSize.y))
+                );
+            }
 
-            // Apply zoom and pan to node position for display
             Rect screenRect = NodeToScreenRect(node);
             screenRect.x += zoomArea.x;
             screenRect.y += zoomArea.y;
 
             bool isSelected = selectedNode == node;
-
-            //todo: builtin skins/darkskin/images/node1.png doesn't work well with rect sizes.
             GUIStyle style = isSelected ? selectedNodeStyle : nodeStyle;
             
-            // Draw node background
-            // GUI.Box(screenRect, "", style);
-            GUI.Box(screenRect, "");
+            GUI.Box(screenRect, "", style);
             
             DrawNodeContent(node, i, screenRect);
             
@@ -535,48 +615,16 @@ public class DialogueNodeEditor : EditorWindow
                 screenRect.y + screenRect.height - 16, 
                 16, 16
             );
-            GUI.Box(resizeHandle, "");
-            
+            GUI.Box(resizeHandle, "", resizeStyle);
         }
     }
 
-    private Vector2 CalculateRequiredNodeSize(DialogueNode node)
-    {
-        float width = 350f; // Base width
-        float height = 160f; // Base height 
-        
-        // if (!string.IsNullOrEmpty(node.dialogueText))
-        // {
-        //     int lineCount = Mathf.Max(1, node.dialogueText.Length / 50); // Adjust chars per line based on width
-        //     height += Mathf.Max(40, lineCount * 16);
-        // }
-        if (!string.IsNullOrEmpty(node.dialogueText))
-        {
-            float textAreaWidth = width - 20; 
-            GUIContent textContent = new GUIContent(node.dialogueText);
-            float textHeight = EditorStyles.textArea.CalcHeight(textContent, textAreaWidth);
-            float minTextHeight = EditorGUIUtility.singleLineHeight * 3;
-            height += Mathf.Max(minTextHeight, textHeight);
-        }
-        else
-        {
-            // Default height when no text
-            height += EditorGUIUtility.singleLineHeight * 3;
-        }
-        height += node.choices.Count * 100f;
-        
-        height += 20f;
-        
-        return new Vector2(width, height);
-    }
-
-    private void DrawNodeContent(DialogueNode node, int nodeIndex, Rect screenRect)
+    private void DrawNodeContent(INode node, int nodeIndex, Rect screenRect)
     {
         Matrix4x4 originalMatrix = GUI.matrix;
         
         try
         {
-            // Scale the content with the node
             Matrix4x4 scaleMatrix = Matrix4x4.TRS(
                 new Vector3(screenRect.x, screenRect.y, 0),
                 Quaternion.identity,
@@ -584,17 +632,15 @@ public class DialogueNodeEditor : EditorWindow
             );
             GUI.matrix = scaleMatrix * originalMatrix;
             
-            // Calculate content area in world coordinates
-            Rect worldContentRect = new Rect(0, 0, node.graphPosition.width, node.graphPosition.height);
+            Rect worldContentRect = new Rect(0, 0, node.GraphPosition.width, node.GraphPosition.height);
             
-            // Begin the content area
             GUILayout.BeginArea(worldContentRect);
             
             // Node title header - this is now the only draggable area
             Rect headerRect = GUILayoutUtility.GetRect(screenRect.width, TITLE_BAR_HEIGHT, GUILayout.ExpandWidth(true));
-            GUI.Box(headerRect, $"Node {nodeIndex + 1}", nodeHeaderStyle);
+            GUI.Box(headerRect, $"{node.GetType().Name} {nodeIndex + 1}", nodeHeaderStyle);
             
-            // Node delete
+            // Node delete button
             Rect deleteButtonRect = new Rect(worldContentRect.width - 25, headerRect.height/2-10, 20, 20);
             Color originalColor = GUI.color;
             GUI.color = Color.red; 
@@ -606,63 +652,26 @@ public class DialogueNodeEditor : EditorWindow
                     return;
                 }
             }
-            GUI.color = originalColor; // Restore original color
-
-
-            // Node ID field
-            GUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("ID:", GUILayout.Width(30));
-            node.nodeID = EditorGUILayout.TextField(node.nodeID);
-            GUILayout.EndHorizontal();
+            GUI.color = originalColor;
 
             // Set as start button
             if (GUILayout.Button("Set as Start Node"))
             {
-                currentTree.startNodeID = node.nodeID;
+                nodeTreeInterface.StartNodeID = node.NodeID;
                 EditorUtility.SetDirty(currentTree);
             }
 
-            // Character Headshot
-            GUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Headshot ID:", GUILayout.Width(80));
-            node.characterHeadshotID = EditorGUILayout.IntField(node.characterHeadshotID);
-            GUILayout.EndHorizontal();
-
-            // Dialogue Text
-            EditorGUILayout.LabelField("Dialogue Text:");
-            
-            GUIStyle textAreaStyle = new GUIStyle(EditorStyles.textArea);
-            textAreaStyle.wordWrap = true; // This is the key line!
-
-            float textAreaWidth = worldContentRect.width - 20;
-            GUIContent textContent = new GUIContent(node.dialogueText);
-            float textHeight = textAreaStyle.CalcHeight(textContent, textAreaWidth);
-
-            float minTextHeight = EditorGUIUtility.singleLineHeight * 3;
-            float finalTextHeight = Mathf.Max(minTextHeight, textHeight);
-
-            node.dialogueText = EditorGUILayout.TextArea(node.dialogueText, textAreaStyle, 
-                GUILayout.Height(finalTextHeight));
-            // float availableWidth = worldContentRect.width - 20;
-            // float textHeight = EditorStyles.textArea.CalcHeight(new GUIContent(node.dialogueText), availableWidth);
-            // float minHeight = EditorStyles.textArea.lineHeight * 3;
-            // node.dialogueText = EditorGUILayout.TextArea(node.dialogueText, GUILayout.Height(Mathf.Max(minHeight, textHeight)));
-
-            EditorGUILayout.Space();
-            EditorGUILayout.LabelField("Choices:", EditorStyles.boldLabel);
-
-            for (int i = 0; i < node.choices.Count; i++)
+            // Use the appropriate node drawer
+            INodeDrawer drawer = GetNodeDrawer(node.GetType());
+            if (drawer != null)
             {
-                bool shouldContinue = DrawChoice(node, i, screenRect, worldContentRect);
-                if (!shouldContinue) 
-                {
-                    break;
-                }
+                drawer.DrawNode(node, worldContentRect.width, () => {
+                    DeleteNode(node);
+                });
             }
-
-            if (GUILayout.Button("Add New Choice"))
+            else
             {
-                node.choices.Add(new DialogueChoice());
+                EditorGUILayout.LabelField("No drawer available for this node type");
             }
             
             GUILayout.EndArea();
@@ -673,98 +682,11 @@ public class DialogueNodeEditor : EditorWindow
         }
     }
 
-    private bool DrawChoice(DialogueNode node, int choiceIndex, Rect screenRect, Rect worldContentRect)
+    private INodeDrawer GetNodeDrawer(System.Type nodeType)
     {
-        GUILayout.BeginVertical("box");
-        
-        // Choice header
-        GUILayout.BeginHorizontal();
-        
-        // Choice content (left side)
-        GUILayout.BeginVertical(GUILayout.ExpandWidth(true));
-        
-        // Choice text
-        GUILayout.BeginHorizontal();
-        EditorGUILayout.LabelField($"Choice {choiceIndex + 1}:", GUILayout.Width(60));
-        node.choices[choiceIndex].choiceText = EditorGUILayout.TextField(node.choices[choiceIndex].choiceText);
-        GUILayout.EndHorizontal();
-
-        // Sort order
-        GUILayout.BeginHorizontal();
-        EditorGUILayout.LabelField("Sort Order:", GUILayout.Width(60));
-        node.choices[choiceIndex].sortOrder = EditorGUILayout.IntField(node.choices[choiceIndex].sortOrder);
-        GUILayout.EndHorizontal();
-
-        // Button Action MonoBehaviour
-        GUILayout.BeginHorizontal();
-        EditorGUILayout.LabelField("Button Action:", GUILayout.Width(80));
-        node.choices[choiceIndex].buttonAction = EditorGUILayout.TextField(
-            node.choices[choiceIndex].buttonAction
-        );
-        GUILayout.EndHorizontal();
-
-        // Target node display
-        if (!string.IsNullOrEmpty(node.choices[choiceIndex].targetNodeID))
-        {
-            EditorGUILayout.LabelField($"→ {node.choices[choiceIndex].targetNodeID}");
-        }
-        else
-        {
-            EditorGUILayout.LabelField("→ Not connected");
-        }
-        
-        GUILayout.EndVertical(); // End choice content
-        
-        GUILayout.BeginVertical(GUILayout.Width(40), GUILayout.Height(60));
-        
-        GUILayout.FlexibleSpace();
-        Rect outputPortRect = GUILayoutUtility.GetRect(16, 16, GUILayout.Width(16), GUILayout.Height(16));
-        
-        bool isConnected = !string.IsNullOrEmpty(node.choices[choiceIndex].targetNodeID);
-        GUIStyle portStyle = isConnected ? connectedPortStyle : disconnectedPortStyle;
-        
-        if (portStyle != null)
-        {
-            GUI.Box(outputPortRect, "", portStyle);
-        }
-        else
-        {
-            GUI.Box(outputPortRect, "", GUI.skin.box);
-        }
-        
-        Vector2 portWorldPos = new Vector2(
-            worldContentRect.x + outputPortRect.x + outputPortRect.width / 2,
-            worldContentRect.y + outputPortRect.y + outputPortRect.height / 2
-        );
-        Vector2 portScreenPos = new Vector2(
-            screenRect.x + portWorldPos.x * zoomLevel,
-            screenRect.y + portWorldPos.y * zoomLevel
-        );
-        choicePortPositions[node.choices[choiceIndex]] = portScreenPos;
-        
-        if (Event.current.type == EventType.MouseDown && outputPortRect.Contains(Event.current.mousePosition))
-        {
-            connectingFrom = node;
-            connectingChoiceIndex = choiceIndex;
-            Event.current.Use();
-        }
-        
-        GUILayout.FlexibleSpace();
-        
-        bool choiceDeleted = false;
-        if (GUILayout.Button("X", GUILayout.Width(20)))
-        {
-            node.choices.RemoveAt(choiceIndex);
-            choiceDeleted = true;
-        }
-        
-        GUILayout.EndVertical(); // End right-aligned controls
-        
-        GUILayout.EndHorizontal(); // End choice header
-        GUILayout.EndVertical(); // End choice box
-        
-        // If choice was deleted, return false to break out of the loop
-        return !choiceDeleted;
+        if (nodeDrawers.ContainsKey(nodeType))
+            return nodeDrawers[nodeType];
+        return null;
     }
 
     private void DrawConnections()
@@ -775,121 +697,48 @@ public class DialogueNodeEditor : EditorWindow
         
         foreach (var node in nodes)
         {
-            for (int i = 0; i < node.choices.Count; i++)
+            List<string> connectedNodeIDs = node.GetConnectedNodeIDs();
+            foreach (string targetNodeID in connectedNodeIDs)
             {
-                var choice = node.choices[i];
-                if (!string.IsNullOrEmpty(choice.targetNodeID))
+                INode targetNode = nodes.Find(n => n.NodeID == targetNodeID);
+                if (targetNode != null)
                 {
-                    DialogueNode targetNode = nodes.Find(n => n.nodeID == choice.targetNodeID);
-                    if (targetNode != null)
-                    {
-                        Vector2 startPos = Vector2.zero;
-                        if (choicePortPositions.ContainsKey(choice))
-                        {
-                            startPos = choicePortPositions[choice];
-                        }
-                        else
-                        {
-                            Rect sourceScreenRect = NodeToScreenRect(node);
-                            startPos = new Vector2(
-                                sourceScreenRect.x + sourceScreenRect.width,
-                                sourceScreenRect.y + 100 + (i * 40) // Approximate position
-                            );
-                        }
-                        
-                        Rect targetScreenRect = NodeToScreenRect(targetNode);
-                        Vector2 endPos = new Vector2(
-                            targetScreenRect.x,
-                            targetScreenRect.y + targetScreenRect.height / 2
-                        );
-                        
-                        
-                        Vector2 startTangent = startPos + Vector2.right * 50;
-                        Vector2 endTangent = endPos + Vector2.left * 50;
-                        
-                        Handles.DrawBezier(startPos, endPos, startTangent, endTangent, Color.green, null, 4f);
-                        
-                        Handles.color = Color.blue;
-                        Handles.DrawSolidDisc(startPos, Vector3.forward, 4f);
-                        Handles.DrawSolidDisc(endPos, Vector3.forward, 4f);
-                        Handles.color = Color.white;
-                    }
+                    Vector2 startPos = new Vector2(
+                        node.GraphPosition.x + node.GraphPosition.width,
+                        node.GraphPosition.y + node.GraphPosition.height / 2
+                    );
+                    Vector2 endPos = new Vector2(
+                        targetNode.GraphPosition.x,
+                        targetNode.GraphPosition.y + targetNode.GraphPosition.height / 2
+                    );
+                    
+                    startPos = WorldToScreenPosition(startPos);
+                    endPos = WorldToScreenPosition(endPos);
+                    
+                    Vector2 startTangent = startPos + Vector2.right * 50;
+                    Vector2 endTangent = endPos + Vector2.left * 50;
+                    
+                    Handles.DrawBezier(startPos, endPos, startTangent, endTangent, Color.green, null, 4f);
+                    
+                    Handles.color = Color.blue;
+                    Handles.DrawSolidDisc(startPos, Vector3.forward, 4f);
+                    Handles.DrawSolidDisc(endPos, Vector3.forward, 4f);
+                    Handles.color = Color.white;
                 }
             }
         }
         
         Handles.EndGUI();
     }
-    private void DrawDebugInfo()
-    {
-        // mpos
-        GUILayout.BeginArea(new Rect(10, position.height - 100, 500, 100));
-        GUILayout.Label($"Mouse: {lastMousePosition}");
-        GUILayout.Label($"Zoom: {zoomLevel}");
-        GUILayout.Label($"ZoomPan: {zoomPan}");
-
-        if (nodes != null && nodes.Count > 0 && selectedNode != null)
-        {
-            Rect screenRect = NodeToScreenRect(selectedNode);
-            GUILayout.Label($"Node Screen: {screenRect}");
-            GUILayout.Label($"Node World: {selectedNode.graphPosition}");
-            Rect resizeHandle = new Rect(
-                screenRect.x + screenRect.width - 16,
-                screenRect.y + screenRect.height - 16,
-                16, 16
-            );
-            GUILayout.Label($"Resize Handle: {resizeHandle}");
-            GUILayout.Label($"Handle Contains Mouse: {resizeHandle.Contains(lastMousePosition)}");
-        }
-        GUILayout.EndArea();
-    }
-    private void DrawArrow(Vector3 position, Vector3 direction, Color color)
-    {
-        float arrowSize = 8f;
-        Vector3 right = Quaternion.LookRotation(direction) * Quaternion.Euler(0, 30, 0) * Vector3.back;
-        Vector3 left = Quaternion.LookRotation(direction) * Quaternion.Euler(0, -30, 0) * Vector3.back;
-        
-        Handles.color = color;
-        Handles.DrawLine(position, position + right * arrowSize);
-        Handles.DrawLine(position, position + left * arrowSize);
-        Handles.color = Color.white;
-    }
 
     private void DrawConnectionLine(Event e, Rect zoomArea)
     {
         if (connectingFrom != null)
         {
-            Vector2 startPos;
-            
-            if (connectingChoiceIndex >= 0 && connectingChoiceIndex < connectingFrom.choices.Count)
-            {
-                // Get the actual port position from our stored dictionary
-                var choice = connectingFrom.choices[connectingChoiceIndex];
-                if (choicePortPositions.ContainsKey(choice))
-                {
-                    startPos = choicePortPositions[choice];
-                }
-                else
-                {
-                    // Fallback calculation
-                    float baseYOffset = 180f;
-                    float choiceSpacing = 100f;
-                    float choiceYOffset = baseYOffset + (connectingChoiceIndex * choiceSpacing);
-                    
-                    startPos = new Vector2(
-                        (connectingFrom.graphPosition.x * zoomLevel) + zoomPan.x + zoomArea.x + (connectingFrom.graphPosition.width * zoomLevel) - 8,
-                        (connectingFrom.graphPosition.y * zoomLevel) + zoomPan.y + zoomArea.y + Mathf.Min(choiceYOffset, connectingFrom.graphPosition.height * zoomLevel - 20)
-                    );
-                }
-            }
-            else
-            {
-                // Connecting from node center (new choice)
-                startPos = new Vector2(
-                    (connectingFrom.graphPosition.x * zoomLevel) + zoomPan.x + zoomArea.x + (connectingFrom.graphPosition.width * zoomLevel) / 2,
-                    (connectingFrom.graphPosition.y * zoomLevel) + zoomPan.y + zoomArea.y + (connectingFrom.graphPosition.height * zoomLevel) / 2
-                );
-            }
+            Vector2 startPos = new Vector2(
+                (connectingFrom.GraphPosition.x * zoomLevel) + zoomPan.x + zoomArea.x + (connectingFrom.GraphPosition.width * zoomLevel) / 2,
+                (connectingFrom.GraphPosition.y * zoomLevel) + zoomPan.y + zoomArea.y + (connectingFrom.GraphPosition.height * zoomLevel) / 2
+            );
             
             Vector2 endPos = new Vector2(e.mousePosition.x, e.mousePosition.y);
             
@@ -924,46 +773,125 @@ public class DialogueNodeEditor : EditorWindow
 
     private void CreateNode()
     {
-        if (currentTree == null) return;
+        if (nodeTreeInterface == null) return;
 
-        DialogueNode newNode = new DialogueNode
+        // Create node based on tree type
+        if (currentTree is DialogueINodeTree dialogueTree)
+        {
+            CreateDialogueNode(dialogueTree);
+        }
+        else if (currentTree is AchievementTree achievementTree)
+        {
+            CreateAchievementNode(achievementTree);
+        }
+        else
+        {
+            CreateGenericNode();
+        }
+    }
+
+    private void CreateDialogueNode(DialogueINodeTree dialogueTree)
+    {
+        DialogueINode newNode = new DialogueINode
         {
             nodeID = $"node_{System.Guid.NewGuid().ToString().Substring(0, 8)}",
             dialogueText = "Enter dialogue text here...",
-            graphPosition = new Rect(100 + nodes.Count * 30, 100 + nodes.Count * 30, 350, 200) // Increased width
+            graphPosition = new Rect(100 + nodes.Count * 30, 100 + nodes.Count * 30, 350, 200)
         };
 
-        currentTree.nodes.Add(newNode);
+        dialogueTree.nodes.Add(newNode);
         
-        if (string.IsNullOrEmpty(currentTree.startNodeID))
+        if (string.IsNullOrEmpty(nodeTreeInterface.StartNodeID))
         {
-            currentTree.startNodeID = newNode.nodeID;
+            nodeTreeInterface.StartNodeID = newNode.nodeID;
         }
 
         EditorUtility.SetDirty(currentTree);
         GUI.changed = true;
     }
 
-    private void DeleteNode(DialogueNode nodeToDelete)
+    private void CreateAchievementNode(AchievementTree achievementTree)
+    {
+        AchievementNode newNode = new AchievementNode
+        {
+            NodeID = $"achievement_{System.Guid.NewGuid().ToString().Substring(0, 8)}",
+            TitleText = "New Achievement",
+            DescriptionText = "Achievement description...",
+            graphPosition = new Rect(100 + nodes.Count * 30, 100 + nodes.Count * 30, 400, 400)
+        };
+
+        achievementTree.nodes.Add(newNode);
+        
+        if (string.IsNullOrEmpty(nodeTreeInterface.StartNodeID))
+        {
+            nodeTreeInterface.StartNodeID = newNode.NodeID;
+        }
+
+        EditorUtility.SetDirty(currentTree);
+        GUI.changed = true;
+    }
+
+    private void CreateGenericNode()
+    {
+        // Create a generic node using reflection
+        var nodeType = nodeTreeInterface.Nodes.GetType().GetGenericArguments()[0];
+        INode newNode = Activator.CreateInstance(nodeType) as INode;
+        
+        if (newNode != null)
+        {
+            newNode.NodeID = $"node_{System.Guid.NewGuid().ToString().Substring(0, 8)}";
+            newNode.GraphPosition = new Rect(100 + nodes.Count * 30, 100 + nodes.Count * 30, 350, 200);
+            
+            // Use reflection to add to nodes list
+            var nodesProperty = currentTree.GetType().GetField("nodes");
+            if (nodesProperty != null)
+            {
+                var nodesList = nodesProperty.GetValue(currentTree) as System.Collections.IList;
+                nodesList?.Add(newNode);
+            }
+            
+            if (string.IsNullOrEmpty(nodeTreeInterface.StartNodeID))
+            {
+                nodeTreeInterface.StartNodeID = newNode.NodeID;
+            }
+
+            EditorUtility.SetDirty(currentTree);
+            GUI.changed = true;
+        }
+    }
+
+    private void DeleteNode(INode nodeToDelete)
     {
         if (nodes.Count <= 1) return;
 
         // Remove all references to this node
         foreach (var node in nodes)
         {
-            for (int i = node.choices.Count - 1; i >= 0; i--)
+            List<string> connectedIDs = node.GetConnectedNodeIDs();
+            connectedIDs.RemoveAll(id => id == nodeToDelete.NodeID);
+            
+            // Type-specific cleanup
+            if (node is DialogueINode DialogueINode)
             {
-                if (node.choices[i].targetNodeID == nodeToDelete.nodeID)
+                for (int i = DialogueINode.choices.Count - 1; i >= 0; i--)
                 {
-                    node.choices[i].targetNodeID = "";
+                    if (DialogueINode.choices[i].targetNodeID == nodeToDelete.NodeID)
+                    {
+                        DialogueINode.choices[i].targetNodeID = "";
+                    }
                 }
+            }
+            else if (node is AchievementNode achievementNode)
+            {
+                if (achievementNode.NextAchievements != null)
+                    achievementNode.NextAchievements.RemoveAll(id => id == nodeToDelete.NodeID);
             }
         }
         
         // Update start node if needed
-        if (currentTree.startNodeID == nodeToDelete.nodeID)
+        if (nodeTreeInterface.StartNodeID == nodeToDelete.NodeID)
         {
-            currentTree.startNodeID = nodes[0].nodeID;
+            nodeTreeInterface.StartNodeID = nodes[0].NodeID;
         }
         
         nodes.Remove(nodeToDelete);

@@ -28,7 +28,7 @@ public class DialogueChoice
     public int sortOrder; 
     public string choiceText;
     public string targetNodeID;
-    public MonoBehaviour buttonAction;
+    public string buttonAction;
     public bool enabled = true;
 }
 

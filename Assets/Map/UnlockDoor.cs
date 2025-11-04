@@ -1,12 +1,16 @@
-using UnityEngine;
 
-public class UnlockDoor : MonoBehaviour
+public class UnlockDoor : EventAction
 {
     public ItemInteraction interaction;
     // called by DialogueResponseCache The moment the button is clicked.
-    public void DialogueButtonAction()
+    // public void DialogueButtonAction()
+    // {
+    //     interaction.CanInteract = true;
+    // }
+
+    public override object DoEventAction()
     {
         interaction.CanInteract = true;
+        return true;
     }
-    
 }
