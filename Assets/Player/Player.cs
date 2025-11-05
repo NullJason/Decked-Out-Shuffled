@@ -10,7 +10,7 @@ public class Player : MonoBehaviour
     public Transform AchievementsPopupContainer;
     public GameObject AchievementBase; // should be organized using ui list layout
     public AchievementTree Achievements;
-
+    public string PlayerName;
     private Rigidbody2D rb;
     private Animator animator;
     private Vector2 movement;
@@ -56,6 +56,9 @@ public class Player : MonoBehaviour
 
     public void ObtainAchievement(string AchievementID)
     {
+        AchievementNode achievementInfo = (AchievementNode)Achievements.GetNode(AchievementID);
+        if (!achievementInfo.isUnlocked) return;
+        
         GameObject AchievementBaseClone = Instantiate(AchievementBase, AchievementsPopupContainer); // uilistlayout will animate.
         AchievementUIReference AUIRef = AchievementBaseClone.GetComponent<AchievementUIReference>();
         SpriteRenderer AchievementIconRenderer = AUIRef.AchievementIconRenderer;
@@ -63,7 +66,11 @@ public class Player : MonoBehaviour
         TextMeshProUGUI AchievementTitleText = AUIRef.AchievementTitleText;
         TextMeshProUGUI AchievementDescriptionText = AUIRef.AchievementDescriptionText;
 
-        AchievementNode achievementInfo = Achievements.GetTypedNode(AchievementID);
+        achievementInfo.IsObtained = true;
+        foreach(string id in achievementInfo.NextAchievements)
+        {
+            AchievementNode a=(AchievementNode)Achievements.GetNode(id); a.isUnlocked = true;
+        }
 
         if (achievementInfo.AchievementIcon != null) AchievementIconRenderer.sprite = achievementInfo.AchievementIcon;
         if (achievementInfo.IconBorder != null) AchievementBorderRenderer.sprite = achievementInfo.IconBorder;

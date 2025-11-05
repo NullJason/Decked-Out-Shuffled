@@ -19,24 +19,31 @@ public interface INodeTree
 }
 
 // Generic node tree implementation
-public class NodeTree<T> : ScriptableObject, INodeTree where T : INode, new()
+[System.Serializable]
+public class NodeTree : ScriptableObject, INodeTree
 {
-    public List<T> nodes = new List<T>();
+   // for polymorphic serialization
+    [SerializeReference] 
+    private List<INode> _nodes = new List<INode>();
+    
     public string startNodeID;
-    
-    public List<INode> Nodes 
-    { 
-        get 
-        {
-            var result = new List<INode>();
-            foreach (var node in nodes) result.Add(node);
-            return result;
-        }
-    }
-    
+
+    // Public property for editor access with proper serialization
+    public List<INode> Nodes => _nodes;
+
     public string StartNodeID { get => startNodeID; set => startNodeID = value; }
-    
-    public INode GetNode(string id) => nodes.Find(n => n.NodeID == id);
-    
-    public T GetTypedNode(string id) => nodes.Find(n => n.NodeID == id);
+
+    public INode GetNode(string id) => _nodes.Find(n => n.NodeID == id);
+
+    // Helper method to add nodes safely
+    public void AddNode(INode node)
+    {
+        _nodes.Add(node);
+    }
+
+    // Helper method to remove nodes safely
+    public void RemoveNode(INode node)
+    {
+        _nodes.Remove(node);
+    }
 }

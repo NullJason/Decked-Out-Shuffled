@@ -12,7 +12,7 @@ public class DialogueResponseCache : MonoBehaviour
     [SerializeField] private GameObject ButtonContainer;
     [SerializeField] private GameObject ButtonPrefab;
     [SerializeField] private Dialogue mainDialogueMono;
-    [SerializeField] private DialogueActionManager dialogueActionManager;
+    [SerializeField] private ActionManager dialogueActionManager;
     private List<GameObject> ButtonCache = new List<GameObject>();
     private DialogueResponse CurrentDR;
     [SerializeField] private DialogueCharacters dialogueCharacters;

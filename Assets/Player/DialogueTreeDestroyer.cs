@@ -5,7 +5,7 @@ public class DialogueTreeDestroyer : MonoBehaviour
 {
     [Header("This Manages Clones and destroys Clones of DialogueTree SOs to prevent clogigng up the asset folder after game ends.")]
     public bool DoDestroyState = true;
-    public static List<DialogueTree> trees;
+    public static List<DialogueTree> trees = new List<DialogueTree>();
     public static void AddTree(DialogueTree t) { trees.Add(t); }
     /// <summary>
     /// Creates a deep copy of a DialogueTree ScriptableObject

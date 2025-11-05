@@ -5,10 +5,11 @@ using System;
 
 public class GenericNodeEditor : EditorWindow
 {
-    private ScriptableObject currentTree;
+    private NodeTree currentTree;
     private INodeTree nodeTreeInterface;
     private List<INode> nodes => nodeTreeInterface?.Nodes;
-    
+    private Dictionary<INode, Vector2> achievementPortPositions = new Dictionary<INode, Vector2>();
+    private Dictionary<AchievementNodeDrawer, Rect> achievementDrawerPortRects = new Dictionary<AchievementNodeDrawer, Rect>();
     private GUIStyle nodeStyle;
     private GUIStyle selectedNodeStyle;
     private GUIStyle connectedPortStyle;
@@ -54,14 +55,18 @@ public class GenericNodeEditor : EditorWindow
 
     private void OnEnable()
     {
-        var dialogueDrawer = new DialogueINodeDrawer();
-        dialogueDrawer.OnChoicePortClicked = (node, choiceIndex) => {
-        connectingFrom = node;
-        // Store the choice index for connection
-    };
+        // var dialogueDrawer = new DialogueINodeDrawer();
+    //     dialogueDrawer.OnChoicePortClicked = (node, choiceIndex) => {
+    //     connectingFrom = node;
+    //     // Store the choice index for connection
+    // };
         // Register node drawers for different types
-        nodeDrawers[typeof(DialogueINode)] = new DialogueINodeDrawer();
-        nodeDrawers[typeof(AchievementNode)] = new AchievementNodeDrawer();
+        // nodeDrawers[typeof(DialogueINode)] = new DialogueINodeDrawer();
+         var achievementDrawer = new AchievementNodeDrawer();
+        achievementDrawer.OnChoicePortClicked = (node, choiceIndex) => {
+            connectingFrom = node;
+        };
+        nodeDrawers[typeof(AchievementNode)] = achievementDrawer;
     }
 
     private void InitializeStyles()
@@ -70,16 +75,16 @@ public class GenericNodeEditor : EditorWindow
 
         // Node styles
         nodeStyle = new GUIStyle();
-        nodeStyle.normal.background = EditorGUIUtility.Load("builtin skins/darkskin/images/node1.png") as Texture2D;
+        // nodeStyle.normal.background = EditorGUIUtility.Load("builtin skins/darkskin/images/node1.png") as Texture2D;
         if (nodeStyle.normal.background == null)
-            nodeStyle.normal.background = CreateColorTexture(new Color(0.3f, 0.3f, 0.3f, 0.9f));
+            nodeStyle.normal.background = CreateColorTexture(new Color(0.3f, 0.3f, 0.3f, 0.6f));
         nodeStyle.border = new RectOffset(12, 12, 12, 12);
         nodeStyle.padding = new RectOffset(10, 10, 10, 10);
         
         selectedNodeStyle = new GUIStyle();
-        selectedNodeStyle.normal.background = EditorGUIUtility.Load("builtin skins/darkskin/images/node1 on.png") as Texture2D;
+        // selectedNodeStyle.normal.background = EditorGUIUtility.Load("builtin skins/darkskin/images/node1 on.png") as Texture2D;
         if (selectedNodeStyle.normal.background == null)
-            selectedNodeStyle.normal.background = CreateColorTexture(new Color(0.4f, 0.4f, 0.6f, 0.9f));
+            selectedNodeStyle.normal.background = CreateColorTexture(new Color(0.043f, 0.271f, 0.588f, 0.8f));
         selectedNodeStyle.border = new RectOffset(12, 12, 12, 12);
         selectedNodeStyle.padding = new RectOffset(10, 10, 10, 10);
 
@@ -120,6 +125,7 @@ public class GenericNodeEditor : EditorWindow
 
     private void OnGUI()
     {
+
         // Initialize styles on first OnGUI call
         InitializeStyles();
 
@@ -132,6 +138,9 @@ public class GenericNodeEditor : EditorWindow
             EditorGUILayout.HelpBox("No Node Tree selected! Drag a node tree asset into the field above.", MessageType.Info);
             return;
         }
+
+        // Clear port positions at start of frame
+        achievementPortPositions.Clear();
 
         // Create default nodes if tree is empty
         if (nodes == null || nodes.Count == 0)
@@ -155,56 +164,8 @@ public class GenericNodeEditor : EditorWindow
         DrawZoomInfo();
 
         if (GUI.changed) Repaint();
+    
     }
-
-    private void CreateDefaultNodes()
-    {
-        if (nodeTreeInterface == null) return;
-
-        // Create a default node based on the tree type
-        if (currentTree is DialogueINodeTree)
-        {
-            CreateDialogueDefaultNodes();
-        }
-        else if (currentTree is AchievementTree)
-        {
-            CreateAchievementDefaultNodes();
-        }
-        else
-        {
-            // Generic fallback
-            CreateGenericDefaultNode();
-        }
-    }
-
-    private void CreateDialogueDefaultNodes()
-    {
-        DialogueINodeTree dialogueTree = currentTree as DialogueINodeTree;
-        if (dialogueTree == null) return;
-
-        // Create StartNode
-        DialogueINode startNode = new DialogueINode
-        {
-            nodeID = "StartNode",
-            dialogueText = "Welcome! This is the start of your dialogue.",
-            graphPosition = new Rect(100, 200, 350, 200)
-        };
-
-        // Create END node
-        DialogueINode endNode = new DialogueINode
-        {
-            nodeID = "END", 
-            dialogueText = "This conversation has ended.",
-            graphPosition = new Rect(500, 200, 350, 200)
-        };
-
-        dialogueTree.nodes.Add(startNode);
-        dialogueTree.nodes.Add(endNode);
-        dialogueTree.startNodeID = startNode.nodeID;
-
-        EditorUtility.SetDirty(currentTree);
-    }
-
     private void CreateAchievementDefaultNodes()
     {
         AchievementTree achievementTree = currentTree as AchievementTree;
@@ -219,23 +180,121 @@ public class GenericNodeEditor : EditorWindow
             graphPosition = new Rect(100, 200, 400, 400)
         };
 
-        achievementTree.nodes.Add(achievementNode);
-        achievementTree.startNodeID = achievementNode.NodeID;
+        // Use the safe add method
+        achievementTree.AddNode(achievementNode);
+        achievementTree.StartNodeID = achievementNode.NodeID;
 
         EditorUtility.SetDirty(currentTree);
+        AssetDatabase.SaveAssets(); // Save immediately
     }
+
+    private void DeleteNode(INode nodeToDelete)
+    {
+        if (nodes.Count <= 1) return;
+
+        // Remove all references to this node
+        foreach (var node in nodes)
+        {
+            List<string> connectedIDs = node.GetConnectedNodeIDs();
+            connectedIDs.RemoveAll(id => id == nodeToDelete.NodeID);
+            
+            if (node is AchievementNode achievementNode)
+            {
+                if (achievementNode.NextAchievements != null)
+                    achievementNode.NextAchievements.RemoveAll(id => id == nodeToDelete.NodeID);
+            }
+        }
+        
+        // Update start node if needed
+        if (nodeTreeInterface.StartNodeID == nodeToDelete.NodeID)
+        {
+            nodeTreeInterface.StartNodeID = nodes[0].NodeID;
+        }
+        
+        // Use safe removal
+        if (currentTree is NodeTree tree)
+        {
+            // We need to access the underlying list - this is a bit hacky but necessary
+            // due to the interface abstraction
+            var field = typeof(NodeTree).GetField("_nodes", 
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            if (field != null)
+            {
+                var nodeList = field.GetValue(currentTree) as List<INode>;
+                nodeList?.Remove(nodeToDelete);
+            }
+        }
+
+        if (selectedNode == nodeToDelete)
+        {
+            selectedNode = null;
+        }
+
+        EditorUtility.SetDirty(currentTree);
+        AssetDatabase.SaveAssets(); // Save changes
+        GUI.changed = true;
+    }
+    private void CreateDefaultNodes()
+    {
+        if (nodeTreeInterface == null) return;
+
+        // Create a default node based on the tree type
+        // if (currentTree is DialogueINodeTree)
+        // {
+        //     CreateDialogueDefaultNodes();
+        // }
+        if (currentTree is AchievementTree)
+        {
+            CreateAchievementDefaultNodes();
+        }
+        else
+        {
+            // Generic fallback
+            CreateGenericDefaultNode();
+        }
+    }
+
+    // private void CreateDialogueDefaultNodes()
+    // {
+    //     DialogueINodeTree dialogueTree = (DialogueINodeTree) currentTree;
+    //     if (dialogueTree == null) return;
+
+    //     // Create StartNode
+    //     DialogueINode startNode = new DialogueINode
+    //     {
+    //         nodeID = "StartNode",
+    //         dialogueText = "Welcome! This is the start of your dialogue.",
+    //         graphPosition = new Rect(100, 200, 350, 200)
+    //     };
+
+    //     // Create END node
+    //     DialogueINode endNode = new DialogueINode
+    //     {
+    //         nodeID = "END", 
+    //         dialogueText = "This conversation has ended.",
+    //         graphPosition = new Rect(500, 200, 350, 200)
+    //     };
+
+    //     dialogueTree.nodes.Add(startNode);
+    //     dialogueTree.nodes.Add(endNode);
+    //     dialogueTree.startNodeID = startNode.nodeID;
+
+    //     EditorUtility.SetDirty(currentTree);
+    // }
+
+
 
     private void CreateGenericDefaultNode()
     {
         // Create a simple default node
         var nodeType = nodeTreeInterface.Nodes.GetType().GetGenericArguments()[0];
         INode defaultNode = Activator.CreateInstance(nodeType) as INode;
-        
+
         if (defaultNode != null)
         {
             defaultNode.NodeID = "StartNode";
             defaultNode.GraphPosition = new Rect(100, 200, 350, 200);
-            
+
             // Use reflection to add to nodes list
             var nodesProperty = currentTree.GetType().GetField("nodes");
             if (nodesProperty != null)
@@ -243,25 +302,68 @@ public class GenericNodeEditor : EditorWindow
                 var nodesList = nodesProperty.GetValue(currentTree) as System.Collections.IList;
                 nodesList?.Add(defaultNode);
             }
-            
+
             nodeTreeInterface.StartNodeID = defaultNode.NodeID;
             EditorUtility.SetDirty(currentTree);
         }
     }
-
+    private ConnectionInfo hoveredConnection = null;
+    private void HandleConnectionHover(Event e, Rect zoomArea)
+    {
+        if (e.type == EventType.MouseMove)
+        {
+            ConnectionInfo newHovered = FindConnectionAtPosition(e.mousePosition);
+            if (hoveredConnection != newHovered)
+            {
+                hoveredConnection = newHovered;
+                GUI.changed = true;
+            }
+        }
+    }
     private void HandleEvents(Event e, Rect zoomArea)
     {
+        HandleConnectionRightClick(e, zoomArea);
+        HandleConnectionHover(e, zoomArea); 
         switch (e.type)
         {
             case EventType.MouseDown:
                 if (e.button == 0) // Left click
                 {
-                    // First check for resize handle
+                    foreach (var kvp in achievementPortPositions)
+                    {
+                        Vector2 portPos = kvp.Value;
+                        Rect portRect = new Rect(portPos.x - 8, portPos.y - 8, 16, 16);
+                        if (portRect.Contains(lastMousePosition))
+                        {
+                            connectingFrom = kvp.Key;
+                            selectedNode = kvp.Key;
+                            e.Use();
+                            return;
+                        }
+                    }
                     resizingNode = null;
                     draggingNode = null;
                     
                     if (nodes != null)
                     {
+                        // Check for achievement port clicks
+                        foreach (var node in nodes)
+                        {
+                            if (node is AchievementNode && achievementPortPositions.ContainsKey(node))
+                            {
+                                Vector2 portPos = achievementPortPositions[node];
+                                Rect portRect = new Rect(portPos.x - 8, portPos.y - 8, 16, 16);
+                                if (portRect.Contains(lastMousePosition))
+                                {
+                                    connectingFrom = node;
+                                    selectedNode = node;
+                                    e.Use();
+                                    return;
+                                }
+                            }
+                        }
+                        
+                        // Then check for resize handle (your existing code)
                         foreach (var node in nodes)
                         {
                             Rect screenRect = NodeToScreenRect(node);
@@ -282,11 +384,8 @@ public class GenericNodeEditor : EditorWindow
                                 return;
                             }
                         }
-                    }
-                    
-                    // Then check for node dragging (ONLY on title bar)
-                    if (nodes != null)
-                    {
+                        
+                        // Then check for node dragging (ONLY on title bar)
                         foreach (var node in nodes)
                         {
                             Rect screenRect = NodeToScreenRect(node);
@@ -330,7 +429,6 @@ public class GenericNodeEditor : EditorWindow
                             Rect screenRect = NodeToScreenRect(nodes[i]);
                             if (screenRect.Contains(lastMousePosition) && nodes[i] != connectingFrom)
                             {
-                                // Handle connection based on node type
                                 HandleNodeConnection(connectingFrom, nodes[i]);
                                 break;
                             }
@@ -427,15 +525,15 @@ public class GenericNodeEditor : EditorWindow
     private void HandleNodeConnection(INode fromNode, INode toNode)
     {
         // Handle connections based on node type
-        if (fromNode is DialogueINode DialogueINode)
-        {
-            // For dialogue nodes, add a new choice
-            var newChoice = new DialogueChoice();
-            newChoice.targetNodeID = toNode.NodeID;
-            newChoice.choiceText = $"Go to {toNode.NodeID}";
-            DialogueINode.choices.Add(newChoice);
-        }
-        else if (fromNode is AchievementNode achievementNode)
+        // if (fromNode is DialogueINode DialogueINode)
+        // {
+        //     // For dialogue nodes, add a new choice
+        //     var newChoice = new DialogueChoice();
+        //     newChoice.targetNodeID = toNode.NodeID;
+        //     newChoice.choiceText = $"Go to {toNode.NodeID}";
+        //     DialogueINode.choices.Add(newChoice);
+        // }
+        if (fromNode is AchievementNode achievementNode)
         {
             // For achievement nodes, add to NextAchievements
             if (achievementNode.NextAchievements == null)
@@ -481,7 +579,13 @@ public class GenericNodeEditor : EditorWindow
         GUILayout.BeginHorizontal(EditorStyles.toolbar);
         
         EditorGUI.BeginChangeCheck();
-        currentTree = (ScriptableObject)EditorGUILayout.ObjectField(currentTree, typeof(ScriptableObject), false);
+        currentTree = EditorGUILayout.ObjectField(currentTree, typeof(NodeTree), false) as NodeTree;
+        if (currentTree != null && !(currentTree is INodeTree))
+        {
+            Debug.LogWarning($"Selected object {currentTree.name} does not implement INodeTree. Please select a valid node tree.");
+            currentTree = null;
+        }
+        
         if (EditorGUI.EndChangeCheck())
         {
             selectedNode = null;
@@ -618,8 +722,18 @@ public class GenericNodeEditor : EditorWindow
             GUI.Box(resizeHandle, "", resizeStyle);
         }
     }
-
-    private void DrawNodeContent(INode node, int nodeIndex, Rect screenRect)
+    private string GetNodeDisplayName(INode node)
+    {
+        if (node is AchievementNode achievementNode)
+        {
+            return string.IsNullOrEmpty(achievementNode.TitleText) ? 
+                $"Unnamed Achievement ({achievementNode.NodeID})" : 
+                achievementNode.TitleText;
+        }
+        
+        return $"{node.GetType().Name} ({node.NodeID})";
+    }
+   private void DrawNodeContent(INode node, int nodeIndex, Rect screenRect)
     {
         Matrix4x4 originalMatrix = GUI.matrix;
         
@@ -636,10 +750,11 @@ public class GenericNodeEditor : EditorWindow
             
             GUILayout.BeginArea(worldContentRect);
             
-            // Node title header - this is now the only draggable area
+            // Node title header
+            string headerText = GetNodeDisplayName(node);
             Rect headerRect = GUILayoutUtility.GetRect(screenRect.width, TITLE_BAR_HEIGHT, GUILayout.ExpandWidth(true));
-            GUI.Box(headerRect, $"{node.GetType().Name} {nodeIndex + 1}", nodeHeaderStyle);
-            
+            GUI.Box(headerRect, headerText, nodeHeaderStyle);
+
             // Node delete button
             Rect deleteButtonRect = new Rect(worldContentRect.width - 25, headerRect.height/2-10, 20, 20);
             Color originalColor = GUI.color;
@@ -665,9 +780,29 @@ public class GenericNodeEditor : EditorWindow
             INodeDrawer drawer = GetNodeDrawer(node.GetType());
             if (drawer != null)
             {
-                drawer.DrawNode(node, worldContentRect.width, () => {
+                drawer.DrawNode(node, nodeTreeInterface, worldContentRect.width, () => {
                     DeleteNode(node);
                 });
+                
+                // Track port position for achievement nodes
+                if (node is AchievementNode && drawer is AchievementNodeDrawer achievementDrawer)
+                {
+                    // Calculate the exact port position in screen coordinates
+                    Rect portWorldRect = achievementDrawer.LastOutputPortRect;
+                    Vector2 portWorldPos = new Vector2(
+                        worldContentRect.x + portWorldRect.x + portWorldRect.width / 2,
+                        worldContentRect.y + portWorldRect.y + portWorldRect.height / 2
+                    );
+                    
+                    // Convert to screen coordinates
+                    Vector2 portScreenPos = new Vector2(
+                        screenRect.x + portWorldPos.x * zoomLevel,
+                        screenRect.y + portWorldPos.y * zoomLevel
+                    );
+                    
+                    achievementPortPositions[node] = portScreenPos;
+                    achievementDrawerPortRects[achievementDrawer] = portWorldRect;
+                }
             }
             else
             {
@@ -697,30 +832,64 @@ public class GenericNodeEditor : EditorWindow
         
         foreach (var node in nodes)
         {
+            // Draw achievement connections
+            if (node is AchievementNode achievementNode)
+            {
+                if (achievementNode.NextAchievements != null)
+                {
+                    foreach (string targetNodeID in achievementNode.NextAchievements)
+                    {
+                        INode targetNode = nodes.Find(n => n.NodeID == targetNodeID);
+                        if (targetNode != null)
+                        {
+                            // Start from the port position (red box)
+                            Vector2 startPos = achievementPortPositions.ContainsKey(node) ? 
+                                achievementPortPositions[node] : 
+                                GetRightInputPosition(node);
+                            
+                            Vector2 endPos = GetDefaultOutputPosition(targetNode);
+                            
+                            // Calculate tangents for a smooth curve
+                            Vector2 startTangent = startPos + Vector2.right * 50;
+                            Vector2 endTangent = endPos + Vector2.left * 50;
+                            
+                            bool isHovered = hoveredConnection != null && 
+                                            hoveredConnection.FromNode == node && 
+                                            hoveredConnection.ToNode == targetNode;
+                            
+                            Color connectionColor = isHovered ? Color.red : Color.yellow;
+                            float thickness = isHovered ? 5f : 3f;
+
+                            // Draw the bezier curve
+                            Handles.DrawBezier(startPos, endPos, startTangent, endTangent, Color.yellow, null, 3f);
+                            
+                            // Draw small circles at connection points
+                            Handles.color = Color.yellow;
+                            Handles.DrawSolidDisc(startPos, Vector3.forward, 4f);
+                            Handles.DrawSolidDisc(endPos, Vector3.forward, 4f);
+                            Handles.color = Color.white;
+                        }
+                    }
+                }
+            }
+            
+            // Keep existing dialogue connections
             List<string> connectedNodeIDs = node.GetConnectedNodeIDs();
             foreach (string targetNodeID in connectedNodeIDs)
             {
                 INode targetNode = nodes.Find(n => n.NodeID == targetNodeID);
-                if (targetNode != null)
+                if (targetNode != null && !(node is AchievementNode))
                 {
-                    Vector2 startPos = new Vector2(
-                        node.GraphPosition.x + node.GraphPosition.width,
-                        node.GraphPosition.y + node.GraphPosition.height / 2
-                    );
-                    Vector2 endPos = new Vector2(
-                        targetNode.GraphPosition.x,
-                        targetNode.GraphPosition.y + targetNode.GraphPosition.height / 2
-                    );
-                    
-                    startPos = WorldToScreenPosition(startPos);
-                    endPos = WorldToScreenPosition(endPos);
+                    // Your existing dialogue connection drawing
+                    Vector2 startPos = GetRightInputPosition(node);
+                    Vector2 endPos = GetDefaultOutputPosition(targetNode);
                     
                     Vector2 startTangent = startPos + Vector2.right * 50;
                     Vector2 endTangent = endPos + Vector2.left * 50;
                     
-                    Handles.DrawBezier(startPos, endPos, startTangent, endTangent, Color.green, null, 4f);
+                    Handles.DrawBezier(startPos, endPos, startTangent, endTangent, Color.green, null, 3f);
                     
-                    Handles.color = Color.blue;
+                    Handles.color = Color.green;
                     Handles.DrawSolidDisc(startPos, Vector3.forward, 4f);
                     Handles.DrawSolidDisc(endPos, Vector3.forward, 4f);
                     Handles.color = Color.white;
@@ -731,31 +900,180 @@ public class GenericNodeEditor : EditorWindow
         Handles.EndGUI();
     }
 
-    private void DrawConnectionLine(Event e, Rect zoomArea)
+    private Vector2 GetRightInputPosition(INode node)
     {
-        if (connectingFrom != null)
+        Rect screenRect = NodeToScreenRect(node);
+        return new Vector2(
+            screenRect.x + screenRect.width,
+            screenRect.y + screenRect.height / 2
+        );
+    }
+
+    private Vector2 GetDefaultOutputPosition(INode node)
+    {
+        Rect screenRect = NodeToScreenRect(node);
+        return new Vector2(
+            screenRect.x,
+            screenRect.y + screenRect.height / 2
+        );
+    }
+    
+    private void HandleConnectionRightClick(Event e, Rect zoomArea)
+    {
+        if (e.type == EventType.MouseDown && e.button == 1) // Right click
         {
-            Vector2 startPos = new Vector2(
-                (connectingFrom.GraphPosition.x * zoomLevel) + zoomPan.x + zoomArea.x + (connectingFrom.GraphPosition.width * zoomLevel) / 2,
-                (connectingFrom.GraphPosition.y * zoomLevel) + zoomPan.y + zoomArea.y + (connectingFrom.GraphPosition.height * zoomLevel) / 2
-            );
-            
-            Vector2 endPos = new Vector2(e.mousePosition.x, e.mousePosition.y);
-            
-            Handles.DrawBezier(
-                startPos,
-                endPos,
-                startPos,
-                endPos,
-                Color.green,
-                null,
-                2f
-            );
-            
+            // Check if right-clicked on a connection line
+            ConnectionInfo clickedConnection = FindConnectionAtPosition(e.mousePosition);
+            if (clickedConnection != null)
+            {
+                ShowConnectionContextMenu(clickedConnection);
+                e.Use();
+            }
+        }
+    }
+
+    private ConnectionInfo FindConnectionAtPosition(Vector2 screenPosition)
+    {
+        if (nodes == null) return null;
+
+        foreach (var node in nodes)
+        {
+            if (node is AchievementNode achievementNode)
+            {
+                if (achievementNode.NextAchievements != null)
+                {
+                    foreach (string targetNodeID in achievementNode.NextAchievements)
+                    {
+                        INode targetNode = nodes.Find(n => n.NodeID == targetNodeID);
+                        if (targetNode != null)
+                        {
+                            // Calculate connection points
+                            Vector2 startPos = achievementPortPositions.ContainsKey(node) ? 
+                                achievementPortPositions[node] : 
+                                GetDefaultOutputPosition(node);
+                            
+                            Vector2 endPos = GetRightInputPosition(targetNode);
+                            
+                            // Check if click is near the connection line
+                            if (IsPointNearConnection(screenPosition, startPos, endPos))
+                            {
+                                return new ConnectionInfo(node, targetNode);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        return null;
+    }
+
+    private bool IsPointNearConnection(Vector2 point, Vector2 start, Vector2 end, float maxDistance = 10f)
+    {
+        // Simple distance to line segment check
+        Vector2 line = end - start;
+        float lineLength = line.magnitude;
+        Vector2 lineDir = line.normalized;
+        
+        Vector2 pointToStart = point - start;
+        float dot = Vector2.Dot(pointToStart, lineDir);
+        
+        if (dot < 0) dot = 0;
+        if (dot > lineLength) dot = lineLength;
+        
+        Vector2 closestPoint = start + lineDir * dot;
+        float distance = Vector2.Distance(point, closestPoint);
+        
+        return distance <= maxDistance;
+    }
+
+    private void ShowConnectionContextMenu(ConnectionInfo connection)
+    {
+        string fromTitle = GetNodeDisplayName(connection.FromNode);
+        string toTitle = GetNodeDisplayName(connection.ToNode);
+        
+        GenericMenu menu = new GenericMenu();
+        menu.AddItem(new GUIContent($"Remove Connection: {fromTitle} → {toTitle}"), false, () => RemoveConnection(connection));
+        menu.ShowAsContext();
+    }
+
+    private void RemoveConnection(ConnectionInfo connection)
+    {
+        if (connection.FromNode is AchievementNode achievementNode)
+        {
+            achievementNode.RemoveConnection(connection.ToNode.NodeID);
+            EditorUtility.SetDirty(currentTree);
             GUI.changed = true;
         }
     }
 
+    // Helper class to store connection information
+    private class ConnectionInfo
+    {
+        public INode FromNode { get; }
+        public INode ToNode { get; }
+        
+        public ConnectionInfo(INode fromNode, INode toNode)
+        {
+            FromNode = fromNode;
+            ToNode = toNode;
+        }
+    }
+     private void DrawConnectionLine(Event e, Rect zoomArea)
+    {
+        if (connectingFrom != null)
+        {
+            Vector2 startPos;
+            
+            if (connectingFrom is AchievementNode && achievementPortPositions.ContainsKey(connectingFrom))
+            {
+                // Start from the actual port position (red box)
+                startPos = achievementPortPositions[connectingFrom];
+            }
+            else
+            {
+                // Fallback to right side
+                startPos = GetDefaultOutputPosition(connectingFrom);
+            }
+            
+            Vector2 endPos = new Vector2(e.mousePosition.x, e.mousePosition.y);
+            
+            // Draw the connection line with proper curve
+            Handles.BeginGUI();
+            
+            // Calculate tangents for smooth curve
+            Vector2 startTangent = startPos + Vector2.right * 50;
+            Vector2 endTangent = endPos;
+            if (endPos.x > startPos.x)
+            {
+                endTangent = endPos + Vector2.left * 50;
+            }
+            else
+            {
+                endTangent = endPos + Vector2.right * 50;
+            }
+            
+            Handles.DrawBezier(
+                startPos,
+                endPos,
+                startTangent,
+                endTangent,
+                Color.yellow,
+                null,
+                2f
+            );
+            
+            // Draw port circle
+            Handles.color = Color.yellow;
+            Handles.DrawSolidDisc(startPos, Vector3.forward, 4f);
+            Handles.color = Color.white;
+            
+            Handles.EndGUI();
+            
+            GUI.changed = true;
+        }
+    }
+    
     private void DrawZoomInfo()
     {
         // Draw zoom level in corner
@@ -776,11 +1094,11 @@ public class GenericNodeEditor : EditorWindow
         if (nodeTreeInterface == null) return;
 
         // Create node based on tree type
-        if (currentTree is DialogueINodeTree dialogueTree)
-        {
-            CreateDialogueNode(dialogueTree);
-        }
-        else if (currentTree is AchievementTree achievementTree)
+        // if (currentTree is DialogueINodeTree dialogueTree)
+        // {
+        //     CreateDialogueNode(dialogueTree);
+        // }
+        if (currentTree is AchievementTree achievementTree)
         {
             CreateAchievementNode(achievementTree);
         }
@@ -790,25 +1108,25 @@ public class GenericNodeEditor : EditorWindow
         }
     }
 
-    private void CreateDialogueNode(DialogueINodeTree dialogueTree)
-    {
-        DialogueINode newNode = new DialogueINode
-        {
-            nodeID = $"node_{System.Guid.NewGuid().ToString().Substring(0, 8)}",
-            dialogueText = "Enter dialogue text here...",
-            graphPosition = new Rect(100 + nodes.Count * 30, 100 + nodes.Count * 30, 350, 200)
-        };
+    // private void CreateDialogueNode(DialogueINodeTree dialogueTree)
+    // {
+    //     DialogueINode newNode = new DialogueINode
+    //     {
+    //         nodeID = $"node_{System.Guid.NewGuid().ToString().Substring(0, 8)}",
+    //         dialogueText = "Enter dialogue text here...",
+    //         graphPosition = new Rect(100 + nodes.Count * 30, 100 + nodes.Count * 30, 350, 200)
+    //     };
 
-        dialogueTree.nodes.Add(newNode);
+    //     dialogueTree.nodes.Add(newNode);
         
-        if (string.IsNullOrEmpty(nodeTreeInterface.StartNodeID))
-        {
-            nodeTreeInterface.StartNodeID = newNode.nodeID;
-        }
+    //     if (string.IsNullOrEmpty(nodeTreeInterface.StartNodeID))
+    //     {
+    //         nodeTreeInterface.StartNodeID = newNode.nodeID;
+    //     }
 
-        EditorUtility.SetDirty(currentTree);
-        GUI.changed = true;
-    }
+    //     EditorUtility.SetDirty(currentTree);
+    //     GUI.changed = true;
+    // }
 
     private void CreateAchievementNode(AchievementTree achievementTree)
     {
@@ -820,7 +1138,7 @@ public class GenericNodeEditor : EditorWindow
             graphPosition = new Rect(100 + nodes.Count * 30, 100 + nodes.Count * 30, 400, 400)
         };
 
-        achievementTree.nodes.Add(newNode);
+        achievementTree.AddNode(newNode);
         
         if (string.IsNullOrEmpty(nodeTreeInterface.StartNodeID))
         {
@@ -858,50 +1176,5 @@ public class GenericNodeEditor : EditorWindow
             EditorUtility.SetDirty(currentTree);
             GUI.changed = true;
         }
-    }
-
-    private void DeleteNode(INode nodeToDelete)
-    {
-        if (nodes.Count <= 1) return;
-
-        // Remove all references to this node
-        foreach (var node in nodes)
-        {
-            List<string> connectedIDs = node.GetConnectedNodeIDs();
-            connectedIDs.RemoveAll(id => id == nodeToDelete.NodeID);
-            
-            // Type-specific cleanup
-            if (node is DialogueINode DialogueINode)
-            {
-                for (int i = DialogueINode.choices.Count - 1; i >= 0; i--)
-                {
-                    if (DialogueINode.choices[i].targetNodeID == nodeToDelete.NodeID)
-                    {
-                        DialogueINode.choices[i].targetNodeID = "";
-                    }
-                }
-            }
-            else if (node is AchievementNode achievementNode)
-            {
-                if (achievementNode.NextAchievements != null)
-                    achievementNode.NextAchievements.RemoveAll(id => id == nodeToDelete.NodeID);
-            }
-        }
-        
-        // Update start node if needed
-        if (nodeTreeInterface.StartNodeID == nodeToDelete.NodeID)
-        {
-            nodeTreeInterface.StartNodeID = nodes[0].NodeID;
-        }
-        
-        nodes.Remove(nodeToDelete);
-        
-        if (selectedNode == nodeToDelete)
-        {
-            selectedNode = null;
-        }
-
-        EditorUtility.SetDirty(currentTree);
-        GUI.changed = true;
     }
 }

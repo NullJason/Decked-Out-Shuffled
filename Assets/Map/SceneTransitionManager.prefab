@@ -10,6 +10,9 @@ GameObject:
   m_Component:
   - component: {fileID: 7156382882444635791}
   - component: {fileID: 1851453626614776033}
+  - component: {fileID: 5328641809172593238}
+  - component: {fileID: 5273234666354794391}
+  - component: {fileID: 5864377282725601313}
   m_Layer: 0
   m_Name: SceneTransitionManager
   m_TagString: Untagged
@@ -44,3 +47,42 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 90cb537b54d45c347b128bd14f05a74d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &5328641809172593238
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3804905243617821551}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83b0cd516f6e42c41b5e71a436ceca60, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CharacterHeadshotImage: []
+--- !u!114 &5273234666354794391
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3804905243617821551}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9580f1413bc74d847aa75b96eb94fbb6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  DoDestroyState: 1
+--- !u!114 &5864377282725601313
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3804905243617821551}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 23b161230bb5da34abde0ff232ec01e8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  actionMappings: []

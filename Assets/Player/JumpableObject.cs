@@ -10,6 +10,7 @@ public class JumpableObject : MonoBehaviour
     [SerializeField] private bool CanManualFall = true; // 
     [SerializeField] private Transform GroundPos; // the y-value player will land on if they fall off platform. will use ease-in anim for pos.
     [SerializeField] private float InteractionDistance = 3;
+    [SerializeField] private Collider2D JOCollider;
     public static KeyCode JOInteractKey = KeyCode.Space;
 
     private GameObject player;
@@ -19,10 +20,7 @@ public class JumpableObject : MonoBehaviour
 
     void Start()
     {
-        player = GameObject.FindGameObjectWithTag("Player");
-        if (player != null)
-        {
-        }
+        player = GameObject.FindFirstObjectByType<Player>().gameObject;
 
         if (PlatformArea == null)
         {
@@ -74,7 +72,7 @@ public class JumpableObject : MonoBehaviour
     private void JumpOnObject()
     {
         if (player == null || PlatformArea == null) return;
-
+        JOCollider.isTrigger = true;
         SpriteRenderer playerSprite = player.GetComponent<SpriteRenderer>();
         if (playerSprite != null)
         {
@@ -82,7 +80,6 @@ public class JumpableObject : MonoBehaviour
         }
 
         Vector3 platformPosition = PlatformArea.bounds.center;
-        // todo set pivot to player's feet. make camera follow a obj centered on plr sprite.
         player.transform.position = new Vector3(platformPosition.x, platformPosition.y, player.transform.position.z);
 
         isPlayerOnObject = true;
@@ -113,6 +110,7 @@ public class JumpableObject : MonoBehaviour
     private IEnumerator FallOffObject()
     {
         if (player == null || GroundPos == null) yield break;
+        JOCollider.isTrigger = false;
 
         Vector3 startPos = player.transform.position;
         Vector3 endPos = new Vector3(startPos.x, GroundPos.position.y, startPos.z);

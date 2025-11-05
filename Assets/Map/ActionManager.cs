@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
-public class DialogueActionManager : MonoBehaviour
+public class ActionManager : MonoBehaviour
 {
     [System.Serializable]
     public class ActionMapping
