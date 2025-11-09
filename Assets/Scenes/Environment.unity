@@ -499,8 +499,7 @@ MonoBehaviour:
   agent: {fileID: 0}
   SmallTalkCanvas: {fileID: 614830975}
   dialogueMono: {fileID: 614830974}
-  PopUpText: "<typewriter> It seems the path forward is blocked. \n[Space] to Interact,
-    climb the pile.\n</typewriter>"
+  PopUpText: <typewriter>[Space]\nClimb the pile.</typewriter>
 --- !u!1 &719007106133374953
 GameObject:
   m_ObjectHideFlags: 0
@@ -785,6 +784,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: -0.056
       objectReference: {fileID: 0}
+    - target: {fileID: 3571353576527688627, guid: 88bf10c327d85b7488f2b71b9aaef579, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3685859958877906651, guid: 88bf10c327d85b7488f2b71b9aaef579, type: 3}
       propertyPath: agent
       value: 
@@ -793,6 +796,10 @@ PrefabInstance:
       propertyPath: agent
       value: 
       objectReference: {fileID: 2064206473911176052}
+    - target: {fileID: 3892324022361674431, guid: 88bf10c327d85b7488f2b71b9aaef579, type: 3}
+      propertyPath: FontSize
+      value: 20
+      objectReference: {fileID: 0}
     - target: {fileID: 4948511777513580630, guid: 88bf10c327d85b7488f2b71b9aaef579, type: 3}
       propertyPath: agent
       value: 
