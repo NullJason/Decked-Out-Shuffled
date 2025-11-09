@@ -14,7 +14,7 @@ public class AchievementNode : INode
     [SerializeField] public List<string> NextAchievements = new List<string>();
     [SerializeField] public Rect graphPosition;
 
-    // INode implementation
+    // INode implementation.
     public string NodeID { get => nodeID; set => nodeID = value; }
     public Rect GraphPosition { get => graphPosition; set => graphPosition = value; }
 

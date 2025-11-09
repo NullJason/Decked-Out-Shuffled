@@ -21,6 +21,7 @@ public class DialogueResponseCache : MonoBehaviour
     {
         if (ButtonPrefab == null) Debug.Log("BUTTON PREFAB HASN'T BEEN SET!");
         dialogueCharacters = FindFirstObjectByType<DialogueCharacters>();
+        if (dialogueActionManager == null) dialogueActionManager = FindFirstObjectByType<ActionManager>();
         if (ButtonContainer == null) ButtonContainer = GetComponentInChildren<UIListLayout>().gameObject;
     }
     public void SetDR(DialogueResponse dr)
