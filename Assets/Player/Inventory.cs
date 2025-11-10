@@ -11,12 +11,26 @@ public class Inventory : MonoBehaviour
     //Represents whether cards are being selected through toggles. Some actions may behave unexpectedly depending on whether this is true or false. 
     private protected bool selectMode = false;
 
+    //The UI panel on which to place toggles. 
     [SerializeField] private protected Transform ui;
+
+    //The GameObject or prefab representing a ui panel with a toggle. 
+    //Must have a Toggle Component!
     [SerializeField] private protected GameObject uiPanel;
+
     //what distance separates two panels on the display.
     [SerializeField] private protected float panelDeltaY = -50;
+
+    //The Cards that the user has acquired. 
     private protected List<Card> cards;
+
+    //Stores any Toggles that are created. 
     private protected List<Toggle> toggles;
+
+
+    //Represents the cards gotten in the most recent selection. 
+    private protected List<Card> reapedCards;
+
     private void Awake()
     {
         //TODO: Add save system... later. 
@@ -35,6 +49,7 @@ public class Inventory : MonoBehaviour
     //Should be called when the player wants to confirm their card selections. 
     //By getting the toggles, checks which cards were selected, returning them. 
     //Destroys the old toggles. 
+    //Also saves the reaped cards in reapedCards. 
     public List<Card> ReapCards()
     {
 	if(!selectMode) Debug.LogError("Cannot get cards selected when select mode is not active!");
@@ -47,7 +62,14 @@ public class Inventory : MonoBehaviour
 		GameObject.Destroy(t.gameObject);
 	}
 	toggles = null;
+	reapedCards = results;
+	selectMode = false;
         return results;
+    }
+
+    public List<Card> GetReapedCards(){
+	if(selectMode) Debug.LogError("Cannot get reaped cards, as cards are still being selected!");
+	return reapedCards;
     }
 
     //Returns the number of cards toggled on. 
