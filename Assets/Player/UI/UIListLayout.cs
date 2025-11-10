@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -67,6 +68,29 @@ public class UIListLayout : MonoBehaviour
     [Range(-180f, 180f)] public float rotationDegrees = 0f; // rotate layout around container pivot
     public bool rotateChildrenWithList = false; // if true, apply rotation to children localEulerAngles.z
 
+    [Header("Animation")]
+    public bool animate = false;
+    public Vector2 startingAnimationPosition = new Vector2(-200, 0);
+    public Vector2 endingAnimationPosition = Vector2.zero;
+    public AnimationType animType = AnimationType.EaseOut;
+    public float animationDuration = 0.5f;
+    public bool animateNewChildrenOnly = true;
+    
+    public enum AnimationType
+    {
+        Linear,
+        EaseIn,
+        EaseOut,
+        EaseInOut,
+        Cubic,
+        Quad,
+        Circ,
+        Elastic,
+        Bounce,
+        Back,
+        Sine
+    }
+
     [Header("Editor / Preview")]
     [Tooltip("Show a transparent preview in Scene view")]
     public bool showPreview = true;
@@ -78,10 +102,12 @@ public class UIListLayout : MonoBehaviour
     public bool setSizeDeltaToChild = false; // if uniformCellSize true, optionally set child's sizeDelta to cellSize when applying
     public bool ignoreInactiveChildren = true;
 
-    // Child tracking for auto-updates
+    // Child tracking for auto-updates and animation
     private int lastChildCount = 0;
     private List<Transform> trackedChildren = new List<Transform>();
     private Vector3 lastContainerPosition;
+    private Dictionary<RectTransform, Coroutine> activeAnimations = new Dictionary<RectTransform, Coroutine>();
+    private List<RectTransform> animatedChildren = new List<RectTransform>();
 
     void Start()
     {
@@ -132,6 +158,144 @@ public class UIListLayout : MonoBehaviour
         }
     }
 
+    // ========== Animation Methods ==========
+    
+    private float ApplyEasing(float t, AnimationType type)
+    {
+        switch (type)
+        {
+            case AnimationType.Linear:
+                return t;
+            case AnimationType.EaseIn:
+                return t * t;
+            case AnimationType.EaseOut:
+                return 1 - (1 - t) * (1 - t);
+            case AnimationType.EaseInOut:
+                return t < 0.5f ? 2 * t * t : 1 - Mathf.Pow(-2 * t + 2, 2) / 2;
+            case AnimationType.Cubic:
+                return t * t * t;
+            case AnimationType.Quad:
+                return t * t;
+            case AnimationType.Circ:
+                return 1 - Mathf.Sqrt(1 - Mathf.Pow(t, 2));
+            case AnimationType.Elastic:
+                const float c4 = (2 * Mathf.PI) / 3;
+                return t == 0 ? 0 : t == 1 ? 1 : Mathf.Pow(2, -10 * t) * Mathf.Sin((t * 10 - 0.75f) * c4) + 1;
+            case AnimationType.Bounce:
+                if (t < 1 / 2.75f) return 7.5625f * t * t;
+                else if (t < 2 / 2.75f) return 7.5625f * (t -= 1.5f / 2.75f) * t + 0.75f;
+                else if (t < 2.5 / 2.75f) return 7.5625f * (t -= 2.25f / 2.75f) * t + 0.9375f;
+                else return 7.5625f * (t -= 2.625f / 2.75f) * t + 0.984375f;
+            case AnimationType.Back:
+                const float c1 = 1.70158f;
+                const float c3 = c1 + 1;
+                return c3 * t * t * t - c1 * t * t;
+            case AnimationType.Sine:
+                return 1 - Mathf.Cos((t * Mathf.PI) / 2);
+            default:
+                return t;
+        }
+    }
+
+    private IEnumerator AnimateChild(RectTransform child, Vector2 startPos, Vector2 targetPos, float duration, AnimationType type)
+    {
+        float elapsed = 0f;
+        Vector2 currentPos = startPos;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+            float easedT = ApplyEasing(t, type);
+
+            currentPos = Vector2.Lerp(startPos, targetPos, easedT);
+            child.anchoredPosition = currentPos;
+
+            yield return null;
+        }
+
+        // Ensure final position is exact
+        child.anchoredPosition = targetPos;
+        
+        // Clean up animation tracking
+        if (activeAnimations.ContainsKey(child))
+        {
+            activeAnimations.Remove(child);
+        }
+    }
+
+    private void StopChildAnimation(RectTransform child)
+    {
+        if (activeAnimations.ContainsKey(child))
+        {
+            if (activeAnimations[child] != null)
+            {
+                StopCoroutine(activeAnimations[child]);
+            }
+            activeAnimations.Remove(child);
+        }
+    }
+
+    private void AnimateChildToPosition(RectTransform child, Vector2 targetPos)
+    {
+        // Stop any existing animation for this child
+        StopChildAnimation(child);
+
+        if (animate && Application.isPlaying)
+        {
+            Vector2 startPos = startingAnimationPosition;
+            
+            // If this child has already been animated and we're only animating new children, skip animation
+            if (animateNewChildrenOnly && animatedChildren.Contains(child))
+            {
+                child.anchoredPosition = targetPos;
+                return;
+            }
+
+            // Start new animation
+            Coroutine animationCoroutine = StartCoroutine(AnimateChild(child, startPos, targetPos, animationDuration, animType));
+            activeAnimations[child] = animationCoroutine;
+            
+            // Mark as animated
+            if (!animatedChildren.Contains(child))
+            {
+                animatedChildren.Add(child);
+            }
+        }
+        else
+        {
+            // No animation, set position directly
+            child.anchoredPosition = targetPos;
+        }
+    }
+
+    [ContextMenu("Reset All Animations")]
+    public void ResetAllAnimations()
+    {
+        // Stop all running animations
+        foreach (var kvp in activeAnimations)
+        {
+            if (kvp.Value != null)
+            {
+                StopCoroutine(kvp.Value);
+            }
+        }
+        activeAnimations.Clear();
+        animatedChildren.Clear();
+        
+        // Re-apply layout without animation
+        ApplyLayoutImmediate();
+    }
+
+    [ContextMenu("Apply Layout Immediate")]
+    public void ApplyLayoutImmediate()
+    {
+        bool wasAnimate = animate;
+        animate = false;
+        ApplyLayout();
+        animate = wasAnimate;
+    }
+
     // ========== Public API ==========
     public void ApplyLayout()
     {
@@ -152,7 +316,8 @@ public class UIListLayout : MonoBehaviour
             RectTransform child = children[i];
             Vector2 pos = positions[i];
 
-            child.anchoredPosition = pos;
+            // Use animation method instead of direct position assignment
+            AnimateChildToPosition(child, pos);
 
             if (rotateChildrenWithList)
             {
@@ -824,6 +989,9 @@ public class UIListLayoutEditor : Editor
     SerializedProperty showPreview, previewAlpha, previewColor, autoApplyInEditor;
     SerializedProperty setSizeDeltaToChild, ignoreInactiveChildren;
     SerializedProperty sortByPriority, layoutDirection;
+    
+    // Animation properties
+    SerializedProperty animate, startingAnimationPosition, endingAnimationPosition, animType, animationDuration, animateNewChildrenOnly;
 
     void OnEnable()
     {
@@ -862,6 +1030,14 @@ public class UIListLayoutEditor : Editor
         
         sortByPriority = serializedObject.FindProperty("sortByPriority");
         layoutDirection = serializedObject.FindProperty("layoutDirection");
+        
+        // Animation properties
+        animate = serializedObject.FindProperty("animate");
+        startingAnimationPosition = serializedObject.FindProperty("startingAnimationPosition");
+        endingAnimationPosition = serializedObject.FindProperty("endingAnimationPosition");
+        animType = serializedObject.FindProperty("animType");
+        animationDuration = serializedObject.FindProperty("animationDuration");
+        animateNewChildrenOnly = serializedObject.FindProperty("animateNewChildrenOnly");
 
         SceneView.duringSceneGui += DuringSceneGUI;
     }
@@ -1073,7 +1249,23 @@ public class UIListLayoutEditor : Editor
         }
 
         EditorGUILayout.Space();
-        // EditorGUILayout.BeginVertical("box");
+        EditorGUILayout.LabelField("Animation", EditorStyles.boldLabel);
+        EditorGUILayout.PropertyField(animate);
+        
+        if (t.animate)
+        {
+            EditorGUI.indentLevel++;
+            EditorGUILayout.PropertyField(startingAnimationPosition);
+            EditorGUILayout.PropertyField(endingAnimationPosition);
+            EditorGUILayout.PropertyField(animType);
+            EditorGUILayout.PropertyField(animationDuration);
+            EditorGUILayout.PropertyField(animateNewChildrenOnly);
+            EditorGUI.indentLevel--;
+            
+            EditorGUILayout.HelpBox("Animation only works in Play Mode. Use 'Apply Layout Immediate' to position without animation.", MessageType.Info);
+        }
+
+        EditorGUILayout.Space();
         EditorGUILayout.LabelField("Sorting & Direction", EditorStyles.boldLabel);
         if (sortByPriority != null)
         {
@@ -1103,7 +1295,6 @@ public class UIListLayoutEditor : Editor
             EditorGUILayout.PropertyField(layoutDirection, new GUIContent("Flow Direction"));
         }
 
-
         EditorGUILayout.Space();
         EditorGUILayout.LabelField("Rotation", EditorStyles.boldLabel);
         EditorGUILayout.PropertyField(rotationDegrees);
@@ -1129,6 +1320,21 @@ public class UIListLayoutEditor : Editor
             t.ApplyLayout();
             EditorUtility.SetDirty(t);
         }
+        if (GUILayout.Button("Apply Layout Immediate"))
+        {
+            Undo.RecordObject(t, "Apply UIListLayout Immediate");
+            t.ApplyLayoutImmediate();
+            EditorUtility.SetDirty(t);
+        }
+        if (GUILayout.Button("Reset All Animations"))
+        {
+            Undo.RecordObject(t, "Reset UIListLayout Animations");
+            t.ResetAllAnimations();
+            EditorUtility.SetDirty(t);
+        }
+        EditorGUILayout.EndHorizontal();
+        
+        EditorGUILayout.BeginHorizontal();
         if (GUILayout.Button("Repaint Preview"))
         {
             SceneView.RepaintAll();

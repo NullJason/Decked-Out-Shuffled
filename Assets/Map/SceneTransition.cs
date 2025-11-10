@@ -8,12 +8,9 @@ public static class SceneTransition
     public static float TransitionTime = 1f; // total time to wait AFTER new scene fully loads, before DoTransitionEnd
     public static float AnimSpeed = 1f; // multiplier applied to Animator.speed if Animator exists
 
-    public static Canvas TransitionCanvas;    // assign in inspector or let the manager try to find one
-    public static Transform AnimatedSprite;  // optional: the panel/transform that contains the animation
-
-    // Internal (kept to match your original sketch)
-    private static Animation TransitionAnimation; // legacy Animation (optional)
-    private static Animator TransitionAnimator;   // Animator (preferred)
+    public static Canvas TransitionCanvas;   
+    public static Transform AnimatedSprite; 
+    private static Animator TransitionAnimator;   
 
     // Ensure the hidden persistent behaviour exists and is initialized
     static SceneTransition()
@@ -21,7 +18,12 @@ public static class SceneTransition
         SceneTransitionBehaviour.EnsureExists();
     }
 
-    
+    public static void AttachTransitionItems(Canvas TC, Transform spriteT, Animator animator)
+    {
+        TransitionCanvas = TC;
+        AnimatedSprite = spriteT;
+        TransitionAnimator = animator;
+    }
     /// <summary>
     /// specify the level by its id registered in LevelsManager and a path name (no tags).
     /// If not currently in the Environment scene this triggers the transition to load it and will
@@ -93,7 +95,7 @@ public static class SceneTransition
                         Transform player = Player;
                         if (player == null)
                         {
-                            var pgo = GameObject.FindWithTag("Player");
+                            var pgo = GameObject.FindFirstObjectByType<Player>();
                             if (pgo != null) player = pgo.transform;
                         }
                         if (player != null)
@@ -110,7 +112,7 @@ public static class SceneTransition
                         }
                         else
                         {
-                            Debug.LogWarning("SceneTransition: Player transform null and no GameObject tagged 'Player' found.");
+                            Debug.LogWarning("SceneTransition: Player transform null and no GameObject 'Player' found.");
                         }
                     }
                     else
@@ -152,13 +154,13 @@ public static class SceneTransition
         Transform playerTransform = player;
         if (playerTransform == null)
         {
-            var pgo = GameObject.FindWithTag("Player");
+            var pgo = GameObject.FindFirstObjectByType<Player>();
             if (pgo != null) playerTransform = pgo.transform;
         }
 
         if (playerTransform == null)
         {
-            Debug.LogWarning("SceneTransition: Player transform null and no GameObject tagged 'Player' found.");
+            Debug.LogWarning("SceneTransition: Player transform null and no GameObject 'Player' found.");
             return true;
         }
 
@@ -200,6 +202,7 @@ public static class SceneTransition
         // If TransitionCanvas not set, try to find one in scene
         if (TransitionCanvas == null)
         {
+            Debug.Log("transitionCanvas not set, will use first canvas found.");
             TransitionCanvas = Object.FindFirstObjectByType<Canvas>();
             if (TransitionCanvas != null)
                 Debug.Log($"SceneTransition: Found Canvas '{TransitionCanvas.name}' and assigned it to TransitionCanvas.");
@@ -231,19 +234,13 @@ public static class SceneTransition
         if (TransitionCanvas != null)
             Object.DontDestroyOnLoad(TransitionCanvas.gameObject);
 
-        // If we have AnimatedSprite, mark it DontDestroyOnLoad too (ensures the panel isn't destroyed)
         if (AnimatedSprite != null)
             Object.DontDestroyOnLoad(AnimatedSprite.gameObject);
 
-        TransitionAnimator = null;
-        TransitionAnimation = null;
+        // TransitionAnimator = null;
         if (AnimatedSprite != null)
         {
             TransitionAnimator = AnimatedSprite.GetComponent<Animator>() ?? AnimatedSprite.GetComponentInChildren<Animator>();
-            if (TransitionAnimator == null)
-            {
-                TransitionAnimation = AnimatedSprite.GetComponent<Animation>() ?? AnimatedSprite.GetComponentInChildren<Animation>();
-            }
         }
         else
         {
@@ -255,7 +252,7 @@ public static class SceneTransition
             TransitionAnimator.speed = AnimSpeed;
 
         // Hand off to behaviour coroutine to handle timing, background load, activation and optional scene load
-        behaviour.StartTransitionCoroutine(sceneName, TransitionTime, TransitionAnimator, TransitionAnimation);
+        behaviour.StartTransitionCoroutine(sceneName, TransitionTime, TransitionAnimator, TransitionCanvas);
     }
 }
 

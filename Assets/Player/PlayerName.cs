@@ -1,9 +1,11 @@
 using UnityEngine;
 
-public class PlayerName : MonoBehaviour
+public class PlayerName : EventAction
 {
-    public void DialogueButtonAction()
+    public override object DoEventAction()
     {
-        // display input ui for inputting name which will then apply that name to the player.
+        // TODO display input ui for inputting name which will then apply that name to the player.
+
+        return true;
     }
 }

@@ -22,17 +22,17 @@ MonoBehaviour:
     - sortOrder: 1
       choiceText: Who Are You?
       targetNodeID: Option1
-      buttonAction: {fileID: 0}
+      buttonAction: 
       enabled: 1
     - sortOrder: 0
       choiceText: Where Am I?
       targetNodeID: c2
-      buttonAction: {fileID: 0}
+      buttonAction: 
       enabled: 1
     - sortOrder: 0
       choiceText: Where are your Windows?
       targetNodeID: node_80b8ca25
-      buttonAction: {fileID: 0}
+      buttonAction: 
       enabled: 1
     graphPosition:
       serializedVersion: 2
@@ -60,12 +60,12 @@ MonoBehaviour:
     - sortOrder: 1
       choiceText: Cards?
       targetNodeID: node_abf1d2a6
-      buttonAction: {fileID: 0}
+      buttonAction: 
       enabled: 1
     - sortOrder: 0
       choiceText: Whats your name?
       targetNodeID: node_84ce0848
-      buttonAction: {fileID: 0}
+      buttonAction: 
       enabled: 1
     graphPosition:
       serializedVersion: 2
@@ -81,7 +81,7 @@ MonoBehaviour:
     - sortOrder: 0
       choiceText: Oh...
       targetNodeID: END
-      buttonAction: {fileID: 0}
+      buttonAction: 
       enabled: 1
     graphPosition:
       serializedVersion: 2
@@ -99,7 +99,7 @@ MonoBehaviour:
     - sortOrder: 0
       choiceText: ...
       targetNodeID: node_95da1835
-      buttonAction: {fileID: 0}
+      buttonAction: 
       enabled: 1
     graphPosition:
       serializedVersion: 2
@@ -136,7 +136,7 @@ MonoBehaviour:
     - sortOrder: 0
       choiceText: Alright.
       targetNodeID: END
-      buttonAction: {fileID: 0}
+      buttonAction: 
       enabled: 1
     graphPosition:
       serializedVersion: 2
@@ -151,7 +151,7 @@ MonoBehaviour:
     - sortOrder: 0
       choiceText: Thanks!
       targetNodeID: follow
-      buttonAction: {fileID: 0}
+      buttonAction: UnlockEDoor
       enabled: 1
     graphPosition:
       serializedVersion: 2
@@ -166,7 +166,7 @@ MonoBehaviour:
     - sortOrder: 0
       choiceText: ...
       targetNodeID: END
-      buttonAction: {fileID: 0}
+      buttonAction: 
       enabled: 1
     graphPosition:
       serializedVersion: 2
@@ -181,7 +181,7 @@ MonoBehaviour:
     - sortOrder: 0
       choiceText: ...
       targetNodeID: Option1
-      buttonAction: {fileID: 0}
+      buttonAction: 
       enabled: 1
     graphPosition:
       serializedVersion: 2

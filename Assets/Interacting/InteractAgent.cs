@@ -60,6 +60,7 @@ public class InteractAgent : MonoBehaviour
 		Interactable nearest = null;
 		double farthestDistance = 0;
 		foreach(Interactable target in targets){
+			if(target == null || target.gameObject == null){Debug.LogWarning($"A Interactable added itself to targets but is null at check."); targets.Remove(target); }
 			double targetDistance = (transform.position - target.gameObject.transform.position).sqrMagnitude;
 			if(targetDistance < farthestDistance || nearest == null){
 				nearest = target;

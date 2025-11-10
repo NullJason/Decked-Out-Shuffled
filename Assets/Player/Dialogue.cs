@@ -344,15 +344,27 @@ public class Dialogue : MonoBehaviour
                 {
                     if (i >= tt.startIndex && i <= tt.endIndex)
                     {
-                        int charsToReveal = tt.revealed;
-                        int lastRevealedIndex = tt.startIndex + charsToReveal - 1;
-
-                        if (charsToReveal <= 0 || i > lastRevealedIndex)
+                        if (i < tt.startIndex + tt.revealed)
+                        {
+                            isRevealed = true;
+                        }
+                        else
                         {
                             isRevealed = false;
                         }
                         break;
                     }
+                    // if (i >= tt.startIndex && i <= tt.endIndex)
+                    // {
+                    //     int charsToReveal = tt.revealed;
+                    //     int lastRevealedIndex = tt.startIndex + charsToReveal - 1;
+
+                    //     if (charsToReveal <= 0 || i > lastRevealedIndex)
+                    //     {
+                    //         isRevealed = false;
+                    //     }
+                    //     break;
+                    // }
                 }
 
                 visibleMask[i] = isRevealed;
@@ -749,6 +761,23 @@ public class Dialogue : MonoBehaviour
                             if (eff != null)
                             {
                                 int endIdx = visIndex - 1;
+                                string cleanSoFar = sb.ToString();
+                                // Trim trailing and starting whitespace from effect range 
+                                while (startIdx < cleanSoFar.Length && startIdx <= endIdx && 
+                                    char.IsWhiteSpace(cleanSoFar[startIdx]))
+                                {
+                                    startIdx++;
+                                }
+                                 
+                                while (endIdx >= 0 && endIdx >= startIdx && 
+                                    char.IsWhiteSpace(cleanSoFar[endIdx]))
+                                {
+                                    endIdx--;
+                                }
+                                if (endIdx < startIdx)
+                                {
+                                    endIdx = startIdx;
+                                }
                                 if (endIdx >= startIdx)
                                 {
                                     eff.startIndex = startIdx;

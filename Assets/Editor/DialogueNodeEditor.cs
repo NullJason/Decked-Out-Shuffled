@@ -63,16 +63,16 @@ public class DialogueNodeEditor : EditorWindow
 
         // Node styles
         nodeStyle = new GUIStyle();
-        nodeStyle.normal.background = EditorGUIUtility.Load("builtin skins/darkskin/images/node1.png") as Texture2D;
+        // nodeStyle.normal.background = EditorGUIUtility.Load("builtin skins/darkskin/images/node1.png") as Texture2D;
         if (nodeStyle.normal.background == null)
-            nodeStyle.normal.background = CreateColorTexture(new Color(0.3f, 0.3f, 0.3f, 0.9f));
+            nodeStyle.normal.background = CreateColorTexture(new Color(0.3f, 0.3f, 0.3f, 0.6f));
         nodeStyle.border = new RectOffset(12, 12, 12, 12);
         nodeStyle.padding = new RectOffset(10, 10, 10, 10);
         
         selectedNodeStyle = new GUIStyle();
-        selectedNodeStyle.normal.background = EditorGUIUtility.Load("builtin skins/darkskin/images/node1 on.png") as Texture2D;
+        // selectedNodeStyle.normal.background = EditorGUIUtility.Load("builtin skins/darkskin/images/node1 on.png") as Texture2D;
         if (selectedNodeStyle.normal.background == null)
-            selectedNodeStyle.normal.background = CreateColorTexture(new Color(0.4f, 0.4f, 0.6f, 0.9f));
+            selectedNodeStyle.normal.background = CreateColorTexture(new Color(0.043f, 0.271f, 0.588f, 0.8f));
         selectedNodeStyle.border = new RectOffset(12, 12, 12, 12);
         selectedNodeStyle.padding = new RectOffset(10, 10, 10, 10);
 
@@ -524,8 +524,7 @@ public class DialogueNodeEditor : EditorWindow
             GUIStyle style = isSelected ? selectedNodeStyle : nodeStyle;
             
             // Draw node background
-            // GUI.Box(screenRect, "", style);
-            GUI.Box(screenRect, "");
+            GUI.Box(screenRect, "", style);
             
             DrawNodeContent(node, i, screenRect);
             
@@ -698,11 +697,8 @@ public class DialogueNodeEditor : EditorWindow
         // Button Action MonoBehaviour
         GUILayout.BeginHorizontal();
         EditorGUILayout.LabelField("Button Action:", GUILayout.Width(80));
-        node.choices[choiceIndex].buttonAction = (MonoBehaviour)EditorGUILayout.ObjectField(
-            node.choices[choiceIndex].buttonAction, 
-            typeof(MonoBehaviour), 
-            true, 
-            GUILayout.ExpandWidth(true)
+        node.choices[choiceIndex].buttonAction = EditorGUILayout.TextField(
+            node.choices[choiceIndex].buttonAction
         );
         GUILayout.EndHorizontal();
 

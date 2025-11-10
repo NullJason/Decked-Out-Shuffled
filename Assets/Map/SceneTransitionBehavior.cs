@@ -10,9 +10,20 @@ public class SceneTransitionBehaviour : MonoBehaviour
 {
     private static SceneTransitionBehaviour _instance;
     private static readonly string ManagerName = "SceneTransitionManager";
+    
+    public Canvas TransitionCanvas;   
+    public Transform AnimatedSprite; 
+    private Animator TransitionAnimator;   
     void Awake()
     {
+        if (_instance != null && _instance != this)
+        {
+            Destroy(_instance.gameObject);
+            _instance = null;
+        }
+
         EnsureExists();
+        SceneTransition.AttachTransitionItems(_instance.TransitionCanvas, _instance.AnimatedSprite, _instance.TransitionAnimator);
     }
 
     // Ensure there's exactly one instance in the game 
@@ -31,24 +42,20 @@ public class SceneTransitionBehaviour : MonoBehaviour
         var go = new GameObject(ManagerName);
         DontDestroyOnLoad(go);
         _instance = go.AddComponent<SceneTransitionBehaviour>();
-
-#if UNITY_EDITOR
-        // visible in editor for debugging
-#else
-                _instance.hideFlags = HideFlags.HideAndDontSave;
-#endif
+        
         return _instance;
     }
 
     // Public entry to start the coroutine from the static class
     public void StartTransitionCoroutine(string sceneName,
-        float transitionTime, Animator animator, Animation animation)
+        float transitionTime, Animator animator, Canvas TransitionCanvas)
     {
-        StartCoroutine(TransitionRoutine(sceneName, transitionTime, animator, animation));
+        Debug.Log("startingg");
+        StartCoroutine(TransitionRoutine(sceneName, transitionTime, animator, TransitionCanvas));
     }
 
     private IEnumerator TransitionRoutine(string sceneName,
-        float transitionTime, Animator animator, Animation animation)
+        float transitionTime, Animator animator, Canvas TransitionCanvas)
     {
         bool willLoadScene = !string.IsNullOrEmpty(sceneName);
 
@@ -58,35 +65,7 @@ public class SceneTransitionBehaviour : MonoBehaviour
             animator.SetTrigger("DoTransitionStart");
             Debug.Log("SceneTransition: Animator triggered 'DoTransitionStart'.");
         }
-        else if (animation != null)
-        {
-            // try to play a clip named "DoTransitionStart" or the first clip
-            if (animation.GetClip("DoTransitionStart") != null)
-            {
-                animation.Play("DoTransitionStart");
-                Debug.Log("SceneTransition: Legacy Animation played clip 'DoTransitionStart'.");
-            }
-            else
-            {
-                // play first available clip
-                var enumerator = animation.GetEnumerator();
-                AnimationState first = null;
-                while (enumerator.MoveNext())
-                {
-                    var a = enumerator.Current as AnimationState;
-                    if (a != null) { first = a; break; }
-                }
-                if (first != null)
-                {
-                    animation.Play(first.name);
-                    Debug.Log($"SceneTransition: Legacy Animation played first clip '{first.name}'.");
-                }
-                else
-                {
-                    Debug.LogWarning("SceneTransition: Animation component present but no clips found.");
-                }
-            }
-        }
+        
         else
         {
             Debug.Log("SceneTransition: No Animator/Animation found. Can't play transition animation.");
@@ -104,13 +83,13 @@ public class SceneTransitionBehaviour : MonoBehaviour
             }
 
             if (animator != null) animator.SetTrigger("DoTransitionEnd");
-            else if (animation != null && animation.GetClip("DoTransitionEnd") != null) animation.Play("DoTransitionEnd");
 
             yield break;
         }
 
         // --- SCENE LOADING PATH ---
         // Start loading the scene in background but DO NOT activate yet
+        Debug.Log("Attempting to Load Scene");
         var async = SceneManager.LoadSceneAsync(sceneName);
         if (async == null)
         {
@@ -154,14 +133,9 @@ public class SceneTransitionBehaviour : MonoBehaviour
             animator.SetTrigger("DoTransitionEnd");
             Debug.Log("SceneTransition: Animator triggered 'DoTransitionEnd' after scene load + delay.");
         }
-        else if (animation != null)
-        {
-            if (animation.GetClip("DoTransitionEnd") != null)
-            {
-                animation.Play("DoTransitionEnd");
-                Debug.Log("SceneTransition: Legacy Animation played clip 'DoTransitionEnd' after scene load + delay.");
-            }
-        }
+        else TransitionCanvas.gameObject.SetActive(false);
+
+        Debug.Log("completed transition");
 
         yield break;
     }
