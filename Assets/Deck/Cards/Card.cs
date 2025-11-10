@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections.Generic;
 
 public abstract class Card : ClickSelectable
 {
@@ -7,6 +8,7 @@ public abstract class Card : ClickSelectable
 	[SerializeField] private protected Sprite faceUpSprite;
 	[SerializeField] private protected Sprite faceDownSprite;
 	[SerializeField] private protected Sprite hiddenCard;
+	[SerializeField] private protected List<string> attributes;
 
 	private protected void Awake(){
 		sprite = Util.NullCheck(sprite, gameObject);
