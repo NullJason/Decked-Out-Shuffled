@@ -6,6 +6,7 @@ using System;
 
 public class DialogueResponse : MonoBehaviour
 {
+    [SerializeField] private Transform NPCTransform;
     [SerializeField] private DialogueTree dialogueTree;
     [SerializeField] private string StartNodeID;
     [SerializeField] private DialogueResponseCache DRButtonCache;
@@ -50,7 +51,7 @@ public class DialogueResponse : MonoBehaviour
 
     private void DisplayCurrentNode()
     {
-        if (currentNode.choices.Count != 0) DRButtonCache.SetContainerActiveState(true);
+        if (currentNode.choices.Count != 0) DRButtonCache.SetContainerActiveState(true, NPCTransform);
         else DRButtonCache.SetContainerActiveState(false);
         DRButtonCache.DoDialogue(currentNode.dialogueText, currentNode.characterHeadshotID);
         DRButtonCache.UpdateSize(currentNode);

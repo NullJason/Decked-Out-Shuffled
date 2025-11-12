@@ -9,28 +9,37 @@ using UnityEngine.UI;
 /// </summary>
 public class DialogueResponseCache : MonoBehaviour
 {
+    [SerializeField] private GameObject MainCanvas;
     [SerializeField] private GameObject ButtonContainer;
     [SerializeField] private GameObject ButtonPrefab;
     [SerializeField] private Dialogue mainDialogueMono;
     [SerializeField] private ActionManager dialogueActionManager;
+    [SerializeField] private DistanceActiveStateObject mainDialogueDistanceManager;
     private List<GameObject> ButtonCache = new List<GameObject>();
     private DialogueResponse CurrentDR;
     [SerializeField] private DialogueCharacters dialogueCharacters;
     private float WaitForTextFinishTimeoutDuration = 15f; // dialogue shouldn't play this long in the first place. will immediately execute button method if passed.
+    [SerializeField] private UIListLayout listLayout;
     void OnEnable()
     {
         if (ButtonPrefab == null) Debug.Log("BUTTON PREFAB HASN'T BEEN SET!");
         dialogueCharacters = FindFirstObjectByType<DialogueCharacters>();
         if (dialogueActionManager == null) dialogueActionManager = FindFirstObjectByType<ActionManager>();
-        if (ButtonContainer == null) ButtonContainer = GetComponentInChildren<UIListLayout>().gameObject;
+        if (listLayout == null) listLayout = GetComponentInChildren<UIListLayout>();
+        if (ButtonContainer == null) ButtonContainer = listLayout.gameObject; 
     }
     public void SetDR(DialogueResponse dr)
     {
         CurrentDR = dr;
     }
-    public void SetContainerActiveState(bool state)
+    public void SetContainerActiveState(bool state, Transform npc = null)
     {
         ButtonContainer.SetActive(state);
+
+        if(mainDialogueDistanceManager!=null && state == true && npc != null)
+        {
+            mainDialogueDistanceManager.SetNew(Player.Player_Transform, npc, MainCanvas, true);
+        }
     }
     public void UpdateSize(DialogueNode currentNode)
     {
@@ -90,7 +99,8 @@ public class DialogueResponseCache : MonoBehaviour
             }
             else currentBPI.SetButtonSideImage();
         }
-        if(priorityButtonImg != null && highestLayer != 0) priorityButtonImg.SetButtonSideImage(true);
+        if (priorityButtonImg != null && highestLayer != 0) priorityButtonImg.SetButtonSideImage(true);
+        if(listLayout != null)listLayout.ManualUpdate(); // just in case onenable doesnt call for some weird reason, (it happened before)
     }
     private void OnChoiceSelected(string targetNodeID, string buttonAction)
     {

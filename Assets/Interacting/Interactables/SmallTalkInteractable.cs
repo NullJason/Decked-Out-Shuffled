@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 public class SmallTalkInteractable : Interactable
@@ -20,6 +19,11 @@ public class SmallTalkInteractable : Interactable
     private bool isNull()
     {
         return SmallTalkCanvas == null || dialogueMono == null;
+    }
+
+    public void TempDisable()
+    {
+        SmallTalkCanvas.gameObject.SetActive(false);
     }
 
     public override void OnOver()

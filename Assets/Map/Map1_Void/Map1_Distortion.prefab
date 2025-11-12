@@ -5184,6 +5184,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 255f58de11b8af34d9b6d7b5e3eeafe5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  NPCTransform: {fileID: 2821782010609467881}
   dialogueTree: {fileID: 11400000, guid: 95e8ba634a20d9e4c9c9fb5ba3a9d9b4, type: 2}
   StartNodeID: 
   DRButtonCache: {fileID: 0}
@@ -9956,6 +9957,77 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!1 &1739500352110374842
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8206592013266840015}
+  - component: {fileID: 2334393328026999956}
+  - component: {fileID: 8595093542691568319}
+  m_Layer: 0
+  m_Name: interactArea
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8206592013266840015
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1739500352110374842}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.759, y: -0.785, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 998669096779473574}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2334393328026999956
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1739500352110374842}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53f569c033dada04abefd9501b7ec330, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObjectHeight: 0
+  PlatformArea: {fileID: 8954369134018034775}
+  CanAccidentalFall: 1
+  CanManualFall: 1
+  GroundPos: {fileID: 6922461400398993434}
+  InteractionDistance: 2
+  JOCollider: {fileID: 5299505182951830055}
+--- !u!114 &8595093542691568319
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1739500352110374842}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d502f75c3c16de4ca9e9cb813e3ffe3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  interaction: {fileID: 0}
+  agent: {fileID: 0}
+  SmallTalkCanvas: {fileID: 338273275635961468}
+  dialogueMono: {fileID: 3892324022361674431}
+  PopUpText: '<typewriter>[Space]
+
+    Climb the pile.</typewriter>'
 --- !u!1 &1761449506394321190
 GameObject:
   m_ObjectHideFlags: 0
@@ -11107,7 +11179,7 @@ MonoBehaviour:
   InitialDialogueText: 
   CharacterHeadshotTransform: {fileID: 0}
   Font: {fileID: 11400000, guid: 2f94f7a8158b3bc439087c3e13715c98, type: 2}
-  FontSize: 0
+  FontSize: 13
   DefaultFontColor: {r: 1, g: 1, b: 1, a: 1}
   AutoPlayWait: -1
   DefaultAdvanceKey: 32
@@ -12203,7 +12275,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0.025, y: -0.056}
   m_SizeDelta: {x: 50, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!223 &338273275635961468
@@ -12285,7 +12357,7 @@ MonoBehaviour:
   InitialDialogueText: 
   CharacterHeadshotTransform: {fileID: 0}
   Font: {fileID: 11400000, guid: 2f94f7a8158b3bc439087c3e13715c98, type: 2}
-  FontSize: 0
+  FontSize: 20
   DefaultFontColor: {r: 1, g: 1, b: 1, a: 1}
   AutoPlayWait: -1
   DefaultAdvanceKey: 32
@@ -14049,7 +14121,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 7}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 385.27, y: 75}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7605595142207557423
@@ -21446,6 +21518,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6922461400398993434}
   - component: {fileID: 3233547004747818821}
+  - component: {fileID: 7134149481921204925}
   m_Layer: 0
   m_Name: land
   m_TagString: Untagged
@@ -21523,6 +21596,52 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!61 &7134149481921204925
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3910129991528941567}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: -0.28929716}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 0.5}
+    oldSize: {x: 0.82, y: 0.82}
+    newSize: {x: 0.82, y: 0.82}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Size: {x: 0.4491966, y: 0.2414056}
+  m_EdgeRadius: 0
 --- !u!1 &3932687213516059628
 GameObject:
   m_ObjectHideFlags: 0
@@ -33321,8 +33440,8 @@ GameObject:
   - component: {fileID: 1493702631512392444}
   - component: {fileID: 5502639921804191773}
   - component: {fileID: 858820041076460773}
-  - component: {fileID: 6110536875102892845}
   - component: {fileID: 7058609644590300845}
+  - component: {fileID: 354128318719363003}
   m_Layer: 0
   m_Name: playerleadtutorial
   m_TagString: Untagged
@@ -33417,52 +33536,6 @@ MonoBehaviour:
   PopUpText: '<wavy>Hey New Guy!
 
     ...Meet Me in front of the House! m''kay?</wavy>'
---- !u!61 &6110536875102892845
-BoxCollider2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4711405211507081854}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Density: 1
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_ForceSendLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ForceReceiveLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ContactCaptureLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_CallbackLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_IsTrigger: 1
-  m_UsedByEffector: 0
-  m_CompositeOperation: 0
-  m_CompositeOrder: 0
-  m_Offset: {x: 0.00000047683716, y: 0}
-  m_SpriteTilingProperty:
-    border: {x: 0, y: 0, z: 0, w: 0}
-    pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 0.95, y: 0.95}
-    newSize: {x: 0.95, y: 0.95}
-    adaptiveTilingThreshold: 0.5
-    drawMode: 0
-    adaptiveTiling: 0
-  m_AutoTiling: 0
-  m_Size: {x: 1, y: 1.0000002}
-  m_EdgeRadius: 0
 --- !u!212 &7058609644590300845
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -33504,8 +33577,8 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 206117013
-  m_SortingLayer: 3
+  m_SortingLayerID: 345884419
+  m_SortingLayer: 2
   m_SortingOrder: 0
   m_Sprite: {fileID: -8876004567204042438, guid: 984bb5df49068b64190866afce66b7ae, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -33518,6 +33591,42 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!58 &354128318719363003
+CircleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4711405211507081854}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: -0.23}
+  m_Radius: 0.2131592
 --- !u!1 &4762931893004885597
 GameObject:
   m_ObjectHideFlags: 0
@@ -33692,8 +33801,6 @@ GameObject:
   - component: {fileID: 998669096779473574}
   - component: {fileID: 8208351038405626146}
   - component: {fileID: 5299505182951830055}
-  - component: {fileID: 8441451417555104137}
-  - component: {fileID: 8788518928079514677}
   m_Layer: 0
   m_Name: LampObstacle
   m_TagString: Untagged
@@ -33724,6 +33831,7 @@ Transform:
   - {fileID: 7473673234295730062}
   - {fileID: 2262512594226120948}
   - {fileID: 3379034630243684091}
+  - {fileID: 8206592013266840015}
   m_Father: {fileID: 704016060781838018}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 66.01}
 --- !u!212 &8208351038405626146
@@ -33827,43 +33935,6 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 1.3094178, y: 1.2453048}
   m_EdgeRadius: 0
---- !u!114 &8441451417555104137
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4806837236477454087}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 53f569c033dada04abefd9501b7ec330, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ObjectHeight: 0
-  PlatformArea: {fileID: 8954369134018034775}
-  CanAccidentalFall: 1
-  CanManualFall: 1
-  GroundPos: {fileID: 6922461400398993434}
-  InteractionDistance: 3
-  JOCollider: {fileID: 5299505182951830055}
---- !u!114 &8788518928079514677
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4806837236477454087}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4d502f75c3c16de4ca9e9cb813e3ffe3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  interaction: {fileID: 0}
-  agent: {fileID: 0}
-  SmallTalkCanvas: {fileID: 338273275635961468}
-  dialogueMono: {fileID: 3892324022361674431}
-  PopUpText: "<typewriter> It seems the path forward is blocked. \n[Space] to Interact,
-    climb the pile.\n</typewriter>"
 --- !u!1 &4880244140016921056
 GameObject:
   m_ObjectHideFlags: 0
@@ -35762,8 +35833,8 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 206117013
-  m_SortingLayer: 3
+  m_SortingLayerID: -412616137
+  m_SortingLayer: 1
   m_SortingOrder: 0
   m_Sprite: {fileID: -6603632339332022093, guid: 3bb0bfadf5ad25a48bbf83c9e6070e1c, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -38154,6 +38225,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 255f58de11b8af34d9b6d7b5e3eeafe5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  NPCTransform: {fileID: 0}
   dialogueTree: {fileID: 0}
   StartNodeID: 
   DRButtonCache: {fileID: 0}
@@ -45911,6 +45983,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 255f58de11b8af34d9b6d7b5e3eeafe5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  NPCTransform: {fileID: 0}
   dialogueTree: {fileID: 11400000, guid: 95e8ba634a20d9e4c9c9fb5ba3a9d9b4, type: 2}
   StartNodeID: 
   DRButtonCache: {fileID: 0}
@@ -46708,7 +46781,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 250, y: 30}
+  m_SizeDelta: {x: 250, y: 60}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &6750812708761909499
 CanvasRenderer:
@@ -47866,7 +47939,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: -0.012702763, y: -0.7177019}
+  m_Offset: {x: -0.012702763, y: 0.048758388}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.25}
@@ -47876,7 +47949,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1.6800009, y: 0.65540695}
+  m_Size: {x: 1.6800009, y: 0.430668}
   m_EdgeRadius: 0
 --- !u!1 &7532998547712540902
 GameObject:
@@ -49025,7 +49098,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: -0.012702763, y: -0.7177019}
+  m_Offset: {x: -0.012702763, y: 0.020246752}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.12}
@@ -49035,7 +49108,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1.6800009, y: 0.65540695}
+  m_Size: {x: 1.6800009, y: 0.42060524}
   m_EdgeRadius: 0
 --- !u!1 &7835585437510487880
 GameObject:
@@ -49611,7 +49684,8 @@ MonoBehaviour:
   agent: {fileID: 0}
   SmallTalkCanvas: {fileID: 5790225699044433864}
   dialogueMono: {fileID: 1245906654713428142}
-  PopUpText: <typewriter=8> Welcome! [<wavy>The rest is unintelligible.</wavy>] </typewriter>
+  PopUpText: "<typewriter=8> Welcome! \n[<shake=3,3>The rest is unintelligible.</shake>]
+    </typewriter>"
 --- !u!114 &4947251741031507894
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -56895,7 +56969,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: -0.012702763, y: -0.7177019}
+  m_Offset: {x: -0.012702763, y: 0.12087606}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.12}
@@ -56905,7 +56979,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1.6800009, y: 0.65540695}
+  m_Size: {x: 1.6800009, y: 0.5749035}
   m_EdgeRadius: 0
 --- !u!1 &9010089817675948810
 GameObject:
@@ -57083,8 +57157,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 16
-  m_fontSizeBase: 16
+  m_fontSize: 13
+  m_fontSizeBase: 13
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18

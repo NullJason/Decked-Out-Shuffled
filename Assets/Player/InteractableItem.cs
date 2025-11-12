@@ -13,7 +13,7 @@ public class InteractableItem : Interactable
     void Start()
     {
         AddToAgent();
-        Debug.Log(isNull());
+        // Debug.Log(isNull());
         if (isNull()) return;
         dialogueMono.QueueDialogue(PopUpText);
     }

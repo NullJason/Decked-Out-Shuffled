@@ -47,6 +47,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 90cb537b54d45c347b128bd14f05a74d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  TransitionCanvas: {fileID: 0}
+  AnimatedSprite: {fileID: 0}
 --- !u!114 &5328641809172593238
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -85,4 +87,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 23b161230bb5da34abde0ff232ec01e8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  actionMappings: []
+  actionMappings:
+  - actionID: UnlockEDoor
+    eventAction: {fileID: 0}

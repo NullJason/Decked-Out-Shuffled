@@ -1,11 +1,11 @@
-using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.SocialPlatforms.Impl;
 
 public class Player : MonoBehaviour
 {
+    public static Transform Player_Transform;
+    public static bool PlayerCanMove = true;
     public int MOVE_SPEED = 5;
     public Transform AchievementsPopupContainer;
     public GameObject AchievementBase; // should be organized using ui list layout
@@ -14,17 +14,18 @@ public class Player : MonoBehaviour
     private Rigidbody2D rb;
     private Animator animator;
     private Vector2 movement;
-    private Dictionary<string, int> Items; // not 4 cards
+    private Dictionary<string, int> Items; // not for cards. for other items
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
+        Player_Transform = transform;
     }
 
     void Update()
     {
-        Move();
+        if(PlayerCanMove) Move();
     }
 
     void Move()

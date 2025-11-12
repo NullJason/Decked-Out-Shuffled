@@ -1,6 +1,7 @@
+using System.Collections;
 using UnityEngine;
 
 public abstract class EventAction : MonoBehaviour
 {
-    public abstract object DoEventAction(); 
+    public abstract void DoEventAction(); 
 }

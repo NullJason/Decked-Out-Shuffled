@@ -115,6 +115,12 @@ MonoBehaviour:
   scaleDirection: 5
   rotationDegrees: 0
   rotateChildrenWithList: 0
+  animate: 0
+  startingAnimationPosition: {x: -200, y: 0}
+  endingAnimationPosition: {x: 0, y: 0}
+  animType: 2
+  animationDuration: 0.5
+  animateNewChildrenOnly: 1
   showPreview: 1
   previewAlpha: 0.35
   previewColor: {r: 0.021252984, g: 0.10786498, b: 0.7509433, a: 1}
@@ -136,6 +142,7 @@ GameObject:
   - component: {fileID: 4861825722007195242}
   - component: {fileID: 9187351618224186678}
   - component: {fileID: 2421051581226912151}
+  - component: {fileID: 3627240271421009814}
   m_Layer: 5
   m_Name: MainDialogueCanvas
   m_TagString: Untagged
@@ -274,12 +281,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4a6b2fe63fc96ce4a82f7fd3c9f417b2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  MainCanvas: {fileID: 3924026688797027248}
   ButtonContainer: {fileID: 1356589753315274545}
   ButtonPrefab: {fileID: 3664774781203160531, guid: b28906673b1c5884fbba753a8d0853e4, type: 3}
   mainDialogueMono: {fileID: 4861825722007195242}
-  MainProgressionBranch_Icon: {fileID: -6815069252794124239, guid: c38a0361dc1605e4ea2f99a241cb508a, type: 3}
-  DefaultProgressionBranch_Icon: {fileID: -2532843354024351669, guid: a387978468ac0344aa833ac65e65157e, type: 3}
+  dialogueActionManager: {fileID: 0}
+  mainDialogueDistanceManager: {fileID: 3627240271421009814}
   dialogueCharacters: {fileID: 0}
+  listLayout: {fileID: 3504456151566509587}
+--- !u!114 &3627240271421009814
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3924026688797027248}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7fb02509a8176f449a490951121b0aa4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ActiveType: 4
+  ActiveDistance: 6
 --- !u!1 &4419247143895187493
 GameObject:
   m_ObjectHideFlags: 0

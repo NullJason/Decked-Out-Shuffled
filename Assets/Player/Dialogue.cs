@@ -553,7 +553,7 @@ public class Dialogue : MonoBehaviour
     /// </summary>
     public void PlayNext(bool disableOnComplete = false)
     {
-        Debug.Log("Playing Next dialogue");
+        // Debug.Log("Playing Next dialogue");
         if (CanReplay && !HasPlayed)
         {
             HasPlayed = true;
@@ -583,7 +583,7 @@ public class Dialogue : MonoBehaviour
     /// <param name="txt"></param>
     public void Play(string txt = "", float autoplay = -1, bool disableOnComplete = false)
     {
-        Debug.Log("Playing text");
+        // Debug.Log("Playing text");
         ClearDialogue();
         SetAutoPlay(autoplay);
         string[] parts = txt.Split(new string[] { "<break>" }, 0);

@@ -17,7 +17,7 @@ public class UIListLayout : MonoBehaviour
     public bool horizontal = true;
     public bool vertical = false; // if both true -> table/grid mode
 
-    [Header("Spacing & Padding")]
+    // Spacing & Padding
     public float spacingX = 8f;
     public float spacingY = 8f;
     public float indentPerItem = 0f; // additive offset each next item (in primary axis)
@@ -27,25 +27,25 @@ public class UIListLayout : MonoBehaviour
     public float paddingBottom = 8f;
     public enum Constraint { Flexible, FixedColumnCount, FixedRowCount }
 
-    [Header("Table Settings (when both horizontal & vertical)")]
+    // Table Settings (when both horizontal & vertical
     public Constraint tableConstraint = Constraint.Flexible;
     [Min(1)] public int constraintCount = 3; // columns if FixedColumnCount, rows if FixedRowCount
     public bool uniformCellSize = false;
     public Vector2 cellSize = new Vector2(100, 30); // used if uniformCellSize=true
 
-    [Header("Sizing & Alignment")]
+    // Sizing & Alignment
     public bool useChildPreferredSize = true; // if false, use child's RectTransform.sizeDelta (current)
     public enum AlignHorizontal { Left, Center, Right }
     public enum AlignVertical { Top, Middle, Bottom }
     public AlignHorizontal alignX = AlignHorizontal.Left;
     public AlignVertical alignY = AlignVertical.Top;
 
-    [Header("Sorting & Direction")]
+    // Sorting & Direction
     public bool sortByPriority = false;
     public enum LayoutDirection { LeftToRight, RightToLeft, TopToBottom, BottomToTop }
     public LayoutDirection layoutDirection = LayoutDirection.LeftToRight;
     
-    [Header("Container Scaling")]
+    // Container Scaling
     public bool scaleHorizontal = false; // Adjust container width to fit content
     public bool scaleVertical = false;   // Adjust container height to fit content
     public float minWidth = 0f;          // Minimum width when scaling horizontally
@@ -117,11 +117,17 @@ public class UIListLayout : MonoBehaviour
 
     void OnEnable()
     {
+        Debug.Log("Re-applying list layout (ON-ENABLE)");
         UpdateChildTracking();
         lastContainerPosition = transform.localPosition;
         ApplyLayout();
     }
-
+    public void ManualUpdate()
+    {
+        UpdateChildTracking();
+        lastContainerPosition = transform.localPosition;
+        ApplyLayout(); 
+    }
     void Update()
     {
         // Check for new children in runtime

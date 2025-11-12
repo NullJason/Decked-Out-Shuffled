@@ -141,6 +141,7 @@ MonoBehaviour:
   AchievementsPopupContainer: {fileID: 0}
   AchievementBase: {fileID: 0}
   Achievements: {fileID: 0}
+  PlayerName: 
 --- !u!50 &3093440641847278219
 Rigidbody2D:
   serializedVersion: 5
@@ -417,7 +418,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4310173370260927097}
-  - component: {fileID: 6146329839164635837}
+  - component: {fileID: 6143554500956087985}
   m_Layer: 0
   m_Name: PlayerGroup
   m_TagString: Untagged
@@ -443,7 +444,7 @@ Transform:
   - {fileID: 4242739597248327661}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &6146329839164635837
+--- !u!114 &6143554500956087985
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -452,7 +453,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 4792738815121639970}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5e6e6b52c752ad24abfb2902abea4e33, type: 3}
+  m_Script: {fileID: 11500000, guid: 6c8f604b668024f419a8574a733b4ab0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &4915057879242138529

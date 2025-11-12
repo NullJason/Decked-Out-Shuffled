@@ -15,7 +15,7 @@ public class DialogueCharacters:MonoBehaviour
     void Start()
     {
         DontDestroyOnLoad(gameObject);
-        LoadImages(true);
+        LoadImages();
     }
     /// <summary>
     /// Loads all images under Resources.CharacterHeadShots and applies it to CharacterHeadshotImage list, indexing alphabetically.

@@ -1,11 +1,11 @@
+using System.Collections;
 using UnityEngine;
 
 public class PlayerName : EventAction
 {
-    public override object DoEventAction()
+    public override void DoEventAction()
     {
         // TODO display input ui for inputting name which will then apply that name to the player.
-
-        return true;
+        Player.PlayerCanMove = false;
     }
 }
