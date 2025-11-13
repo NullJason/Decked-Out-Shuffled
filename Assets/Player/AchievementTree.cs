@@ -29,6 +29,15 @@ public class AchievementNode : INode
 [CreateAssetMenu(fileName = "AchievementTree", menuName = "Achievement/Achievement Tree")]
 public class AchievementTree : NodeTree
 {
+    public AchievementNode GetAchievementNodeByTitle(string title)
+    {
+        foreach(INode n in Nodes)
+        {
+            AchievementNode achnode = (AchievementNode) n;
+            if(achnode.TitleText.Equals(title, System.StringComparison.OrdinalIgnoreCase)) return achnode;
+        }
+        return null;
+    }
     public void WipeAchievementProgress()
     {
         foreach(var node in Nodes) 

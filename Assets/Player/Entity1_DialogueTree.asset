@@ -15,8 +15,8 @@ MonoBehaviour:
   startNodeID: StartNode
   nodes:
   - nodeID: StartNode
-    dialogueText: Heya! It seems you saw the message I left! Welcome to the Void
-      realm!
+    dialogueText: <typewriter>Heya! It seems you saw the message I left! Welcome
+      to the Void realm!</typewriter>
     characterHeadshotID: 0
     choices:
     - sortOrder: 1
@@ -51,31 +51,25 @@ MonoBehaviour:
       width: 350
       height: 234
   - nodeID: Option1
-    dialogueText: Me? Just some rando running a card shop here in this village! Whenever
-      someone is about to plop into [name of world], they first pass through here!
-      <break> I know you got some SoulCoins as a traveler bonus, so how bout it?
-      Wanna see what booster packs I got in stock?
+    dialogueText: <typewriter=80>Me? Just some rando running a card shop here in
+      this village! Whenever someone is about to plop into [name of world], they
+      first pass through here! </typewriter>
     characterHeadshotID: 0
     choices:
-    - sortOrder: 1
-      choiceText: Cards?
-      targetNodeID: node_abf1d2a6
-      buttonAction: 
-      enabled: 1
     - sortOrder: 0
-      choiceText: Whats your name?
-      targetNodeID: node_84ce0848
+      choiceText: ...
+      targetNodeID: node_2ce41609
       buttonAction: 
       enabled: 1
     graphPosition:
       serializedVersion: 2
-      x: 590.2853
-      y: -119.42946
+      x: 537.1321
+      y: -100.96099
       width: 350
-      height: 455.62
+      height: 341.1
   - nodeID: c2
-    dialogueText: Buddy ol, I dont realize if you noticed, but you ARE kinda incorporeal
-      right now! <break> Awkward... Let's try again...
+    dialogueText: <typewriter> Buddy, I dont realize if you noticed, but you ARE
+      kinda incorporeal right now... </typewriter>
     characterHeadshotID: 0
     choices:
     - sortOrder: 0
@@ -92,8 +86,8 @@ MonoBehaviour:
   - nodeID: node_80b8ca25
     dialogueText: 'What? Don''t mind that...
 
-      <typewriter=30> <size=8>All Of
-      The Funds Went into buying cards...</size></typewriter>'
+      <typewriter=30> <size=12>All
+      Of The Funds Went into buying cards...</typewriter>'
     characterHeadshotID: 0
     choices:
     - sortOrder: 0
@@ -118,16 +112,21 @@ MonoBehaviour:
       width: 350
       height: 234
   - nodeID: node_abf1d2a6
-    dialogueText: "Its better if i show you directly. But more importantly, I don\u2019t
-      think I got your name! "
+    dialogueText: "<typewriter=50>I believe its better if i show you directly. But
+      more importantly, I don\u2019t think I got your name! </typewriter>"
     characterHeadshotID: 0
-    choices: []
+    choices:
+    - sortOrder: 0
+      choiceText: My... Name...
+      targetNodeID: 
+      buttonAction: AskPlayerName
+      enabled: 1
     graphPosition:
       serializedVersion: 2
-      x: 1042.8262
-      y: -160.0287
+      x: 1336.5146
+      y: -288.07413
       width: 350
-      height: 234
+      height: 334
   - nodeID: follow
     dialogueText: Your welcome! <break> We should really get going though, enter
       my Card shop, I'll be waiting inside!
@@ -140,11 +139,11 @@ MonoBehaviour:
       enabled: 1
     graphPosition:
       serializedVersion: 2
-      x: 1998.0022
-      y: 36.84945
+      x: 2145.78
+      y: 70.18277
       width: 350
       height: 334
-  - nodeID: node_9062b2e0
+  - nodeID: doorDialogueNode
     dialogueText: That's a nice name!
     characterHeadshotID: 0
     choices:
@@ -155,16 +154,16 @@ MonoBehaviour:
       enabled: 1
     graphPosition:
       serializedVersion: 2
-      x: 1497.1849
-      y: -2.8636398
+      x: 1720.2068
+      y: -75.58247
       width: 350
       height: 334
   - nodeID: node_95da1835
-    dialogueText: :( Don't judge...
+    dialogueText: <typewriter>... I can feel your judgement. :(</typewriter>
     characterHeadshotID: 0
     choices:
     - sortOrder: 0
-      choiceText: ...
+      choiceText: Let's start over...
       targetNodeID: END
       buttonAction: 
       enabled: 1
@@ -175,17 +174,38 @@ MonoBehaviour:
       width: 350
       height: 334
   - nodeID: node_84ce0848
-    dialogueText: 'My name is [name]! '
+    dialogueText: My name is Entis!
     characterHeadshotID: 0
     choices:
     - sortOrder: 0
-      choiceText: ...
-      targetNodeID: Option1
+      choiceText: Cool
+      targetNodeID: node_2ce41609
       buttonAction: 
       enabled: 1
     graphPosition:
       serializedVersion: 2
-      x: 1018.7931
-      y: 130.42363
+      x: 1347.756
+      y: 150.10007
       width: 350
       height: 334
+  - nodeID: node_2ce41609
+    dialogueText: <typewriter=80>I know you got some SoulCoins as a traveler bonus,
+      so how bout it? Wanna see what booster packs I got in stock?</typewriter>
+    characterHeadshotID: 0
+    choices:
+    - sortOrder: 0
+      choiceText: Cards?
+      targetNodeID: node_abf1d2a6
+      buttonAction: 
+      enabled: 1
+    - sortOrder: 0
+      choiceText: What's your name?
+      targetNodeID: node_84ce0848
+      buttonAction: 
+      enabled: 1
+    graphPosition:
+      serializedVersion: 2
+      x: 951.66614
+      y: -82.49948
+      width: 350
+      height: 434

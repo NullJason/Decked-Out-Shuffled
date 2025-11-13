@@ -7,18 +7,18 @@ using UnityEngine;
 /// </summary>
 public class LoadingTransition : MonoBehaviour
 {
-    public List<GameObject> Card_Prefabs;
-    public float Max_FallSpeed = 1;
-    public float Min_FallSpeed = .1f;
-    public int CardsPerSecond = 1; // num cards that should spawn inside the canvas already every second. 3 cardspersecond = every 1/3 a second spawn a card.
-    public int Max_CardsAnimating = 10;
-    public Transform SpawnArea; // use position and size, cards will spawn randomly inside this area.
-    public Transform StartPos;
-    public Transform EndPos;
-    public float SpreadAngle = 100; // direction the cards go to are influenced by this.
-    public float CircularInfluence = 10; // from 0-100, causes cards to emulate gravity (gravitational influence) around the midpoint between start and end pos
-    public float LifeSpan = 3;
-    private List<CardAnimate> activeCards = new List<CardAnimate>();
+    [SerializeField] private List<GameObject> Card_Prefabs;
+    [SerializeField] private float Max_FallSpeed = 1;
+    [SerializeField] private float Min_FallSpeed = .1f;
+    [SerializeField] private int CardsPerSecond = 1; // num cards that should spawn inside the canvas already every second. 3 cardspersecond = every 1/3 a second spawn a card.
+    [SerializeField] private int Max_CardsAnimating = 10;
+    [SerializeField] private Transform SpawnArea; // use position and size, cards will spawn randomly inside this area.
+    [SerializeField] private Transform StartPos;
+    [SerializeField] private Transform EndPos;
+    [SerializeField] private float SpreadAngle = 100; // direction the cards go to are influenced by this.
+    [SerializeField] private float CircularInfluence = 10; // from 0-100, causes cards to emulate gravity (gravitational influence) around the midpoint between start and end pos
+    [SerializeField] private float LifeSpan = 3;
+    [SerializeField] private List<CardAnimate> activeCards = new List<CardAnimate>();
     
     void OnEnable()
     {

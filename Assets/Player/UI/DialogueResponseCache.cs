@@ -106,11 +106,11 @@ public class DialogueResponseCache : MonoBehaviour
     {
         if (CurrentDR == null) Debug.Log("Current DialogueResponse is null, buttons won't work.");
 
-        if (buttonAction != null)
+        if (!string.IsNullOrEmpty(buttonAction))
         {
-            // buttonAction.Invoke("DialogueButtonAction", 0f);
+            Debug.Log("Trying to do action "+buttonAction);
             StartCoroutine(TriggerDialogueButtonAction(buttonAction));
-        }
+        } else Debug.Log($"Button {targetNodeID} has no action, field: {buttonAction}");
 
         if (targetNodeID == "END" || !CurrentDR.NodeLookup.ContainsKey(targetNodeID))
         {

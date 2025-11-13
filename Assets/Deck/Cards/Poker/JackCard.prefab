@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 865486080322750699}
   - component: {fileID: 4216797369922122024}
   m_Layer: 5
-  m_Name: jc
+  m_Name: JackCard
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
