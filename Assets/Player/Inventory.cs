@@ -5,11 +5,15 @@ using UnityEngine.UI;
 //When the player opens a UI to select what cards they want to use in a fight, the Inventory class creates a UI for swapping with toggles for each card. 
 //  (Actually, the UI panel pre-exists. The Inventory class really just creates the Toggles.)
 //When the player confirms their selection, ReapCards() is called, and the cards are returned based on whether they were toggled. The toggles themselves are destroyed afterwards. 
+//Also responsible for storing the cards themselves. 
 
 public class Inventory : MonoBehaviour
 {
     //Represents whether cards are being selected through toggles. Some actions may behave unexpectedly depending on whether this is true or false. 
     private protected bool selectMode = false;
+
+    [SerializeField]
+    private protected Deck storage; //This was added after List<Card> cards was programmed into this and I don't want to deal with it right now. In theory, a Deck should be the only container a card can be stored in. In practice, an Inventory stores two copies of its content, one in a Deck and one in a List<Card>. 
 
     //The UI panel on which to place toggles. 
     [SerializeField] private protected Transform ui;
@@ -37,10 +41,11 @@ public class Inventory : MonoBehaviour
         cards = new List<Card>();
     }
 
-    public void AddCard(Card c)
+    public void AddCard(Card c, Deck fromDeck)
     {
 	if(selectMode) Debug.LogError("Cannot add new cards to inventory when select mode is already active!");
         cards.Add(c);
+	Deck.MoveCard(fromDeck, c, storage);
     }
     public void PrintCards(){
 	foreach(Card c in cards) Debug.Log(c);
@@ -64,6 +69,7 @@ public class Inventory : MonoBehaviour
 	toggles = null;
 	reapedCards = results;
 	selectMode = false;
+
         return results;
     }
 
@@ -78,9 +84,10 @@ public class Inventory : MonoBehaviour
     {
 	if(!selectMode) Debug.LogError("Cannot get number of cards selected when select mode is not active!");
         int count = 0;
-        foreach (Toggle toggle in toggles)
+	Debug.Log("Toggles: " + toggles);
+        foreach (Toggle t in toggles)
         {
-            if(toggle.isOn) count++;
+            if(t.isOn) count++;
         }
         return count;
     }
@@ -88,6 +95,7 @@ public class Inventory : MonoBehaviour
     //Creates the new toggles on the UI. 
     public void StartSelection()
     {
+	Debug.Log("Card selection started!");
 	if(selectMode) Debug.LogError("Cannot activate select mode when select mode is already active!");
 	selectMode = true;
         toggles = new List<Toggle>();
@@ -111,4 +119,7 @@ public class Inventory : MonoBehaviour
 	return(cards[toggles.IndexOf(t)]);
     }
 
+    public Deck GetDeck(){
+	    return storage;
+    }
 }

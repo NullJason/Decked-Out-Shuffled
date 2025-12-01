@@ -170,6 +170,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dialogueText: {fileID: 27522290}
+  InitialDialogueText: 
+  CharacterHeadshotTransform: {fileID: 0}
   Font: {fileID: 0}
   FontSize: 0
   DefaultFontColor: {r: 1, g: 1, b: 1, a: 1}
@@ -933,7 +935,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1101482618}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 974fd1f84bc725143896586a212181fc, type: 3}
+  m_Script: {fileID: 11500000, guid: 118d4ddde6cbbae48b8425b1c05c8a0c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!4 &1101482620

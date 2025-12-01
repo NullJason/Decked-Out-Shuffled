@@ -5,10 +5,10 @@ using UnityEngine;
 public class TestInventory : MonoBehaviour
 {
 	[SerializeField] Inventory inv;
-	[SerializeField] List<Card> cards;
+	[SerializeField] Deck deck;
 	void Start(){
-		foreach(Card c in cards) {
-			inv.AddCard(c);
+		foreach(Card c in deck) {
+			inv.AddCard(c, deck);
 		}
 		inv.PrintCards();
 

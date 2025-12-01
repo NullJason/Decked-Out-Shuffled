@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 using TMPro;
 
 //  Opens a UI panel for selecting the cards for a fight, 
@@ -28,6 +29,9 @@ public class EnterFight : Interaction
 	//The Inventory responsible for selecting cards. 
 	[SerializeField] private protected Inventory inv;
 
+	//The card game to be started. 
+	[SerializeField] private protected string sceneName;
+
 
 	bool ready = false;
 
@@ -49,7 +53,10 @@ public class EnterFight : Interaction
 				if(Input.GetKeyDown("space") || Input.GetKeyDown("enter")){
 					inv.ReapCards(); 
 					//TODO!!
-					Debug.LogError("Here, a new scene would begin for a card battle, but that functionality has not yet been added!");
+					
+
+					SceneManager.LoadScene(sceneName);
+		//			Debug.LogError("Here, a new scene would begin for a card battle, but that functionality has not yet been added!");
 				}
 			}
 		}
