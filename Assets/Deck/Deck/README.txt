@@ -1,0 +1,2 @@
+A Deck is an ordered collection of cards. During a card game, a card should be a member of exactly one deck. 
+A Deck is shown visually by the DeckPreset associated with it. So, if you want a Deck to be invisible, use an InvisibleDeck preset as the Deck's preset. If you want its cards to be spread out so that all are visible, use a VisibleDeck. If you want the cards to be stacked so that only the top card is visible, use a HiddenDeck. 

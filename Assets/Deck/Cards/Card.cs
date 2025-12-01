@@ -8,10 +8,11 @@ public abstract class Card : ClickSelectable
 	[SerializeField] private protected Sprite faceUpSprite;
 	[SerializeField] private protected Sprite faceDownSprite;
 	[SerializeField] private protected Sprite hiddenCard;
-	[SerializeField] private protected List<string> attributes;
+	[SerializeField] private protected HashSet<string> attributes;
 
 	private protected void Awake(){
 		sprite = Util.NullCheck(sprite, gameObject);
+		attributes = new HashSet<string>();
 	}
 
 	private Face facing;
@@ -38,5 +39,9 @@ public abstract class Card : ClickSelectable
 		if(facing == Face.up) sprite.sprite = faceUpSprite;
 		else if(facing == Face.down) sprite.sprite = faceDownSprite;
 		else sprite.sprite = hiddenCard;
+	}
+
+	public bool HasAttribute(string s){
+		return attributes.Contains(s);
 	}
 }

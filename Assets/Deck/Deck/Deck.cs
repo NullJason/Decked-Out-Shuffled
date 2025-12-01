@@ -1,7 +1,8 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System.Collections;
 
-public class Deck : MonoBehaviour
+public class Deck : MonoBehaviour, IEnumerable
 {
 	[SerializeField]
 	List<Card> cards;
@@ -30,9 +31,13 @@ public class Deck : MonoBehaviour
 		//Remove the card and insert. 
 		deck2.AddCard(card1, position);
 		deck1.RemoveCard(index);
+
+		//Change the card's transform parent. 
+		card1.gameObject.transform.SetParent(deck2.gameObject.transform);
 	}
 
 	public Card GetCardAtIndex(int index){
+		if(Count() <= 0) Debug.LogError("Could not get card since the inventory was empty!");
 		if(index < 0) Debug.LogError("Could not get card at negative index!");
 		if(index > Count()) Debug.LogError("Index " + index + " was out of bounds (" + Count() + ")!");
 		return cards[index];
@@ -49,13 +54,15 @@ public class Deck : MonoBehaviour
 		return cards.Count;
 	}
 
-	private void RemoveCard(int index){
+	private void RemoveCard(int index = 0){
 		index = ActualPosition(index);
 		cards.RemoveAt(index);
 		Render();
 	}
 
-	private void AddCard(Card card, int index){
+	//This should generally not be called! If you're moving cards between two decks, do not use this. 
+	//I include it here for the sake of initializing decks with new cards. 
+	public void AddCard(Card card, int index = 0){
 		index = ActualPosition(index);
 		cards.Insert(index, card);
 		Render();
@@ -74,4 +81,10 @@ public class Deck : MonoBehaviour
 	private void Render(DeckPreset preset){
 		preset.Apply(cards, this);
 	}
+
+	public IEnumerator GetEnumerator(){
+		return cards.GetEnumerator();
+	}
+
+
 }
