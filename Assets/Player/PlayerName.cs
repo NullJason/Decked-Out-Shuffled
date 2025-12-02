@@ -14,10 +14,10 @@ public class PlayerName : EventAction
         Debug.Log("Doing Player name action");
         Player.PlayerCanMove = false;
         gameObject.SetActive(true);
-        inputField.onEndEdit.AddListener(OnInputFieldEndEdit);
+        inputField.onSubmit.AddListener(OnInputFieldSubmit);
         plrDRCache.SetContainerActiveState(false);
     }
-    void OnInputFieldEndEdit(string text)
+    void OnInputFieldSubmit(string text)
     {
         if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
         {
