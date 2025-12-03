@@ -11,51 +11,24 @@ using System.Collections.Generic;
 //
 //The Selectables that are clicked by the player are recorded in FIFO order, and can be gotten by calling GetNext(). If no cards have been selected, GetNext() will return null. 
 //(To complete the example, the external class would call GetNext() to get the card, and then move it to the discard pile using relevant card/deck methods. It might also call WaitForNewInput again with an empty set, to prevent any new input from being collected.)
-public class UserInput : MonoBehaviour
+public class UserInput : GameInput
 {
-  public static UserInput main;
-
-  private void Awake(){
-    selected = new Queue<Selectable>();
-    selectables = new HashSet<Selectable>();
-    everything = new HashSet<Selectable>();
-
-    if(main == null) main = this;
-  }
-
   Queue<Selectable> selected;
   HashSet<Selectable> selectables;
+  static HashSet<Selectable> everything;
 
-  HashSet<Selectable> everything;
-  
-  public void WaitForNewInput(HashSet<Selectable> selectables)
-  {
-    selected.Clear();
-    this.selectables = selectables;
-    HighlightSelectable();
-  }
+  public static UserInput main;
 
-  public void Clear(){
-    WaitForNewInput(new HashSet<Selectable>());
-  }
+  private protected override void Awake(){
+    selected = new Queue<Selectable>();
+    selectables = new HashSet<Selectable>();
+    if(everything == null) everything = new HashSet<Selectable>();
 
-  public Selectable GetNext(){
-    if(selected.Count > 0) return selected.Dequeue();
-    return null;
-  }
-
-  public void Add(Selectable s){
-    everything.Add(s);
+    if(main == null) main = this;
   }
 
   private void HighlightSelectable(){
     foreach(Selectable s in everything) s.Unhighlight();
     foreach(Selectable s in selectables) s.Highlight();
-  }
-
-  public void Try(Selectable s){
-    if(!selectables.Contains(s)) Debug.LogError("Could not select Selectable " + s.gameObject + " because it was not in the selectable set!");
-    if(!everything.Contains(s)) Debug.LogError("Could not select Selectable " + s.gameObject + " because it was not in the everything set!");
-    selected.Enqueue(s);
   }
 }

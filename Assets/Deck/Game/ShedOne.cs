@@ -61,8 +61,8 @@ public class ShedOne : CardGame
 	//Waits for player input, and then moves the selected card from the hand to the top of the discard pile. 
 	private protected class ChooseWhichCardToPlayState : State{
 		
-		override public State Do(){
-			Selectable s = UserInput.main.GetNext();
+		override public State Do(GameInput input){
+			Selectable s = input.GetNext();
 			if(s != null) {
 				if(!(s is Card)) Debug.LogError("Somehow got a non-Card where a Card was expected!");
 				Deck.MoveCard(CardGame.main.GetDeck("Hand"), (Card) s, CardGame.main.GetDeck("Discard"));
@@ -74,7 +74,7 @@ public class ShedOne : CardGame
 	}
 
 	private protected class PlayerCanPlayCards : State{
-		override public State Do(){
+		override public State Do(GameInput input){
 
 			HashSet<Selectable> cards = new HashSet<Selectable>();
 			Card discard = CardGame.main.GetDeck("Discard").GetCardAtIndex(0); //The card at the top of the discard pile. 
@@ -113,8 +113,8 @@ public class ShedOne : CardGame
 	}
 
 	private protected class DrawCardState : State{
-		override public State Do(){
-			Selectable s = UserInput.main.GetNext();
+		override public State Do(GameInput input){
+			Selectable s = input.GetNext();
 			if(s != null) {
 				if(!(s is Card)) Debug.LogError("Somehow got a non-Card where a Card was expected!");
 				Deck.MoveCard(CardGame.main.GetDeck("Draw"), (Card) s, CardGame.main.GetDeck("Hand")); //Move card from draw pile to hand (i.e. draw a card). 

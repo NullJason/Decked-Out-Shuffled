@@ -11,12 +11,13 @@ public abstract class CardGame : MonoBehaviour
 	Inventory playerInv;
 	[SerializeField] private protected Deck botStartingCards;
 	[SerializeField] private protected Deck extraCards;
+	[SerializeField] private protected GameInput npcInput;
 
 	private protected State currentState;
 
 	private protected User currentUser;
 
-	private protected static CardGame main;
+	public static CardGame main;
 
 	private protected void OnEnable(){
 		Inventory playerInv = KeyUtil.main.PlayerInventory();
@@ -42,7 +43,7 @@ public abstract class CardGame : MonoBehaviour
 
 	//TODO: Check if the card game was won or lost, and then set main to null to end the game. 
 	private protected void Update(){
-		State temp = currentState.Do();
+		State temp = currentState.Do(CurrentInput());
 		if(temp == null){
 			StartNewTurn();
 		}
@@ -58,6 +59,13 @@ public abstract class CardGame : MonoBehaviour
 		if(currentUser == User.player) currentUser = User.npc;
 		else if(currentUser == User.npc) currentUser = User.player;
 		else Debug.LogError("Unknown participant in game: " + currentUser); 
+	}
+
+	public GameInput CurrentInput(){
+		if(currentUser == User.player) return UserInput.main;
+		if(currentUser == User.npc) return npcInput;
+		Debug.LogError("Could not get input because there was an unexpected user! Returning null. ");
+		return null;
 	}
 
 	//This method is called in Awake(), and should be used to add the player-specific Decks necessary for each game. 
@@ -118,6 +126,6 @@ public abstract class CardGame : MonoBehaviour
 
 	public abstract class State{
 		//Returns the next state. If it is equal to the current state, do nothing. If it is null, end the turn. 
-		abstract public State Do();
+		abstract public State Do(GameInput input);
 	}
 }

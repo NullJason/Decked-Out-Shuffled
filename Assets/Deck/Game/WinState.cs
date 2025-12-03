@@ -6,7 +6,7 @@ public class WinState : CardGame.State
 	public WinState(bool who){
 		this.who = who;
 	}
-	public override CardGame.State Do(){
+	public override CardGame.State Do(GameInput input){
 		Debug.LogWarning("This method should not be called. A Win State should automatically be recognized as the end of a game, and should never actually have its Do() method called.");
 		return this;
 	}

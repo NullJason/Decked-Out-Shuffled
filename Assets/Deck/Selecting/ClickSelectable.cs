@@ -32,6 +32,6 @@ public class ClickSelectable : Selectable
 	}
 
 	public override void Select(){
-		UserInput.main.Try(this);
+		CardGame.main.CurrentInput().Try(this);
 	}
 }
