@@ -41,6 +41,7 @@ public class DialogueResponseCache : MonoBehaviour
             mainDialogueDistanceManager.SetNew(Player.Player_Transform, npc, MainCanvas, true);
         }
     }
+    public void SetCanvasActiveState(bool state = false){MainCanvas.SetActive(state);}
     public void UpdateSize(DialogueNode currentNode)
     {
         List<DialogueChoice> enabledChoices = currentNode.EnabledChoices;
@@ -109,7 +110,8 @@ public class DialogueResponseCache : MonoBehaviour
         if (!string.IsNullOrEmpty(buttonAction))
         {
             Debug.Log("Trying to do action "+buttonAction);
-            StartCoroutine(TriggerDialogueButtonAction(buttonAction));
+            dialogueActionManager.ExecuteAction(buttonAction);
+            // StartCoroutine(TriggerDialogueButtonAction(buttonAction));
         } else Debug.Log($"Button {targetNodeID} has no action, field: {buttonAction}");
 
         if (targetNodeID == "END" || !CurrentDR.NodeLookup.ContainsKey(targetNodeID))
@@ -126,6 +128,7 @@ public class DialogueResponseCache : MonoBehaviour
         while (!mainDialogueMono.FinishedDisplayingText && (Time.time - startTime < WaitForTextFinishTimeoutDuration))
         {
             yield return null;
+            Debug.Log("uhhh mono hasn't finished");
         }
         dialogueActionManager.ExecuteAction(act);
     }

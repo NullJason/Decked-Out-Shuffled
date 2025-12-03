@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using System.Text.RegularExpressions;
+using System;
 
 
 /// <summary> 
@@ -64,6 +66,22 @@ public class Dialogue : MonoBehaviour
     private bool fastForwardHold = false;   // true while FF key held
     private bool fastForwardPulse = false;  // one-shot FF (press)
 
+
+    [Header("Preset Styles")]
+    // [SerializeField] private TMP_SpriteAsset spriteAsset;
+    // below two dictionaries are replacements for certain texts. 
+    // for number styles it will detect if there are numbers in the word to the left or right and also apply the style to them, 
+    // if not it will just apply the style to the word. if there is a <icon=index> tag somewhere in these presets then it should replace that tag with the image from TextIcons and this image should be rescaled keeping aspect ratio until it fits into the current line, the text needs to be displaced so it isnt covered by the icon.
+    private static readonly Dictionary<string,string> PresetNameStyles = new Dictionary<string, string>
+    {
+        ["Entis"]="<Color=(4, 24, 66)><i><b>Entis</b></i></Color>",
+    };
+    private static readonly Dictionary<string,string> PresetNumberStyles = new Dictionary<string, string>
+    {
+        ["Soul Coins"]="<colorgradient=(0, 163, 164),(0, 188, 161)><i><b>Soul Coins</i></b></colorgradient>",
+    };
+    [SerializeField] private List<Sprite> TextIcons = new List<Sprite>();
+
     // ignore common tmp tags
     private static readonly HashSet<string> TMPAllowedTags = new HashSet<string>
     {
@@ -112,6 +130,11 @@ public class Dialogue : MonoBehaviour
         if (dialogueText == null)
         {
             dialogueText = GetComponent<TextMeshProUGUI>();
+            // if (TextIcons != null && TextIcons.Count > 0)
+            // {
+            //     InitializeSpriteAsset();
+            // }
+            
             if (InitialDialogueText!=null && InitialDialogueText != " " && InitialDialogueText != "")
             {
                 QueueDialogue(InitialDialogueText);
@@ -119,6 +142,48 @@ public class Dialogue : MonoBehaviour
             }
         }
     }
+    // private void InitializeSpriteAsset()
+    // {
+    //     if (spriteAsset == null)
+    //     {
+    //         spriteAsset = ScriptableObject.CreateInstance<TMP_SpriteAsset>();
+            
+    //         // Import sprites from the list
+    //         var spriteInfoList = new List<TMP_Sprite>();
+            
+    //         for (int i = 0; i < TextIcons.Count; i++)
+    //         {
+    //             var sprite = TextIcons[i];
+    //             if (sprite != null)
+    //             {
+    //                 var spriteInfo = new TMP_Sprite
+    //                 {
+    //                     id = i,
+    //                     name = sprite.name,
+    //                     hashCode = TMP_TextUtilities.GetSimpleHashCode(sprite.name),
+    //                     sprite = sprite,
+    //                     width = sprite.rect.width,
+    //                     height = sprite.rect.height,
+    //                     pivot = new Vector2(0.5f, 0.5f),
+    //                     x = sprite.rect.x,
+    //                     y = sprite.rect.y,
+    //                     xAdvance = sprite.rect.width,
+    //                     scale = 1.0f
+    //                 };
+    //                 spriteInfoList.Add(spriteInfo);
+    //             }
+    //         }
+            
+    //         spriteAsset.spriteInfoList = spriteInfoList;
+    //         spriteAsset.UpdateLookupTables();
+            
+    //         // Assign to dialogue text
+    //         if (dialogueText != null)
+    //         {
+    //             dialogueText.spriteAsset = spriteAsset;
+    //         }
+    //     }
+    // }
     /// <summary>
     /// Sets autoplay, < 0 disables this, > 0 waits this amount before next.
     /// </summary>
@@ -430,7 +495,18 @@ public class Dialogue : MonoBehaviour
                 var e = activeEffects[i];
                 e.startIndex = Mathf.Clamp(e.startIndex, 0, info.characterCount - 1);
                 e.endIndex = Mathf.Clamp(e.endIndex, 0, info.characterCount - 1);
-                e.Apply(dialogueText, info, originalInfo, t);
+                if (e is DelayedTextEffect delayedEffect)
+                {
+                    if (delayedEffect.ShouldStartEffect(t, visibleMask))
+                    {
+                        delayedEffect.Apply(dialogueText, info, originalInfo, t);
+                    }
+                }
+                else
+                {
+                    // Apply non-delayed effects immediately
+                    e.Apply(dialogueText, info, originalInfo, t);
+                }
             }
 
             for (int i = 0; i < info.meshInfo.Length; i++)
@@ -659,6 +735,61 @@ public class Dialogue : MonoBehaviour
 
 
     }
+    private string ApplyPresetStyles(string text)
+    {
+        string result = text;
+        
+        foreach (var preset in PresetNameStyles)
+        {
+            string pattern = @"(?<!\w)" + Regex.Escape(preset.Key) + @"(?!\w)";
+            result = Regex.Replace(result, pattern, preset.Value, RegexOptions.IgnoreCase);
+        }
+        
+        foreach (var preset in PresetNumberStyles)
+        {
+            // We need three separate patterns to handle different cases properly
+            
+            // 1. Numbers before the key: \d+ followed by whitespace followed by key
+            string pattern1 = @"(?<!\w)(?<numbers>\d+)\s+" + Regex.Escape(preset.Key) + @"(?!\w)";
+            result = Regex.Replace(result, pattern1, match => 
+            {
+                string fullMatch = match.Value;
+                return ApplyStyleToText(preset.Value, preset.Key, fullMatch);
+            }, RegexOptions.IgnoreCase);
+            
+            // 2. Numbers after the key: key followed by whitespace followed by \d+
+            string pattern2 = @"(?<!\w)" + Regex.Escape(preset.Key) + @"\s+(?<numbers>\d+)(?!\w)";
+            result = Regex.Replace(result, pattern2, match => 
+            {
+                string fullMatch = match.Value;
+                return ApplyStyleToText(preset.Value, preset.Key, fullMatch);
+            }, RegexOptions.IgnoreCase);
+            
+            // 3. Numbers on both sides: \d+ whitespace key whitespace \d+
+            string pattern3 = @"(?<!\w)(?<before>\d+)\s+" + Regex.Escape(preset.Key) + @"\s+(?<after>\d+)(?!\w)";
+            result = Regex.Replace(result, pattern3, match => 
+            {
+                string fullMatch = match.Value;
+                return ApplyStyleToText(preset.Value, preset.Key, fullMatch);
+            }, RegexOptions.IgnoreCase);
+        }
+        
+        return result;
+    }
+    private string ApplyStyleToText(string styledTemplate, string keyInTemplate, string textToStyle)
+    {
+        int keyIndex = styledTemplate.IndexOf(keyInTemplate, StringComparison.OrdinalIgnoreCase);
+        
+        if (keyIndex >= 0)
+        {
+            string openingTags = styledTemplate.Substring(0, keyIndex);
+            string closingTags = styledTemplate.Substring(keyIndex + keyInTemplate.Length);
+            
+            return openingTags + textToStyle + closingTags;
+        }
+        
+        return textToStyle;
+    }
     private bool IsCharacterRevealed(int charIndex, List<TextEffectTypewriter> typewriters)
     {
         if (typewriters == null || typewriters.Count == 0) return true;
@@ -708,9 +839,14 @@ public class Dialogue : MonoBehaviour
 
         int visIndex = 0;
 
-        for (int i = 0; i < input.Length; i++)
+        string processedInput = ApplyPresetStyles(input);
+    
+        processedInput = ProcessIconTags(processedInput);
+        
+
+        for (int i = 0; i < processedInput.Length; i++)
         {
-            char c = input[i];
+            char c = processedInput[i];
 
             if (c == '<')
             {
@@ -727,6 +863,12 @@ public class Dialogue : MonoBehaviour
                 string[] parts = tagContent.Split('=');
                 string tagName = parts[0].Trim().ToLower();
                 string paramStr = parts.Length > 1 ? parts[1] : "";
+                
+                if (tagName == "sprite")
+                {
+                    sb.Append("<" + tagContent + ">");
+                    continue;
+                }
 
                 if (IsTMPTag(tagContent))
                 {
@@ -792,7 +934,20 @@ public class Dialogue : MonoBehaviour
                                                 typewriter.pauseDurations.Add(pause.Duration);
                                             }
                                         }
-                                    }
+                                        string segmentText = cleanSoFar.Substring(startIdx, endIdx - startIdx + 1);
+                                        typewriter.SetText(segmentText);
+                                        
+                                        foreach (var stutterEffect in effects)
+                                        {
+                                            if (stutterEffect is TextEffectStutter stutter && 
+                                                stutter.startIndex >= startIdx && stutter.startIndex <= endIdx)
+                                            {
+                                                stutter.startIndex -= startIdx; // Make relative to typewriter start
+                                                typewriter.stutterEffects.Add(stutter);
+                                            }
+                                        }
+                                
+                                    }    
                                     effects.Add(eff);
                                 }
                             }
@@ -815,7 +970,18 @@ public class Dialogue : MonoBehaviour
 
         cleanText = sb.ToString();
     }
-
+    private string ProcessIconTags(string text)
+    {
+        string pattern = @"<icon=(\d+)>";
+        return Regex.Replace(text, pattern, match =>
+        {
+            if (int.TryParse(match.Groups[1].Value, out int index) && index >= 0 && index < TextIcons.Count)
+            {
+                return $"<sprite index=\"{index}\" height=\"1em\">";
+            }
+            return match.Value;
+        });
+    }
 
     TextEffect MakeEffect(string name, string paramStr)
     {
@@ -838,6 +1004,7 @@ public class Dialogue : MonoBehaviour
                 case "explode": return new TextEffectExplode(50f, 9.8f);
                 case "collapse": return new TextEffectCollapse(30f, 20f);
                 case "colorgradient": return new TextEffectColorGradient(Color.white, Color.black, 0, 0f);
+                case "gravity": return new TextEffectGravity();
                 default: return null;
             }
         }
@@ -856,7 +1023,17 @@ public class Dialogue : MonoBehaviour
                     float amp = wa.Length > 1 ? ParseFloat(wa[1], 5f) : 5f;
                     return new TextEffectWavy(ws, amp);
                 }
-
+            case "stutter":
+                {
+                    var parts = paramStr.Split(',');
+                    if (parts.Length >= 2)
+                    {
+                        int index = (int)ParseFloat(parts[0], 0f);
+                        string replacement = parts[1];
+                        return new TextEffectStutter(index, replacement);
+                    }
+                    break;
+                }
             case "shake":
                 {
                     string[] sa = paramStr.Split(',');
@@ -920,51 +1097,68 @@ public class Dialogue : MonoBehaviour
                 }
             case "quake":
                 {
-                    return new TextEffectQuake(ParseFloat(paramStr, 5f));
+                    var parts = SplitTopLevelArgs(paramStr);
+                    float intensity = parts.Length > 0 ? ParseFloat(parts[0], 5f) : 5f;
+                    float delay = parts.Length > 1 ? ParseFloat(parts[1], 0f) : 0f;
+                    return new TextEffectQuake(intensity, delay);               
                 }
             case "drop":
                 {
-                    var parts = paramStr.Split(',');
+                    var parts = SplitTopLevelArgs(paramStr);
                     float speed = parts.Length > 0 ? ParseFloat(parts[0], 2f) : 2f;
                     float bounce = parts.Length > 1 ? ParseFloat(parts[1], 10f) : 10f;
                     float angle = parts.Length > 2 ? ParseFloat(parts[2], -90f) : -90f;
-                    return new TextEffectDrop(speed, bounce, angle);
+                    float delay = parts.Length > 3 ? ParseFloat(parts[3], 0f) : 0f;
+                    return new TextEffectDrop(speed, bounce, angle, delay);
                 }
             case "rain":
                 {
-                    var parts = paramStr.Split(',');
+                    var parts = SplitTopLevelArgs(paramStr);
                     float speed = parts.Length > 0 ? ParseFloat(parts[0], 2f) : 2f;
                     float bounce = parts.Length > 1 ? ParseFloat(parts[1], 10f) : 10f;
                     float angle = parts.Length > 2 ? ParseFloat(parts[2], -90f) : -90f;
-                    return new TextEffectRain(speed, bounce, angle);
+                    float delay = parts.Length > 3 ? ParseFloat(parts[3], 0f) : 0f;
+                    return new TextEffectRain(speed, bounce, angle, delay);
                 }
             case "construct":
                 {
-                    var parts = paramStr.Split(',');
+                    var parts = SplitTopLevelArgs(paramStr);
                     float length = parts.Length > 0 ? ParseFloat(parts[0], 50f) : 50f;
                     float speed = parts.Length > 1 ? ParseFloat(parts[1], 1f) : 1f;
-                    return new TextEffectConstruct(length, speed);
+                    float delay = parts.Length > 2 ? ParseFloat(parts[2], 0f) : 0f;
+                    return new TextEffectConstruct(length, speed, delay);
                 }
             case "slam":
                 {
-                    var parts = paramStr.Split(',');
+                    var parts = SplitTopLevelArgs(paramStr);
                     float speed = parts.Length > 0 ? ParseFloat(parts[0], 3f) : 3f;
                     int bounces = parts.Length > 1 ? (int)ParseFloat(parts[1], 2f) : 2;
-                    return new TextEffectSlam(speed, bounces);
+                    float delay = parts.Length > 2 ? ParseFloat(parts[2], 0f) : 0f;
+                    return new TextEffectSlam(speed, bounces, delay);
                 }
             case "explode":
                 {
-                    var parts = paramStr.Split(',');
+                    var parts = SplitTopLevelArgs(paramStr);
                     float force = parts.Length > 0 ? ParseFloat(parts[0], 50f) : 50f;
                     float gravity = parts.Length > 1 ? ParseFloat(parts[1], 9.8f) : 9.8f;
-                    return new TextEffectExplode(force, gravity);
+                    float delay = parts.Length > 2 ? ParseFloat(parts[2], 0f) : 0f;
+                    return new TextEffectExplode(force, gravity, delay);
                 }
             case "collapse":
                 {
-                    var parts = paramStr.Split(',');
+                    var parts = SplitTopLevelArgs(paramStr);
                     float rotation = parts.Length > 0 ? ParseFloat(parts[0], 30f) : 30f;
                     float drop = parts.Length > 1 ? ParseFloat(parts[1], 20f) : 20f;
-                    return new TextEffectCollapse(rotation, drop);
+                    float delay = parts.Length > 2 ? ParseFloat(parts[2], 0f) : 0f;
+                    return new TextEffectCollapse(rotation, drop, delay);
+                }
+            case "gravity":
+                {
+                    var parts = SplitTopLevelArgs(paramStr);
+                    float gravity = parts.Length > 0 ? ParseFloat(parts[0], 9.8f) : 9.8f;
+                    float velocity = parts.Length > 1 ? ParseFloat(parts[1], 0f) : 0f;
+                    float delay = parts.Length > 2 ? ParseFloat(parts[2], 0f) : 0f;
+                    return new TextEffectGravity(gravity, velocity, delay);
                 }
 
         }
@@ -1015,7 +1209,38 @@ public abstract class TextEffect
     /// <param name="time">Apply Time</param>
     public abstract void Apply(TextMeshProUGUI tmp, TMP_TextInfo info, TMP_MeshInfo[] originalVerts, float time);
 }
-
+public abstract class DelayedTextEffect : TextEffect
+{
+    public float delay = 0f;
+    protected float effectStartTime = -1f;
+    protected bool effectStarted = false;
+    
+    public virtual void StartEffect(float currentTime)
+    {
+        effectStartTime = currentTime;
+        effectStarted = true;
+    }
+    
+    public bool ShouldStartEffect(float currentTime, bool[] visibleMask)
+    {
+        for (int i = startIndex; i <= endIndex && i < visibleMask.Length; i++)
+        {
+            if (!visibleMask[i]) return false;
+        }
+        
+        if (!effectStarted)
+        {
+            StartEffect(currentTime);
+        }
+        return effectStarted;
+    }
+    
+    public float GetEffectTime(float currentTime)
+    {
+        if (!effectStarted) return 0f;
+        return currentTime - effectStartTime - delay;
+    }
+}
 
 public class TextEffectTypewriter : TextEffect
 {
@@ -1024,10 +1249,61 @@ public class TextEffectTypewriter : TextEffect
     public int revealed = 0;
     public List<int> pauseIndices = new List<int>();
     public List<float> pauseDurations = new List<float>();
+    public List<TextEffectStutter> stutterEffects = new List<TextEffectStutter>();
     private float pauseTimeRemaining = 0f;
     private int currentPauseIndex = -1;
+    private string originalText;  
+    private string currentText;   
     public TextEffectTypewriter(float s) { speed = Mathf.Max(0.0001f, s); timer = 0f; revealed = 0; }
     public override void Apply(TextMeshProUGUI tmp, TMP_TextInfo info, TMP_MeshInfo[] orig, float t) { }
+    public void SetText(string text)
+    {
+        originalText = text;
+        currentText = text;
+    }
+    private void CheckStutterReplacements()
+    {
+        foreach (var stutter in stutterEffects)
+        {
+            if (!stutter.triggered && revealed >= stutter.triggerIndex)
+            {
+                stutter.triggered = true;
+                
+                int currentPosition = Mathf.Min(revealed, currentText.Length);
+                
+                int wordStart = 0;
+                int wordEnd = currentText.Length;
+                
+                for (int i = currentPosition - 1; i >= 0; i--)
+                {
+                    if (char.IsWhiteSpace(currentText[i]))
+                    {
+                        wordStart = i + 1;
+                        break;
+                    }
+                }
+                
+                for (int i = currentPosition; i < currentText.Length; i++)
+                {
+                    if (char.IsWhiteSpace(currentText[i]))
+                    {
+                        wordEnd = i;
+                        break;
+                    }
+                }
+                
+                if (wordStart < wordEnd && wordEnd <= currentText.Length)
+                {
+                    currentText = currentText.Substring(0, wordStart) + 
+                                  stutter.replacementText + 
+                                  currentText.Substring(wordEnd);
+                    
+                    int lengthDiff = stutter.replacementText.Length - (wordEnd - wordStart);
+                    revealed = Mathf.Max(0, revealed + lengthDiff);
+                }
+            }
+        }
+    }
     // helper to update internal progress
     public void UpdateProgress(float deltaSeconds)
     {
@@ -1051,6 +1327,7 @@ public class TextEffectTypewriter : TextEffect
         int target = Mathf.FloorToInt(timer * speed);
         target = Mathf.Clamp(target, 0, endIndex - startIndex + 1);
         revealed = target;
+        CheckStutterReplacements();
     }
     public void CompleteInstantly()
     {
@@ -1157,7 +1434,7 @@ public class TextEffectColorTransition : TextEffect
         a = c1; 
         b = c2; 
         duration = Mathf.Max(0.1f, dur);
-        timeOffset = Random.Range(0f, duration); // Random offset for variety
+        timeOffset = UnityEngine.Random.Range(0f, duration); // UnityEngine.Random offset for variety
     }
 
     public override void Apply(TextMeshProUGUI tmp, TMP_TextInfo info, TMP_MeshInfo[] orig, float time)
@@ -1200,23 +1477,23 @@ public class TextEffectColorGradient : TextEffect
 
     public override void Apply(TextMeshProUGUI tmp, TMP_TextInfo info, TMP_MeshInfo[] orig, float time)
     {
-        if (info.characterCount == 0) return;
+        if (info.characterCount == 0 || startIndex >= info.characterCount) return;
         
         Vector2 direction = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
         
-        float minDist = float.MaxValue;
-        float maxDist = float.MinValue;
         List<float> distances = new List<float>();
+        List<int> visibleIndices = new List<int>();
         
         for (int i = startIndex; i <= endIndex && i < info.characterCount; i++)
         {
             var charInfo = info.characterInfo[i];
             if (!charInfo.isVisible) continue;
+            
             int mat = charInfo.materialReferenceIndex;
             int vIndex = charInfo.vertexIndex;
             var cols = info.meshInfo[mat].colors32;
             if (cols == null || cols.Length <= vIndex || cols[vIndex].a == 0) continue;
-          
+            
             Vector2 charPos = new Vector2(
                 (charInfo.bottomLeft.x + charInfo.topRight.x) * 0.5f,
                 (charInfo.bottomLeft.y + charInfo.topRight.y) * 0.5f
@@ -1234,21 +1511,28 @@ public class TextEffectColorGradient : TextEffect
             
             float dist = Vector2.Dot(charPos - centerPos, direction);
             distances.Add(dist);
+            visibleIndices.Add(i);
+        }
+        
+        if (distances.Count == 0) return;
+        
+        float minDist = float.MaxValue;
+        float maxDist = float.MinValue;
+        foreach (float dist in distances)
+        {
             minDist = Mathf.Min(minDist, dist);
             maxDist = Mathf.Max(maxDist, dist);
         }
         
         if (Mathf.Approximately(minDist, maxDist)) return;
         
-        int distIndex = 0;
-        for (int i = startIndex; i <= endIndex && i < info.characterCount; i++)
+        for (int idx = 0; idx < visibleIndices.Count; idx++)
         {
-            var charInfo = info.characterInfo[i];
-            if (!charInfo.isVisible) continue;
-            
-            float t = Mathf.InverseLerp(minDist, maxDist, distances[distIndex++]);
+            int i = visibleIndices[idx];
+            float t = Mathf.InverseLerp(minDist, maxDist, distances[idx]);
             Color c = Color.Lerp(a, b, t);
             
+            var charInfo = info.characterInfo[i];
             int mat = charInfo.materialReferenceIndex;
             int vIndex = charInfo.vertexIndex;
             var cols = info.meshInfo[mat].colors32;
@@ -1259,15 +1543,16 @@ public class TextEffectColorGradient : TextEffect
         }
     }
 }
-public class TextEffectQuake : TextEffect
+public class TextEffectQuake : DelayedTextEffect
 {
     float intensity;
     Vector3[] originalPositions;
     bool initialized = false;
 
-    public TextEffectQuake(float intensity = 5f)
+    public TextEffectQuake(float intensity = 5f, float delay = 0f)
     {
         this.intensity = intensity;
+        this.delay = delay;
     }
 
     public override void Apply(TextMeshProUGUI tmp, TMP_TextInfo info, TMP_MeshInfo[] orig, float time)
@@ -1278,13 +1563,16 @@ public class TextEffectQuake : TextEffect
             originalPositions = new Vector3[info.characterCount * 4];
             for (int i = 0; i < info.characterCount; i++)
             {
-                if (i >= orig.Length) continue;
+                if (!info.characterInfo[i].isVisible) continue;
                 for (int j = 0; j < 4; j++)
                 {
                     originalPositions[i * 4 + j] = orig[info.characterInfo[i].materialReferenceIndex].vertices[info.characterInfo[i].vertexIndex + j];
                 }
             }
         }
+
+        float effectTime = GetEffectTime(time);
+        if (effectTime < 0) return;
 
         for (int i = startIndex; i <= endIndex && i < info.characterCount; i++)
         {
@@ -1295,11 +1583,13 @@ public class TextEffectQuake : TextEffect
             int vIndex = charInfo.vertexIndex;
             var verts = info.meshInfo[mat].vertices;
 
+            // Stronger, more abrupt shaking
+            float shakeAmount = Mathf.PerlinNoise(i * 0.5f + effectTime * 20f, 0) - 0.5f;
             Vector3 offset = new Vector3(
-                Mathf.PerlinNoise(i * 0.1f, time * 10f) - 0.5f,
-                Mathf.PerlinNoise(i * 0.1f + 100f, time * 10f) - 0.5f,
+                shakeAmount * intensity * 2f,
+                (Mathf.PerlinNoise(i * 0.5f + 100f, effectTime * 20f) - 0.5f) * intensity * 2f,
                 0
-            ) * intensity * 2f;
+            );
 
             for (int j = 0; j < 4; j++)
             {
@@ -1309,33 +1599,38 @@ public class TextEffectQuake : TextEffect
         }
     }
 }
-public class TextEffectDrop : TextEffect
+public class TextEffectDrop : DelayedTextEffect
 {
     float speed;
     float bounceAmount;
     float angle;
-    float[] dropTimings;
+    float[] dropTimes;
     bool initialized = false;
 
-    public TextEffectDrop(float speed = 2f, float bounceAmount = 10f, float angle = -90f)
+    public TextEffectDrop(float speed = 2f, float bounceAmount = 10f, float angle = -90f, float delay = 0f)
     {
         this.speed = speed;
         this.bounceAmount = bounceAmount;
         this.angle = angle * Mathf.Deg2Rad;
+        this.delay = delay;
+    }
+
+    public override void StartEffect(float currentTime)
+    {
+        base.StartEffect(currentTime);
+        dropTimes = new float[endIndex - startIndex + 1];
+        for (int i = 0; i < dropTimes.Length; i++)
+        {
+            dropTimes[i] = UnityEngine.Random.Range(0f, 0.3f); // Staggered drop
+        }
     }
 
     public override void Apply(TextMeshProUGUI tmp, TMP_TextInfo info, TMP_MeshInfo[] orig, float time)
     {
-        if (!initialized)
-        {
-            initialized = true;
-            dropTimings = new float[endIndex - startIndex + 1];
-            // All characters drop together
-            for (int i = 0; i < dropTimings.Length; i++)
-            {
-                dropTimings[i] = time;
-            }
-        }
+        if (dropTimes == null) return;
+        
+        float effectTime = GetEffectTime(time);
+        if (effectTime < 0) return;
 
         Vector2 dropDirection = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
 
@@ -1348,8 +1643,9 @@ public class TextEffectDrop : TextEffect
             int vIndex = charInfo.vertexIndex;
             var verts = info.meshInfo[mat].vertices;
 
-            float elapsed = time - dropTimings[i - startIndex];
-            float dropProgress = Mathf.Clamp01(elapsed * speed);
+            int idx = i - startIndex;
+            float charEffectTime = Mathf.Max(0f, effectTime - dropTimes[idx]);
+            float dropProgress = Mathf.Clamp01(charEffectTime * speed);
 
             // Bouncing effect
             float bounce = Mathf.Sin(dropProgress * Mathf.PI * 4f) * (1f - dropProgress) * bounceAmount;
@@ -1363,33 +1659,38 @@ public class TextEffectDrop : TextEffect
         }
     }
 }
-public class TextEffectRain : TextEffect
+public class TextEffectRain : DelayedTextEffect
 {
     float speed;
     float bounceAmount;
     float angle;
-    float[] dropTimings;
+    float[] dropTimes;
     bool initialized = false;
 
-    public TextEffectRain(float speed = 2f, float bounceAmount = 10f, float angle = -90f)
+    public TextEffectRain(float speed = 2f, float bounceAmount = 10f, float angle = -90f, float delay = 0f)
     {
         this.speed = speed;
         this.bounceAmount = bounceAmount;
         this.angle = angle * Mathf.Deg2Rad;
+        this.delay = delay;
+    }
+
+    public override void StartEffect(float currentTime)
+    {
+        base.StartEffect(currentTime);
+        dropTimes = new float[endIndex - startIndex + 1];
+        for (int i = 0; i < dropTimes.Length; i++)
+        {
+            dropTimes[i] = UnityEngine.Random.Range(0f, 2f); // More staggered for rain effect
+        }
     }
 
     public override void Apply(TextMeshProUGUI tmp, TMP_TextInfo info, TMP_MeshInfo[] orig, float time)
     {
-        if (!initialized)
-        {
-            initialized = true;
-            dropTimings = new float[endIndex - startIndex + 1];
-            // Random drop timings for each character
-            for (int i = 0; i < dropTimings.Length; i++)
-            {
-                dropTimings[i] = time + Random.Range(0f, 2f); // Staggered start times
-            }
-        }
+        if (dropTimes == null) return;
+        
+        float effectTime = GetEffectTime(time);
+        if (effectTime < 0) return;
 
         Vector2 dropDirection = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
 
@@ -1397,18 +1698,14 @@ public class TextEffectRain : TextEffect
         {
             var charInfo = info.characterInfo[i];
             if (!charInfo.isVisible) continue;
-            // skip unrevealed char by typewriter
-            
+
             int mat = charInfo.materialReferenceIndex;
             int vIndex = charInfo.vertexIndex;
-            var cols = info.meshInfo[mat].colors32;
-            
-            if (cols == null || cols.Length <= vIndex || cols[vIndex].a == 0) continue;
-            // end
             var verts = info.meshInfo[mat].vertices;
 
-            float elapsed = Mathf.Max(0f, time - dropTimings[i - startIndex]);
-            float dropProgress = Mathf.Clamp01(elapsed * speed);
+            int idx = i - startIndex;
+            float charEffectTime = Mathf.Max(0f, effectTime - dropTimes[idx]);
+            float dropProgress = Mathf.Clamp01(charEffectTime * speed);
 
             float bounce = Mathf.Sin(dropProgress * Mathf.PI * 4f) * (1f - dropProgress) * bounceAmount;
             Vector2 offset = dropDirection * (dropProgress * 100f + bounce);
@@ -1421,33 +1718,37 @@ public class TextEffectRain : TextEffect
         }
     }
 }
-public class TextEffectConstruct : TextEffect
+public class TextEffectConstruct : DelayedTextEffect
 {
-    float length;
-    float speed;
-    float[] constructTimings;
+    float pieceTravelDistance;
+    float buildSpeed;
+    float[] pieceTimes;
     bool initialized = false;
 
-    public TextEffectConstruct(float length = 50f, float speed = 1f)
+    public TextEffectConstruct(float pieceTravelDistance = 50f, float buildSpeed = 1f, float delay = 0f)
     {
-        this.length = length;
-        this.speed = speed;
+        this.pieceTravelDistance = pieceTravelDistance;
+        this.buildSpeed = buildSpeed;
+        this.delay = delay;
+    }
+
+    public override void StartEffect(float currentTime)
+    {
+        base.StartEffect(currentTime);
+        // Initialize piece times with UnityEngine.Random delays
+        pieceTimes = new float[(endIndex - startIndex + 1) * 4];
+        for (int i = 0; i < pieceTimes.Length; i++)
+        {
+            pieceTimes[i] = UnityEngine.Random.Range(0f, 1f); // UnityEngine.Random delay for each piece
+        }
     }
 
     public override void Apply(TextMeshProUGUI tmp, TMP_TextInfo info, TMP_MeshInfo[] orig, float time)
     {
-        if (!initialized)
-        {
-            initialized = true;
-            constructTimings = new float[endIndex - startIndex + 1];
-            int centerIndex = startIndex + (endIndex - startIndex) / 2;
-
-            for (int i = startIndex; i <= endIndex; i++)
-            {
-                float distanceFromCenter = Mathf.Abs(i - centerIndex);
-                constructTimings[i - startIndex] = time + (distanceFromCenter * 0.1f);
-            }
-        }
+        if (pieceTimes == null) return;
+        
+        float effectTime = GetEffectTime(time);
+        if (effectTime < 0) return;
 
         for (int i = startIndex; i <= endIndex && i < info.characterCount; i++)
         {
@@ -1457,47 +1758,62 @@ public class TextEffectConstruct : TextEffect
             int mat = charInfo.materialReferenceIndex;
             int vIndex = charInfo.vertexIndex;
             var verts = info.meshInfo[mat].vertices;
-
-            float elapsed = Mathf.Max(0f, time - constructTimings[i - startIndex]);
-            float constructProgress = Mathf.Clamp01(elapsed * speed);
-
+            
             Vector3 center = (orig[mat].vertices[vIndex] + orig[mat].vertices[vIndex + 2]) * 0.5f;
-            Vector3 scatterDirection = (orig[mat].vertices[vIndex] - center).normalized;
-            Vector3 startPos = center + scatterDirection * length;
-
+            
             for (int j = 0; j < 4; j++)
             {
-                Vector3 origPos = orig[mat].vertices[vIndex + j];
-                Vector3 targetPos = origPos;
-                Vector3 currentStartPos = startPos + (origPos - center);
-                verts[vIndex + j] = Vector3.Lerp(currentStartPos, targetPos, constructProgress);
+                int pieceIndex = (i - startIndex) * 4 + j;
+                float pieceDelay = pieceTimes[pieceIndex];
+                float pieceEffectTime = Mathf.Max(0f, effectTime - pieceDelay);
+                
+                float constructProgress = Mathf.Clamp01(pieceEffectTime * buildSpeed);
+                
+                // Each piece comes from a different direction
+                Vector3 scatterDirection = new Vector3(
+                    (j % 2 == 0 ? 1 : -1),
+                    (j < 2 ? 1 : -1),
+                    0
+                ).normalized;
+                
+                Vector3 startPos = center + scatterDirection * pieceTravelDistance;
+                Vector3 targetPos = orig[mat].vertices[vIndex + j];
+                Vector3 currentPos = Vector3.Lerp(startPos, targetPos, constructProgress);
+                
+                verts[vIndex + j] = currentPos;
             }
         }
     }
 }
-public class TextEffectSlam : TextEffect
+public class TextEffectSlam : DelayedTextEffect
 {
     float speed;
     int bounceCount;
-    float[] slamTimings;
     bool initialized = false;
 
-    public TextEffectSlam(float speed = 3f, int bounceCount = 2)
+    public TextEffectSlam(float speed = 3f, int bounceCount = 2, float delay = 0f)
     {
         this.speed = speed;
         this.bounceCount = bounceCount;
+        this.delay = delay;
     }
 
     public override void Apply(TextMeshProUGUI tmp, TMP_TextInfo info, TMP_MeshInfo[] orig, float time)
     {
-        if (!initialized)
+        float effectTime = GetEffectTime(time);
+        if (effectTime < 0) return;
+        
+        float slamProgress = Mathf.Clamp01(effectTime * speed);
+        float scale = 1f;
+        
+        if (slamProgress < 0.3f)
         {
-            initialized = true;
-            slamTimings = new float[endIndex - startIndex + 1];
-            for (int i = 0; i < slamTimings.Length; i++)
-            {
-                slamTimings[i] = time;
-            }
+            scale = Mathf.Lerp(3f, 1f, slamProgress / 0.3f);
+        }
+        else
+        {
+            float bounceProgress = (slamProgress - 0.3f) / 0.7f;
+            scale = 1f + Mathf.Sin(bounceProgress * Mathf.PI * bounceCount) * 0.3f * (1f - bounceProgress);
         }
 
         for (int i = startIndex; i <= endIndex && i < info.characterCount; i++)
@@ -1508,20 +1824,6 @@ public class TextEffectSlam : TextEffect
             int mat = charInfo.materialReferenceIndex;
             int vIndex = charInfo.vertexIndex;
             var verts = info.meshInfo[mat].vertices;
-
-            float elapsed = time - slamTimings[i - startIndex];
-            float slamProgress = Mathf.Clamp01(elapsed * speed);
-
-            float scale = 1f;
-            if (slamProgress < 0.3f)
-            {
-                scale = Mathf.Lerp(3f, 1f, slamProgress / 0.3f);
-            }
-            else
-            {
-                float bounceProgress = (slamProgress - 0.3f) / 0.7f;
-                scale = 1f + Mathf.Sin(bounceProgress * Mathf.PI * bounceCount) * 0.3f * (1f - bounceProgress);
-            }
 
             Vector3 center = (orig[mat].vertices[vIndex] + orig[mat].vertices[vIndex + 2]) * 0.5f;
 
@@ -1533,87 +1835,100 @@ public class TextEffectSlam : TextEffect
         }
     }
 }
-public class TextEffectExplode : TextEffect
+public class TextEffectExplode : DelayedTextEffect
 {
     float explosionForce;
     float gravity;
-    float delay = 3; //todo add as param
     Vector2[] velocities;
     bool initialized = false;
 
-    public TextEffectExplode(float explosionForce = 50f, float gravity = 9.8f)
+    public TextEffectExplode(float explosionForce = 50f, float gravity = 9.8f, float delay = 0f)
     {
         this.explosionForce = explosionForce;
         this.gravity = gravity;
+        this.delay = delay;
     }
-    // todo delay explosion.
-    public override void Apply(TextMeshProUGUI tmp, TMP_TextInfo info, TMP_MeshInfo[] orig, float time)
+
+    public override void StartEffect(float currentTime)
     {
+        base.StartEffect(currentTime);
+        
         if (!initialized)
         {
             initialized = true;
             velocities = new Vector2[endIndex - startIndex + 1];
-            Vector2 center = Vector2.zero;
-            int count = 0;
-
-            for (int i = startIndex; i <= endIndex && i < info.characterCount; i++)
-            {
-                var charInfo = info.characterInfo[i];
-                Vector2 charCenter = new Vector2(
-                    (charInfo.bottomLeft.x + charInfo.topRight.x) * 0.5f,
-                    (charInfo.bottomLeft.y + charInfo.topRight.y) * 0.5f
-                );
-                center += charCenter;
-                count++;
-            }
-            if (count > 0) center /= count;
-
+            
+            // Calculate center of the word
+            // We'll use the first character as reference
             for (int i = 0; i < velocities.Length; i++)
             {
-                Vector2 direction = Random.insideUnitCircle.normalized;
-                velocities[i] = direction * explosionForce * Random.Range(0.5f, 1.5f);
+                Vector2 direction = UnityEngine.Random.insideUnitCircle.normalized;
+                velocities[i] = direction * explosionForce * UnityEngine.Random.Range(0.8f, 1.2f);
             }
         }
+    }
+
+    public override void Apply(TextMeshProUGUI tmp, TMP_TextInfo info, TMP_MeshInfo[] orig, float time)
+    {
+        if (velocities == null) return;
+        
+        float effectTime = GetEffectTime(time);
+        if (effectTime < 0) return;
 
         for (int i = startIndex; i <= endIndex && i < info.characterCount; i++)
         {
             var charInfo = info.characterInfo[i];
             if (!charInfo.isVisible) continue;
-            // skip unrevealed char by typewriter
-            if (!charInfo.isVisible) continue;
-            
+
             int mat = charInfo.materialReferenceIndex;
             int vIndex = charInfo.vertexIndex;
-            var cols = info.meshInfo[mat].colors32;
-            
-            if (cols == null || cols.Length <= vIndex || cols[vIndex].a == 0) continue;
-            // end
             var verts = info.meshInfo[mat].vertices;
 
-            float elapsed = time;
-            velocities[i - startIndex].y -= gravity * elapsed;
-
-            Vector2 displacement = velocities[i - startIndex] * elapsed;
+            int idx = i - startIndex;
+            
+            // Apply gravity
+            velocities[idx].y -= gravity * Time.deltaTime;
+            
+            Vector2 displacement = velocities[idx] * effectTime;
+            
+            // Don't let characters fall below original line
+            Vector3 originalBottom = new Vector3(
+                orig[mat].vertices[vIndex].x,
+                Mathf.Min(orig[mat].vertices[vIndex].y, orig[mat].vertices[vIndex + 1].y),
+                0
+            );
+            
+            Vector3 newPos = orig[mat].vertices[vIndex] + (Vector3)displacement;
+            
+            // Keep above original line
+            if (newPos.y < originalBottom.y)
+            {
+                newPos.y = originalBottom.y;
+                velocities[idx].y = Mathf.Abs(velocities[idx].y) * 0.5f; // Bounce
+            }
 
             for (int j = 0; j < 4; j++)
             {
                 Vector3 origPos = orig[mat].vertices[vIndex + j];
-                verts[vIndex + j] = origPos + (Vector3)displacement;
+                Vector3 offset = origPos - orig[mat].vertices[vIndex];
+                verts[vIndex + j] = newPos + offset;
             }
         }
     }
 }
-public class TextEffectCollapse : TextEffect
+public class TextEffectCollapse : DelayedTextEffect
 {
     float rotationIntensity;
     float dropDistance;
     float[] rotations;
+    float[] dropTimes;
     bool initialized = false;
     
-    public TextEffectCollapse(float rotationIntensity = 30f, float dropDistance = 20f)
+    public TextEffectCollapse(float rotationIntensity = 30f, float dropDistance = 20f, float delay = 0f)
     {
         this.rotationIntensity = rotationIntensity;
         this.dropDistance = dropDistance;
+        this.delay = delay;
     }
 
     public override void Apply(TextMeshProUGUI tmp, TMP_TextInfo info, TMP_MeshInfo[] orig, float time)
@@ -1622,13 +1937,18 @@ public class TextEffectCollapse : TextEffect
         {
             initialized = true;
             rotations = new float[endIndex - startIndex + 1];
+            dropTimes = new float[endIndex - startIndex + 1];
+            
+            // UnityEngine.Random rotation for each character
             for (int i = 0; i < rotations.Length; i++)
             {
-                rotations[i] = Random.Range(-rotationIntensity, rotationIntensity);
+                rotations[i] = UnityEngine.Random.Range(-rotationIntensity, rotationIntensity);
+                dropTimes[i] = UnityEngine.Random.Range(0f, 0.5f); // Staggered drop start
             }
         }
         
-        float collapseProgress = Mathf.Clamp01(time * 2f);
+        float effectTime = GetEffectTime(time);
+        if (effectTime < 0) return;
         
         for (int i = startIndex; i <= endIndex && i < info.characterCount; i++)
         {
@@ -1639,8 +1959,12 @@ public class TextEffectCollapse : TextEffect
             int vIndex = charInfo.vertexIndex;
             var verts = info.meshInfo[mat].vertices;
             
+            int idx = i - startIndex;
+            float charEffectTime = Mathf.Max(0f, effectTime - dropTimes[idx]);
+            float collapseProgress = Mathf.Clamp01(charEffectTime * 2f);
+            
             // Apply rotation and drop
-            float rotation = rotations[i - startIndex] * collapseProgress;
+            float rotation = rotations[idx] * collapseProgress;
             float drop = dropDistance * collapseProgress;
             
             Vector3 center = (orig[mat].vertices[vIndex] + orig[mat].vertices[vIndex + 2]) * 0.5f;
@@ -1725,19 +2049,27 @@ public class TextEffectMagScale : TextEffect
 public class TextEffectMagnify : TextEffect
 {
     float speed, maxScale, falloff;
+    
     public TextEffectMagnify(float speed, float scale, float len)
     {
-        this.speed = speed; maxScale = scale; falloff = len;
+        this.speed = speed; 
+        maxScale = scale; 
+        falloff = len;
     }
 
     public override void Apply(TextMeshProUGUI tmp, TMP_TextInfo info, TMP_MeshInfo[] orig, float time)
     {
         int span = endIndex - startIndex + 1;
-        float lensPos = startIndex + (time * speed % span);
-        if (lensPos > endIndex + falloff)
-        {
-            lensPos = startIndex - falloff;
-        }
+        
+        // Total distance the lens travels in one complete cycle
+        float cycleLength = span + 2 * falloff;
+        
+        // Lens position moving continuously
+        float rawPos = time * speed;
+        
+        // Calculate lens position with wrap-around
+        float lensPos = startIndex - falloff + (rawPos % cycleLength);
+        
         for (int i = startIndex; i <= endIndex; i++)
         {
             var charInfo = info.characterInfo[i];
@@ -1749,6 +2081,14 @@ public class TextEffectMagnify : TextEffect
             Vector3[] origVerts = orig[mat].vertices;
 
             float dist = Mathf.Abs(i - lensPos);
+            
+            // Also check distance to lens in the next cycle (for seamless transition)
+            if (dist > falloff)
+            {
+                // Check if we're close to the wrap-around point
+                float distToWrap = Mathf.Abs(i - (lensPos - cycleLength));
+                dist = Mathf.Min(dist, distToWrap);
+            }
 
             if (dist > falloff)
             {
@@ -1776,3 +2116,138 @@ public class TextEffectPause : TextEffect
     public override void Apply(TextMeshProUGUI tmp, TMP_TextInfo info, TMP_MeshInfo[] orig, float t) { }
 }
 
+public class TextEffectStutter : TextEffect
+{
+    public int triggerIndex;
+    public string replacementText;
+    public bool triggered = false;
+    
+    public TextEffectStutter(int index, string replacement)
+    {
+        triggerIndex = index;
+        replacementText = replacement;
+    }
+    
+    public override void Apply(TextMeshProUGUI tmp, TMP_TextInfo info, TMP_MeshInfo[] originalVerts, float time)
+    {
+        // This effect is handled by the typewriter, not applied here
+    }
+}
+public class TextEffectGravity : DelayedTextEffect
+{
+    float gravityStrength;
+    float initialVelocity;
+    Vector2[] velocities;
+    Vector2[] positions;
+    bool[] hasCollided;
+    bool initialized = false;
+    
+    public TextEffectGravity(float gravityStrength = 9.8f, float initialVelocity = 0f, float delay = 0f)
+    {
+        this.gravityStrength = gravityStrength;
+        this.initialVelocity = initialVelocity;
+        this.delay = delay;
+    }
+    
+    public override void StartEffect(float currentTime)
+    {
+        base.StartEffect(currentTime);
+        if (!initialized)
+        {
+            initialized = true;
+            velocities = new Vector2[endIndex - startIndex + 1];
+            positions = new Vector2[endIndex - startIndex + 1];
+            hasCollided = new bool[endIndex - startIndex + 1];
+            
+            for (int i = 0; i < velocities.Length; i++)
+            {
+                velocities[i] = new Vector2(
+                    UnityEngine.Random.Range(-1f, 1f) * initialVelocity,
+                    UnityEngine.Random.Range(-1f, 1f) * initialVelocity
+                );
+                positions[i] = Vector2.zero;
+            }
+        }
+    }
+    
+    public override void Apply(TextMeshProUGUI tmp, TMP_TextInfo info, TMP_MeshInfo[] orig, float time)
+    {
+        if (!initialized) return;
+        
+        float effectTime = GetEffectTime(time);
+        if (effectTime < 0) return;
+        
+        // Get screen bounds (simplified)
+        Rect screenBounds = new Rect(0, 0, Screen.width, Screen.height);
+        
+        for (int i = startIndex; i <= endIndex && i < info.characterCount; i++)
+        {
+            var charInfo = info.characterInfo[i];
+            if (!charInfo.isVisible) continue;
+            
+            int idx = i - startIndex;
+            
+            // Apply gravity
+            if (!hasCollided[idx])
+            {
+                velocities[idx].y -= gravityStrength * Time.deltaTime;
+                
+                // Update position
+                positions[idx] += velocities[idx] * Time.deltaTime;
+                
+                // Check screen bounds collision
+                Vector2 charSize = new Vector2(
+                    charInfo.topRight.x - charInfo.bottomLeft.x,
+                    charInfo.topRight.y - charInfo.bottomLeft.y
+                );
+                
+                // Simple AABB collision with screen bounds
+                // This is simplified - you'd need proper screen-space conversion
+                
+                // Check bottom collision
+                if (positions[idx].y < screenBounds.yMin + charSize.y * 0.5f)
+                {
+                    positions[idx].y = screenBounds.yMin + charSize.y * 0.5f;
+                    velocities[idx].y = Mathf.Abs(velocities[idx].y) * 0.3f; // Bounce with damping
+                    
+                    if (Mathf.Abs(velocities[idx].y) < 0.1f)
+                    {
+                        hasCollided[idx] = true;
+                        velocities[idx] = Vector2.zero;
+                    }
+                }
+                
+                // Check top collision
+                if (positions[idx].y > screenBounds.yMax - charSize.y * 0.5f)
+                {
+                    positions[idx].y = screenBounds.yMax - charSize.y * 0.5f;
+                    velocities[idx].y = -Mathf.Abs(velocities[idx].y) * 0.3f;
+                }
+                
+                // Check sides
+                if (positions[idx].x < screenBounds.xMin + charSize.x * 0.5f)
+                {
+                    positions[idx].x = screenBounds.xMin + charSize.x * 0.5f;
+                    velocities[idx].x = Mathf.Abs(velocities[idx].x) * 0.3f;
+                }
+                
+                if (positions[idx].x > screenBounds.xMax - charSize.x * 0.5f)
+                {
+                    positions[idx].x = screenBounds.xMax - charSize.x * 0.5f;
+                    velocities[idx].x = -Mathf.Abs(velocities[idx].x) * 0.3f;
+                }
+            }
+            
+            int mat = charInfo.materialReferenceIndex;
+            int vIndex = charInfo.vertexIndex;
+            var verts = info.meshInfo[mat].vertices;
+            
+            // Apply position offset
+            for (int j = 0; j < 4; j++)
+            {
+                Vector3 origPos = orig[mat].vertices[vIndex + j];
+                verts[vIndex + j] = origPos + (Vector3)positions[idx];
+            }
+        }
+    }
+}

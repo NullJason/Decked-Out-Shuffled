@@ -31,7 +31,7 @@ public class PlayerName : EventAction
         if (username.Length < 15 && Regex.IsMatch(username, pattern))
         {
             FindFirstObjectByType<Player>().PlayerName = username;
-            plrDRCache.SetContainerActiveState(true);
+            plrDRCache.SetCanvasActiveState(true);
             Debug.Log("todo bug; plr main dialogue canvas may not be active even though line 34 makes it active.");
             dialogueResponse.StartDialogueFromNode("doorDialogueNode");
         }

@@ -171,6 +171,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: TestPlayer
       objectReference: {fileID: 0}
+    - target: {fileID: 4699556939265059362, guid: ff08ddd12841d034c9e66a4802178e79, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -400,6 +404,42 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 3305138836176324345, guid: 2f5026e3d4cf9b54fb6b7d50b01d491d, type: 3}
+      propertyPath: SampleText2
+      value: '<typewriter=40><b><color=#00FF00>Never</color></b> gonna <Wavy=3,6>give
+        you up</Wavy>,<Pause=1>
+
+        Never gonna <Shake=2,4>let you down</Shake>,<Pause=1>
+
+        Never
+        gonna <color=#FF0000><i>run around</i></color> and desert you.<Pause=1>
+
+        
+
+        Never
+        gonna <Magnify=8,2,3>make you cry</Magnify>,<Pause=1>
+
+        Never gonna
+        <Color=(0,128,255)>say goodbye</Color>,<Pause=1>
+
+        Never gonna <ColorTransition=(255,255,255),(0,0,0)>tell
+        a lie and hurt you</ColorTransition><pause=2>
+
+        Rickroll, also Here''s
+        a bomb :) <explode>BOOM</explode>.
+
+        </typewriter>'
+      objectReference: {fileID: 0}
+    - target: {fileID: 3305138836176324345, guid: 2f5026e3d4cf9b54fb6b7d50b01d491d, type: 3}
+      propertyPath: SampleText3
+      value: "\r\n    <typewriter=40><stutter=4,Oops>umm-m-m-m-mmm, I stuttered!\r\n   
+        <rain>Rainning Down On You</rain>     \r\n    <quake> QUAKING, ANGRY</quake>     
+        \r\n    <slam>SLAMMMMMM DUNK</slam>     \r\n    <collapse>SOOO tired...</collapse>    
+        \r\n    <gravity> WOAH </gravity>     \r\n    <contruct>Building. Constructing.</contruct>    
+        \r\n    <drop>its a bird, its a plane, no, its just... No clue.</drop>    
+        \r\n    <explode> AN EXPLOSION </explode>     \r\n    <wavy><colorgradient>
+        colorful </colorgradient></wavy></typewriter>     \r\n    "
+      objectReference: {fileID: 0}
     - target: {fileID: 5505858571964402315, guid: 2f5026e3d4cf9b54fb6b7d50b01d491d, type: 3}
       propertyPath: m_Name
       value: TestDialogueUIFunctionality
@@ -442,6 +482,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5594018852756259414, guid: 2f5026e3d4cf9b54fb6b7d50b01d491d, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8805151055856734748, guid: 2f5026e3d4cf9b54fb6b7d50b01d491d, type: 3}
+      propertyPath: m_AnchoredPosition.x
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
