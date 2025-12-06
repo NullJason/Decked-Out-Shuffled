@@ -13,12 +13,10 @@ public class ClickSelectable : Selectable
 	private CanvasRenderer display;
 
 	private void Awake(){
-		button.onClick.AddListener(Select);
-		Unhighlight();
-	}
+		//Unnecessary. Already added on the prefab directly. 
+		//button.onClick.AddListener(Select);
 
-	private void Start(){
-		UserInput.main.Add(this);
+		Unhighlight();
 	}
 
 	public override void Highlight(){
@@ -32,6 +30,7 @@ public class ClickSelectable : Selectable
 	}
 
 	public override void Select(){
+		Debug.Log("Card was selected!");
 		CardGame.main.CurrentInput().Try(this);
 	}
 }

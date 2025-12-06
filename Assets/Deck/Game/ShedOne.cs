@@ -16,7 +16,7 @@ public class ShedOne : CardGame
 		return new Deck[] {npcDraw, npcHand};
 	}
 
-	private protected override void AddDecks(Dictionary<string, Deck> decks, List<Card> startingCards, Deck[] deckList){
+	private protected override void AddDecks(Dictionary<string, Deck> decks, List<Card> startingCards, Deck fromDeck, Deck[] deckList){
 		//Create appropriate Decks. 
 		decks.Add("Draw pile", deckList[0]);
 		decks.Add("Hand", deckList[1]);
@@ -27,14 +27,16 @@ public class ShedOne : CardGame
 
 		//Get top five cards for hand. 
 		for(int i = 0; i < 5; i++) {
-			Card c = startingCards[startingCards.Count - 1];
-			startingCards.RemoveAt(startingCards.Count - 1);
-			decks["Hand"].AddCard(c);
+			//Card c = startingCards[startingCards.Count - 1];
+			//startingCards.RemoveAt(startingCards.Count - 1);
+			//decks["Hand"].AddCard(c);
+			Deck.MoveCard(fromDeck, startingCards[i], decks["Hand"]);
 		}
 
 		//Get the rest of the cards for the draw pile. 
 		foreach(Card c in startingCards) {
-			decks["Draw pile"].AddCard(c);
+			//decks["Draw pile"].AddCard(c);
+			Deck.MoveCard(fromDeck, c, decks["Draw pile"]);
 		}
 
 	}
@@ -73,6 +75,7 @@ public class ShedOne : CardGame
 		}
 	}
 
+	//Sets up a selection for what cards can be played. 
 	private protected class PlayerCanPlayCards : State{
 		override public State Do(GameInput input){
 
@@ -86,13 +89,16 @@ public class ShedOne : CardGame
 			if(cards.Count <= 0){ //If no playable cards were found in the hand, add the top card of the draw pile to the player's options, then start a new DrawCard State. 
 				if(CardGame.main.GetDeck("Draw pile").Count() <= 0 ) return new WinState(false); //Lose the game if there are no cards you can play and your draw pile is empty. 
 				cards.Add(CardGame.main.GetDeck("Draw pile").GetCardAtIndex(0));
+				input.WaitForNewInput(cards);
 				return new DrawCardState();
 			}
+			input.WaitForNewInput(cards);
 
 			return new ChooseWhichCardToPlayState(); //If playable cards were found, transition to a stage where the player chooses which one to play. Note that the input system has already been set up with which cards to play. 
 
 		}
 
+		//Messy, I know. 
 		private protected bool CardsCompatible(Card c1, Card c2){
 			if(c1.HasAttribute("Red") && c2.HasAttribute("Red")) return true;
 			if(c1.HasAttribute("Green") && c2.HasAttribute("Green")) return true;
@@ -117,7 +123,7 @@ public class ShedOne : CardGame
 			Selectable s = input.GetNext();
 			if(s != null) {
 				if(!(s is Card)) Debug.LogError("Somehow got a non-Card where a Card was expected!");
-				Deck.MoveCard(CardGame.main.GetDeck("Draw"), (Card) s, CardGame.main.GetDeck("Hand")); //Move card from draw pile to hand (i.e. draw a card). 
+				Deck.MoveCard(CardGame.main.GetDeck("Draw pile"), (Card) s, CardGame.main.GetDeck("Hand")); //Move card from draw pile to hand (i.e. draw a card). 
 				return null;
 			}
 			return this;

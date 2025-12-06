@@ -3,9 +3,9 @@ using System.Collections.Generic;
 
 public class GameInput : MonoBehaviour
 {
-  Queue<Selectable> selected;
-  HashSet<Selectable> selectables;
-  HashSet<Selectable> everything;
+  private protected Queue<Selectable> selected;
+  private protected HashSet<Selectable> selectables;
+  private protected static HashSet<Selectable> everything;
 
   private protected virtual void Awake(){
     selected = new Queue<Selectable>();
@@ -13,7 +13,7 @@ public class GameInput : MonoBehaviour
     if(everything == null) everything = new HashSet<Selectable>();
   }
 
-  public void WaitForNewInput(HashSet<Selectable> selectables)
+  public virtual void WaitForNewInput(HashSet<Selectable> selectables)
   {
     selected.Clear();
     this.selectables = selectables;
@@ -29,8 +29,12 @@ public class GameInput : MonoBehaviour
     return null;
   }
 
-  public void Add(Selectable s){
+  public static void Add(Selectable s){
     everything.Add(s);
+  }
+
+  public static void Remove(Selectable s){
+    everything.Remove(s);
   }
 
   private void HighlightSelectable(){

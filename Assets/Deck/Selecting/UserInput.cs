@@ -13,16 +13,14 @@ using System.Collections.Generic;
 //(To complete the example, the external class would call GetNext() to get the card, and then move it to the discard pile using relevant card/deck methods. It might also call WaitForNewInput again with an empty set, to prevent any new input from being collected.)
 public class UserInput : GameInput
 {
-  Queue<Selectable> selected;
-  HashSet<Selectable> selectables;
-  static HashSet<Selectable> everything;
-
   public static UserInput main;
 
   private protected override void Awake(){
+    Debug.Log("Initializing Everything...");
     selected = new Queue<Selectable>();
     selectables = new HashSet<Selectable>();
     if(everything == null) everything = new HashSet<Selectable>();
+    Debug.Log(everything);
 
     if(main == null) main = this;
   }
@@ -31,4 +29,13 @@ public class UserInput : GameInput
     foreach(Selectable s in everything) s.Unhighlight();
     foreach(Selectable s in selectables) s.Highlight();
   }
+  /*
+  private void Update(){
+    string sed = "";
+    foreach(Selectable s in selected) sed+=s;
+    string sbl = "";
+    foreach(Selectable s in selectables) sbl+=s;
+    Debug.Log("Current Cards: " + sed + " out of: " + sbl);
+  }
+  */
 }

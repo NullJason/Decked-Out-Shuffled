@@ -25,8 +25,8 @@ public abstract class CardGame : MonoBehaviour
 		npcDecks = new Dictionary<string, Deck>();
 		sharedDecks = new Dictionary<string, Deck>();
 
-		AddDecks(playerDecks, playerInv.GetReapedCards(), PlayerDeckList());
-		AddDecks(npcDecks, GetNpcCards(), NpcDeckList());
+		AddDecks(playerDecks, playerInv.GetReapedCards(), KeyUtil.main.PlayerInventory().GetDeck(), PlayerDeckList());
+		AddDecks(npcDecks, GetNpcCards(), botStartingCards, NpcDeckList());
 		AddDecksShared(sharedDecks);
 		currentState = StartState();
 		Debug.LogWarning("Initial State Set Up: " + currentState);
@@ -43,6 +43,7 @@ public abstract class CardGame : MonoBehaviour
 
 	//TODO: Check if the card game was won or lost, and then set main to null to end the game. 
 	private protected void Update(){
+		Debug.Log("Player: " + currentUser + ", State: " + currentState);
 		State temp = currentState.Do(CurrentInput());
 		if(temp == null){
 			StartNewTurn();
@@ -55,10 +56,10 @@ public abstract class CardGame : MonoBehaviour
 
 	//Switches whose turn it is and sets up the starting phase of a turn. 
 	private protected void StartNewTurn(){
-		currentState = StartState();
 		if(currentUser == User.player) currentUser = User.npc;
 		else if(currentUser == User.npc) currentUser = User.player;
 		else Debug.LogError("Unknown participant in game: " + currentUser); 
+		currentState = StartState();
 	}
 
 	public GameInput CurrentInput(){
@@ -69,7 +70,7 @@ public abstract class CardGame : MonoBehaviour
 	}
 
 	//This method is called in Awake(), and should be used to add the player-specific Decks necessary for each game. 
-	abstract private protected void AddDecks(Dictionary<string, Deck> decks, List<Card> startingCards, Deck[] deckList);
+	abstract private protected void AddDecks(Dictionary<string, Deck> decks, List<Card> startingCards, Deck fromDeck, Deck[] deckList);
 
 	//This method is called in Awake(), and should be used to add the Decks necessary for each game. 
 	abstract private protected void AddDecksShared(Dictionary<string, Deck> decks);
