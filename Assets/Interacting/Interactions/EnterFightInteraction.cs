@@ -14,6 +14,9 @@ using TMPro;
 //  TODO: Make it so that certain fields that are reused a lot are stored statically. 
 public class EnterFight : Interaction
 {
+	//Represents the scene that the player most recently left. Used so that the player can be returned to the proper scene. 
+	private protected static string returnScene;
+
 	//Represents the panel on which the ui for selecting cards is. 
 	[SerializeField] private protected GameObject uiPanel;
 
@@ -55,10 +58,15 @@ public class EnterFight : Interaction
 					//TODO!!
 					
 
+					returnScene = SceneManager.GetActiveScene().name;
 					SceneManager.LoadScene(sceneName);
 		//			Debug.LogError("Here, a new scene would begin for a card battle, but that functionality has not yet been added!");
 				}
 			}
 		}
+	}
+
+	public static string ReturningScene(){
+		return returnScene;
 	}
 }

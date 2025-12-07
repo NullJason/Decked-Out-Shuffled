@@ -36,8 +36,20 @@ public class Deck : MonoBehaviour, IEnumerable
 		card1.gameObject.transform.SetParent(deck2.gameObject.transform);
 	}
 
+	//Moves all Cards from moveFrom to moveTo. 
+	public static void MoveCards(Deck moveFrom, Deck moveTo){
+		Card c = moveFrom.GetCardAtIndex(0);
+		while(c != null){
+			MoveCard(moveFrom, c, moveTo);
+			c = moveFrom.GetCardAtIndex(0);
+		}
+	}
+
 	public Card GetCardAtIndex(int index){
-		if(Count() <= 0) Debug.LogError("Could not get card since the inventory was empty!");
+		if(Count() <= 0) {
+			Debug.LogWarning("Could not get card since the inventory was empty! Returning null.");
+			return null;
+		}
 		if(index < 0) Debug.LogError("Could not get card at negative index!");
 		if(index > Count()) Debug.LogError("Index " + index + " was out of bounds (" + Count() + ")!");
 		return cards[index];

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public abstract class CardGame : MonoBehaviour
 {
@@ -8,7 +9,7 @@ public abstract class CardGame : MonoBehaviour
 	private protected Dictionary<string, Deck> npcDecks;
 	private protected Dictionary<string, Deck> sharedDecks;
 
-	Inventory playerInv;
+	[SerializeField] Inventory playerInv;
 	[SerializeField] private protected Deck botStartingCards;
 	[SerializeField] private protected Deck extraCards;
 	[SerializeField] private protected GameInput npcInput;
@@ -20,12 +21,12 @@ public abstract class CardGame : MonoBehaviour
 	public static CardGame main;
 
 	private protected void OnEnable(){
-		Inventory playerInv = KeyUtil.main.PlayerInventory();
+		playerInv = KeyUtil.main.PlayerInventory();
 		playerDecks = new Dictionary<string, Deck>();
 		npcDecks = new Dictionary<string, Deck>();
 		sharedDecks = new Dictionary<string, Deck>();
 
-		AddDecks(playerDecks, playerInv.GetReapedCards(), KeyUtil.main.PlayerInventory().GetDeck(), PlayerDeckList());
+		AddDecks(playerDecks, playerInv.GetReapedCards(), playerInv.GetDeck(), PlayerDeckList());
 		AddDecks(npcDecks, GetNpcCards(), botStartingCards, NpcDeckList());
 		AddDecksShared(sharedDecks);
 		currentState = StartState();
@@ -48,8 +49,27 @@ public abstract class CardGame : MonoBehaviour
 		if(temp == null){
 			StartNewTurn();
 		}
-		else if(temp is WinState) Debug.LogError("End of game reached!");
+		else if(temp is WinState) {
+			Debug.LogError("End of game reached!");
+			ReclaimPlayerCards();
+			Debug.Log("Exiting to Scene: " + EnterFight.ReturningScene());
+			SceneManager.LoadScene(EnterFight.ReturningScene().ToString());
+		}
 		else if(temp != currentState) currentState = temp;
+	}
+
+	private protected void ReclaimPlayerCards(){
+		//Consolidate all Cards from all useful Decks into one Deck. This is because transferring a specific Card requires knowing the Deck that contains the Card. 
+		foreach(Deck deck in playerDecks.Values) Deck.MoveCards(deck, extraCards);
+		foreach(Deck deck in npcDecks.Values) Deck.MoveCards(deck, extraCards);
+		foreach(Deck deck in sharedDecks.Values) Deck.MoveCards(deck, extraCards);
+
+		Debug.Log("=D");
+		Debug.Log(playerInv);
+		Debug.Log(playerInv.GetReapedCards());
+		foreach(Card c in playerInv.GetReapedCards()){
+			Deck.MoveCard(extraCards, c, playerInv.GetDeck());
+		}
 	}
 
 	abstract private protected List<Card> GetNpcCards();
