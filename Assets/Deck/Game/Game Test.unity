@@ -967,7 +967,7 @@ PrefabInstance:
     - target: {fileID: 6927466485653055173, guid: b61500cf6cd228b41964fd88537912d8, type: 3}
       propertyPath: button
       value: 
-      objectReference: {fileID: 1091789426}
+      objectReference: {fileID: 1601693002}
     - target: {fileID: 6927466485653055173, guid: b61500cf6cd228b41964fd88537912d8, type: 3}
       propertyPath: attributesInitialize.Array.size
       value: 1
@@ -1980,6 +1980,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b61500cf6cd228b41964fd88537912d8, type: 3}
+--- !u!114 &1601693002 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7605869426314505430, guid: b61500cf6cd228b41964fd88537912d8, type: 3}
+  m_PrefabInstance: {fileID: 739255180}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1688327130
 GameObject:
   m_ObjectHideFlags: 0
