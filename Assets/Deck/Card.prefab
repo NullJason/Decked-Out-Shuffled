@@ -96,6 +96,7 @@ MonoBehaviour:
   faceUpSprite: {fileID: 2373183141213679312, guid: f99b89131422b7a4ba181d2540414381, type: 3}
   faceDownSprite: {fileID: 5435608014139152121, guid: d056d68dc2dbf4644a65677b97a67c8c, type: 3}
   hiddenCard: {fileID: 5435608014139152121, guid: 6cecf06225738ad409e690cfecd3ba0c, type: 3}
+  attributesInitialize: []
 --- !u!114 &7605869426314505430
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -164,7 +165,7 @@ GameObject:
   - component: {fileID: 8377426338700392277}
   - component: {fileID: 7944741394860084396}
   m_Layer: 5
-  m_Name: Panel
+  m_Name: Highlight
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

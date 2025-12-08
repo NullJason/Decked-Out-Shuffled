@@ -43,10 +43,16 @@ public class Inventory : MonoBehaviour
 
     public void AddCard(Card c, Deck fromDeck)
     {
-	if(selectMode) Debug.LogError("Cannot add new cards to inventory when select mode is already active!");
-        cards.Add(c);
-	Deck.MoveCard(fromDeck, c, storage);
+      if(selectMode) Debug.LogError("Cannot add new cards to inventory when select mode is already active!");
+      cards.Add(c);
+      Deck.MoveCard(fromDeck, c, storage);
     }
+    public void AddCards(Deck fromDeck){
+      if(selectMode) Debug.LogError("Cannot add new cards to inventory when select mode is already active!");
+      foreach(Card c in fromDeck) cards.Add(c);
+      Deck.MoveCards(fromDeck, storage);
+    }
+
     public void PrintCards(){
 	foreach(Card c in cards) Debug.Log(c);
     }

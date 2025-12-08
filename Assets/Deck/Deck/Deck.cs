@@ -10,6 +10,12 @@ public class Deck : MonoBehaviour, IEnumerable
 	[SerializeField]
 	DeckPreset preset;
 
+	private protected void Awake(){
+		foreach(Transform child in transform){
+			Card card = child.GetComponent<Card>();
+			if(card != null) AddCard(card);
+		}
+	}
 	private protected void Start(){
 		Render();
 	}
@@ -34,6 +40,16 @@ public class Deck : MonoBehaviour, IEnumerable
 
 		//Change the card's transform parent. 
 		card1.gameObject.transform.SetParent(deck2.gameObject.transform);
+	}
+
+	//Swaps two cards in a Deck. 
+	//TODO: Make a static version that allows the cards to be in different Decks!
+	public void SwapCards(int cardIndex1, int cardIndex2){
+		string s = "" + GetCardAtIndex(cardIndex1);
+		Card temp = GetCardAtIndex(cardIndex1);
+		cards[cardIndex1] = GetCardAtIndex(cardIndex2);
+		cards[cardIndex2] = temp;
+		Debug.Log(s + "  " + GetCardAtIndex(cardIndex1));
 	}
 
 	//Moves all Cards from moveFrom to moveTo. 

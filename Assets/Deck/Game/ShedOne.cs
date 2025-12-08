@@ -22,22 +22,23 @@ public class ShedOne : CardGame
 		decks.Add("Hand", deckList[1]);
 
 		//Shuffle the starting cards. 
-		//TODO!!
-		Debug.LogWarning("Shuffling cards has not yet been implemented!");
+		Decks.Shuffle(fromDeck);
 
 		//Get top five cards for hand. 
 		for(int i = 0; i < 5; i++) {
 			//Card c = startingCards[startingCards.Count - 1];
 			//startingCards.RemoveAt(startingCards.Count - 1);
 			//decks["Hand"].AddCard(c);
-			Deck.MoveCard(fromDeck, startingCards[i], decks["Hand"]);
+			Debug.Log(i);
+			Deck.MoveCard(fromDeck, fromDeck.GetCardAtIndex(0), decks["Hand"]);
 		}
 
 		//Get the rest of the cards for the draw pile. 
-		foreach(Card c in startingCards) {
-			//decks["Draw pile"].AddCard(c);
-			Deck.MoveCard(fromDeck, c, decks["Draw pile"]);
-		}
+		Deck.MoveCards(fromDeck, decks["Draw pile"]);
+		//foreach(Card c in startingCards) {
+		//	//decks["Draw pile"].AddCard(c);
+		//	Deck.MoveCard(fromDeck, c, decks["Draw pile"]);
+		//}
 
 	}
 

@@ -13,10 +13,6 @@ public class GiveCard : Interaction
 	}
 
 	private protected override void StuffToDo(){
-		while(cards.Count() > 0) {
-      			Debug.Log("Added card " + cards.GetCardAtIndex(0) + " to inventory!");
-			if(cards.GetCardAtIndex(0) != null) inv.AddCard(cards.GetCardAtIndex(0), cards);
-			else Debug.LogError("Adding null card failed!");
-		}
+		inv.AddCards(cards);
 	}
 }
