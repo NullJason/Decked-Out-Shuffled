@@ -6,6 +6,7 @@ using TMPro;
 using UnityEngine.UI;
 using System.Text.RegularExpressions;
 using System;
+using System.Linq;
 
 
 /// <summary> 
@@ -38,6 +39,7 @@ using System;
 /// </summary>
 public class Dialogue : MonoBehaviour
 {
+    [SerializeField] private bool IsMain = false;
     [SerializeField] private TextMeshProUGUI dialogueText;
     [SerializeField] private string InitialDialogueText = "";
     [SerializeField] private Transform CharacterHeadshotTransform;
@@ -66,6 +68,7 @@ public class Dialogue : MonoBehaviour
     private bool fastForwardHold = false;   // true while FF key held
     private bool fastForwardPulse = false;  // one-shot FF (press)
 
+    public static Dialogue DefaultDialogueMono;
 
     [Header("Preset Styles")]
     // [SerializeField] private TMP_SpriteAsset spriteAsset;
@@ -74,11 +77,12 @@ public class Dialogue : MonoBehaviour
     // if not it will just apply the style to the word. if there is a <icon=index> tag somewhere in these presets then it should replace that tag with the image from TextIcons and this image should be rescaled keeping aspect ratio until it fits into the current line, the text needs to be displaced so it isnt covered by the icon.
     private static readonly Dictionary<string,string> PresetNameStyles = new Dictionary<string, string>
     {
-        ["Entis"]="<Color=(4, 24, 66)><i><b>Entis</b></i></Color>",
+        ["Entis"]="<color=#041842><i><b>Entis</b></i></color>",
     };
     private static readonly Dictionary<string,string> PresetNumberStyles = new Dictionary<string, string>
     {
-        ["Soul Coins"]="<colorgradient=(0, 163, 164),(0, 188, 161)><i><b>Soul Coins</i></b></colorgradient>",
+        ["Soul Coins"]="<colorgradient=(0, 163, 164),(0, 188, 161)><i><b>Soul Coins</b></i></colorgradient>",
+        ["Soul Embers"]="<colorgradient=(25, 212, 146),(2, 230, 188)><i><b>Soul Embers</b></i></colorgradient>"
     };
     [SerializeField] private List<Sprite> TextIcons = new List<Sprite>();
 
@@ -127,6 +131,7 @@ public class Dialogue : MonoBehaviour
 
     void Start()
     {
+        if(IsMain) DefaultDialogueMono = this;
         if (dialogueText == null)
         {
             dialogueText = GetComponent<TextMeshProUGUI>();
@@ -657,7 +662,7 @@ public class Dialogue : MonoBehaviour
     /// Clears queue and Plays this specific text. Will search for <break> tags. text after a <break> will be queued.
     /// </summary>
     /// <param name="txt"></param>
-    public void Play(string txt = "", float autoplay = -1, bool disableOnComplete = false)
+    public void Play(string txt = "", float autoplay = -1, bool disableOnComplete = false, bool enableOnStart = true)
     {
         // Debug.Log("Playing text");
         ClearDialogue();
@@ -670,6 +675,7 @@ public class Dialogue : MonoBehaviour
             if (trimmed.Length > 0)
                 QueueDialogue(trimmed);
         }
+        gameObject.SetActive(enableOnStart);
         PlayNext(disableOnComplete);
     }
     /// <summary>
@@ -738,72 +744,56 @@ public class Dialogue : MonoBehaviour
     private string ApplyPresetStyles(string text)
     {
         string result = text;
+
+        Player plr = FindFirstObjectByType<Player>();
+        if(plr != null){
+            string playerName = plr.PlayerName;
+            result = Regex.Replace(result, "PlayerName", playerName, RegexOptions.IgnoreCase);
+        }
         
         foreach (var preset in PresetNameStyles)
         {
-            string pattern = @"(?<!\w)" + Regex.Escape(preset.Key) + @"(?!\w)";
-            result = Regex.Replace(result, pattern, preset.Value, RegexOptions.IgnoreCase);
+            string pattern = $@"\b{Regex.Escape(preset.Key)}\b";
+            result = Regex.Replace(result, pattern, match => preset.Value, RegexOptions.IgnoreCase);
         }
         
         foreach (var preset in PresetNumberStyles)
         {
-            // We need three separate patterns to handle different cases properly
+            string template = preset.Value;
+            string key = preset.Key;
             
-            // 1. Numbers before the key: \d+ followed by whitespace followed by key
-            string pattern1 = @"(?<!\w)(?<numbers>\d+)\s+" + Regex.Escape(preset.Key) + @"(?!\w)";
-            result = Regex.Replace(result, pattern1, match => 
-            {
-                string fullMatch = match.Value;
-                return ApplyStyleToText(preset.Value, preset.Key, fullMatch);
-            }, RegexOptions.IgnoreCase);
+            int keyIndex = template.IndexOf(key, StringComparison.OrdinalIgnoreCase);
+            if (keyIndex < 0) continue;
             
-            // 2. Numbers after the key: key followed by whitespace followed by \d+
-            string pattern2 = @"(?<!\w)" + Regex.Escape(preset.Key) + @"\s+(?<numbers>\d+)(?!\w)";
-            result = Regex.Replace(result, pattern2, match => 
-            {
-                string fullMatch = match.Value;
-                return ApplyStyleToText(preset.Value, preset.Key, fullMatch);
-            }, RegexOptions.IgnoreCase);
+            string openingTags = template.Substring(0, keyIndex);
+            string closingTags = template.Substring(keyIndex + key.Length);
             
-            // 3. Numbers on both sides: \d+ whitespace key whitespace \d+
-            string pattern3 = @"(?<!\w)(?<before>\d+)\s+" + Regex.Escape(preset.Key) + @"\s+(?<after>\d+)(?!\w)";
-            result = Regex.Replace(result, pattern3, match => 
-            {
-                string fullMatch = match.Value;
-                return ApplyStyleToText(preset.Value, preset.Key, fullMatch);
-            }, RegexOptions.IgnoreCase);
+            string[] keyWords = key.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            string keyPattern = string.Join(@"\s+", keyWords.Select(Regex.Escape));
+            
+            string pattern = $@"\b(?:(?<before>\d+)\s+)?{keyPattern}(?:\s+(?<after>\d+))?\b";
+            
+            result = Regex.Replace(result, pattern, 
+                match => openingTags + match.Value + closingTags,
+                RegexOptions.IgnoreCase);
         }
-        
+        Debug.Log(result);
         return result;
     }
-    private string ApplyStyleToText(string styledTemplate, string keyInTemplate, string textToStyle)
-    {
-        int keyIndex = styledTemplate.IndexOf(keyInTemplate, StringComparison.OrdinalIgnoreCase);
+    // private bool IsCharacterRevealed(int charIndex, List<TextEffectTypewriter> typewriters)
+    // {
+    //     if (typewriters == null || typewriters.Count == 0) return true;
         
-        if (keyIndex >= 0)
-        {
-            string openingTags = styledTemplate.Substring(0, keyIndex);
-            string closingTags = styledTemplate.Substring(keyIndex + keyInTemplate.Length);
-            
-            return openingTags + textToStyle + closingTags;
-        }
+    //     foreach (var tt in typewriters)
+    //     {
+    //         if (charIndex >= tt.startIndex && charIndex <= tt.endIndex)
+    //         {
+    //             return tt.revealed > 0 && charIndex <= tt.startIndex + tt.revealed - 1;
+    //         }
+    //     }
         
-        return textToStyle;
-    }
-    private bool IsCharacterRevealed(int charIndex, List<TextEffectTypewriter> typewriters)
-    {
-        if (typewriters == null || typewriters.Count == 0) return true;
-        
-        foreach (var tt in typewriters)
-        {
-            if (charIndex >= tt.startIndex && charIndex <= tt.endIndex)
-            {
-                return tt.revealed > 0 && charIndex <= tt.startIndex + tt.revealed - 1;
-            }
-        }
-        
-        return true;
-    }
+    //     return true;
+    // }
     void OnDisable()
     {
         StopDialogueRoutine();
@@ -873,7 +863,7 @@ public class Dialogue : MonoBehaviour
                 if (IsTMPTag(tagContent))
                 {
                     // Let TMP handle it & just append it back to text.
-                    sb.Append("<" + tagContent + ">");
+                    sb.Append("<" + tagBuffer + ">");
                     continue;
                 }
                 if (tagName == "pause")

@@ -7,6 +7,7 @@ public class UnlockDoor : EventAction
 
     public override void DoEventAction()
     {
+        interaction.gameObject.SetActive(true);
         interaction.CanInteract = true;
     }
 }

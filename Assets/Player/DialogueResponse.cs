@@ -56,6 +56,11 @@ public class DialogueResponse : MonoBehaviour
         DRButtonCache.DoDialogue(currentNode.dialogueText, currentNode.characterHeadshotID);
         DRButtonCache.UpdateSize(currentNode);
     }
+
+    public void SetDefaultStartNode(string nodeID)
+    {
+        StartNodeID = nodeID;
+    }
 }
 
 

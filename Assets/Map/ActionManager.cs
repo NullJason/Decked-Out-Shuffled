@@ -13,6 +13,7 @@ public class ActionManager : MonoBehaviour
     
     public void ExecuteAction(string actionID)
     {
+        if(string.IsNullOrEmpty(actionID)) Debug.LogWarning("action ID is not specified.");
         var mapping = actionMappings.Find(m => m.actionID == actionID);
         if (mapping != null && mapping.eventAction != null)
         {

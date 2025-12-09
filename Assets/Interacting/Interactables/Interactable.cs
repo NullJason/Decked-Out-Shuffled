@@ -5,6 +5,8 @@ using UnityEngine;
 public class Interactable : MonoBehaviour{
 	[SerializeField] Interaction interaction;
 	[SerializeField] InteractAgent agent;
+	[SerializeField, Range(0, 100)] float interactionDistance = 5;  
+	public float InteractDist => interactionDistance;
 	
 	private void Start(){
 		AddToAgent();

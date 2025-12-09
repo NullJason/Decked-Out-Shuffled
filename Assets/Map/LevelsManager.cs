@@ -83,6 +83,17 @@ public class LevelsManager : MonoBehaviour
         }
         return null;
     }
+    public string GetLevelIDFromPathID(string pathid)
+    {
+        foreach(LevelData ld in levels)
+        {
+            foreach(PathEntry pe in ld.paths)
+            {
+                if(pe.name.Equals(pathid,StringComparison.OrdinalIgnoreCase)) return ld.id;
+            }
+        } 
+        return null;  
+    }
 
     /// <summary>
     /// Activate the level with the given id and deactivate sibling containers (if any).

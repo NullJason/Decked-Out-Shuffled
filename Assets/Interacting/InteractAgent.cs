@@ -14,7 +14,7 @@ public class InteractAgent : MonoBehaviour
 	//A set of the known Interactables that will be able to interact with this InteractAgent. 
 	private HashSet<Interactable> targets;
 
-	private double maxInteractionDistance = 5;
+	private float maxInteractionDistance = 5;
 	private void Awake(){
 		targets = new HashSet<Interactable>();
 		if(defaultInteractAgent == null) defaultInteractAgent = this;
@@ -31,6 +31,9 @@ public class InteractAgent : MonoBehaviour
 
 	private void Update()
 	{
+		if (!Application.isPlaying) return; 
+		if (targets == null || targets.Count == 0) return;
+		
 		Interactable nearest = FindNearest();
 		if (nearest != null)
 		{
@@ -40,7 +43,7 @@ public class InteractAgent : MonoBehaviour
 		}
 		foreach (Interactable i in targets)
 		{
-			if (i.Equals(nearest)) continue;
+			if (i == null || i.Equals(nearest)) continue;
 			i.OnNotOver();
 		}
 		
@@ -57,18 +60,52 @@ public class InteractAgent : MonoBehaviour
 	//Conditionally returns the nearest Interactable within the set of Interactables that this InteractAgent can interact with. 
 	//If the nearest Interactable is farther than the maximum interaction distance, returns null. 
 	private Interactable FindNearest(){
-		Interactable nearest = null;
-		double farthestDistance = 0;
-		foreach(Interactable target in targets){
-			if(target == null || target.gameObject == null){Debug.LogWarning($"A Interactable added itself to targets but is null at check."); targets.Remove(target); }
-			double targetDistance = (transform.position - target.gameObject.transform.position).sqrMagnitude;
-			if(targetDistance < farthestDistance || nearest == null){
-				nearest = target;
-				farthestDistance = targetDistance;
+		// Interactable nearest = null;
+		// double farthestDistance = 0;
+		// foreach(Interactable target in targets){
+		// 	if(target == null || target.gameObject == null){Debug.LogWarning($"A Interactable added itself to targets but is null at check."); targets.Remove(target); }
+		// 	double targetDistance = (transform.position - target.gameObject.transform.position).sqrMagnitude;
+		// 	if(targetDistance < farthestDistance || nearest == null){
+		// 		nearest = target;
+		// 		farthestDistance = targetDistance;
+		// 	}
+		// }
+		// if(farthestDistance > maxInteractionDistance || farthestDistance > nearest.InteractDist) return null;
+		// return nearest;
+		if (targets == null || targets.Count == 0) return null;
+
+		
+		float maxSqr = maxInteractionDistance * maxInteractionDistance;
+		Interactable best = null;
+		float bestSqr = 100000;
+		Vector3 myPos = transform.position;
+
+		foreach (var target in targets)
+		{
+			if (target == null || target.gameObject == null)
+			{
+				Debug.LogWarning($"A Interactable added itself to targets but is null at check."); 
+				targets.Remove(target);;
+				continue;
+			}
+
+			float distSqr = (myPos - target.gameObject.transform.position).sqrMagnitude;
+
+			if (distSqr > maxSqr) continue;
+
+			float interactDist = target.InteractDist;
+			if (interactDist <= 0f) continue;
+			float interactSqr = interactDist * interactDist;
+			if (distSqr > interactSqr) continue; 
+
+			if (distSqr < bestSqr)
+			{
+				bestSqr = distSqr;
+				best = target;
 			}
 		}
-		if(farthestDistance > maxInteractionDistance) return null;
-		return nearest;
+
+		return best;
 	}
 
 	private protected bool CheckPlayerInteraction(){

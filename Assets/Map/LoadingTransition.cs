@@ -7,6 +7,9 @@ using UnityEngine;
 /// </summary>
 public class LoadingTransition : MonoBehaviour
 {
+    [SerializeField] private int TransitionLifeSpan = 3;
+    [SerializeField] private float FadeOutDuration = 1;
+    [SerializeField] private CanvasGroup group;
     [SerializeField] private List<GameObject> Card_Prefabs;
     [SerializeField] private float Max_FallSpeed = 1;
     [SerializeField] private float Min_FallSpeed = .1f;
@@ -19,9 +22,16 @@ public class LoadingTransition : MonoBehaviour
     [SerializeField] private float CircularInfluence = 10; // from 0-100, causes cards to emulate gravity (gravitational influence) around the midpoint between start and end pos
     [SerializeField] private float LifeSpan = 3;
     [SerializeField] private List<CardAnimate> activeCards = new List<CardAnimate>();
-    
+    float start_t;
+    void Start()
+    {
+        DontDestroyOnLoad(gameObject);
+    }
+
     void OnEnable()
     {
+        start_t = Time.time;
+        group.alpha = 1;
         StartCoroutine(StartDroppingCards());
     }
     
@@ -38,7 +48,7 @@ public class LoadingTransition : MonoBehaviour
     {
         float spawnInterval = 1f / CardsPerSecond;
         
-        while (true)
+        while (true && Time.time - start_t < TransitionLifeSpan)
         {
             activeCards.RemoveAll(card => card == null);
             
@@ -49,6 +59,18 @@ public class LoadingTransition : MonoBehaviour
             
             yield return new WaitForSeconds(spawnInterval);
         }
+        float timer = 0f;
+        float targetAlpha = 0;
+        while (timer < FadeOutDuration)
+        {
+            timer += Time.deltaTime;
+            float t = timer/FadeOutDuration;
+            float easedT = t*t; 
+
+            group.alpha = Mathf.Lerp(1, targetAlpha, easedT);
+            yield return null;
+        }
+        gameObject.SetActive(false);
     }
     
     private void SpawnCard()

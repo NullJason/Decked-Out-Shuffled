@@ -5,6 +5,8 @@ public class ToggleEvent : MonoBehaviour
 {
     [SerializeField] Button button;
     [SerializeField] GameObject toggable;
+    [SerializeField] bool DisableOtherChildren = false;
+    [SerializeField] bool CanDisable = true;
     void OnEnable()
     {
         if (button == null) TryGetComponent<Button>(out button);
@@ -12,6 +14,12 @@ public class ToggleEvent : MonoBehaviour
     }
     private void DoEvent()
     {
-        toggable.SetActive(!toggable.activeSelf);
+        bool state = toggable.activeSelf;
+        if(state && CanDisable) toggable.SetActive(false); else if(!state) toggable.SetActive(true);
+        if(!DisableOtherChildren) return;
+        foreach(Transform t in toggable.transform.parent)
+        {
+            if(t!=toggable.transform) t.gameObject.SetActive(false);
+        }
     }
 }

@@ -1,0 +1,467 @@
+fileFormatVersion: 2
+guid: b5399686ee36a40418dfbff0e30d69c2
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -3153495046059719133
+    second: DoorExplosion_0
+  - first:
+      213: -274837373241533691
+    second: DoorExplosion_1
+  - first:
+      213: -3438562484445140963
+    second: DoorExplosion_2
+  - first:
+      213: -2991658235340761436
+    second: DoorExplosion_3
+  - first:
+      213: -67495603483399801
+    second: DoorExplosion_4
+  - first:
+      213: -2411046315824603428
+    second: DoorExplosion_5
+  - first:
+      213: -6186942711064954946
+    second: DoorExplosion_6
+  - first:
+      213: 8085089139840826926
+    second: DoorExplosion_7
+  - first:
+      213: 22739827665023139
+    second: DoorExplosion_8
+  - first:
+      213: 7071042702905943826
+    second: DoorExplosion_9
+  - first:
+      213: 1401471972051034837
+    second: DoorExplosion_10
+  - first:
+      213: -1469583703018928475
+    second: DoorExplosion_11
+  - first:
+      213: -5780778744994117067
+    second: DoorExplosion_12
+  - first:
+      213: -5314977543471076963
+    second: DoorExplosion_13
+  - first:
+      213: 877953950716329792
+    second: DoorExplosion_14
+  - first:
+      213: 1914041346533449067
+    second: DoorExplosion_15
+  - first:
+      213: 5165693078912006002
+    second: DoorExplosion_16
+  - first:
+      213: -822071489582070555
+    second: DoorExplosion_17
+  - first:
+      213: -6652331472780561347
+    second: DoorExplosion_18
+  - first:
+      213: -1636818142358645091
+    second: DoorExplosion_19
+  - first:
+      213: -1626061336819226222
+    second: DoorExplosion_20
+  - first:
+      213: 1997669247445574403
+    second: DoorExplosion_21
+  - first:
+      213: 4855145700708635340
+    second: DoorExplosion_22
+  - first:
+      213: 5655730215195527222
+    second: DoorExplosion_23
+  - first:
+      213: -5244500659371151597
+    second: DoorExplosion_24
+  - first:
+      213: 4529571443830678888
+    second: DoorExplosion_25
+  - first:
+      213: 7407914342390395783
+    second: DoorExplosion_26
+  - first:
+      213: -1894469172988784548
+    second: DoorExplosion_27
+  - first:
+      213: 6780284706195890956
+    second: DoorExplosion_28
+  - first:
+      213: 1098245211309310835
+    second: DoorExplosion_29
+  - first:
+      213: -46909372231266299
+    second: DoorExplosion_30
+  - first:
+      213: -1949938207598160488
+    second: DoorExplosion_31
+  - first:
+      213: 636384014006554961
+    second: DoorExplosion_32
+  - first:
+      213: -8844639006641411527
+    second: DoorExplosion_33
+  - first:
+      213: -3833601567012628764
+    second: DoorExplosion_34
+  - first:
+      213: -4742959659204696879
+    second: DoorExplosion_35
+  - first:
+      213: 3488219015694319695
+    second: DoorExplosion_36
+  - first:
+      213: 3539235413472116620
+    second: DoorExplosion_37
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WindowsStoreApps
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: DoorExplosion_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 308
+        width: 250
+        height: 307
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 32608aaa6f88c34d0800000000000000
+      internalID: -3153495046059719133
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DoorExplosion_1
+      rect:
+        serializedVersion: 2
+        x: 250
+        y: 308
+        width: 250
+        height: 307
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 50bdfec7dd49f2cf0800000000000000
+      internalID: -274837373241533691
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DoorExplosion_2
+      rect:
+        serializedVersion: 2
+        x: 500
+        y: 308
+        width: 250
+        height: 307
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d18a9a083a5c740d0800000000000000
+      internalID: -3438562484445140963
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DoorExplosion_3
+      rect:
+        serializedVersion: 2
+        x: 750
+        y: 308
+        width: 250
+        height: 307
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4a654297fae7b76d0800000000000000
+      internalID: -2991658235340761436
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DoorExplosion_4
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 1
+        width: 250
+        height: 307
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 789a8723b15301ff0800000000000000
+      internalID: -67495603483399801
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DoorExplosion_5
+      rect:
+        serializedVersion: 2
+        x: 250
+        y: 1
+        width: 250
+        height: 307
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cde9248662e3a8ed0800000000000000
+      internalID: -2411046315824603428
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DoorExplosion_6
+      rect:
+        serializedVersion: 2
+        x: 500
+        y: 1
+        width: 250
+        height: 307
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eb7f7455260932aa0800000000000000
+      internalID: -6186942711064954946
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DoorExplosion_7
+      rect:
+        serializedVersion: 2
+        x: 750
+        y: 1
+        width: 250
+        height: 307
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e2eb49d6cb1043070800000000000000
+      internalID: 8085089139840826926
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: e14ac35d4d690364b8d5165a61151520
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      DoorExplosion_0: -3153495046059719133
+      DoorExplosion_1: -274837373241533691
+      DoorExplosion_2: -3438562484445140963
+      DoorExplosion_3: -2991658235340761436
+      DoorExplosion_4: -67495603483399801
+      DoorExplosion_5: -2411046315824603428
+      DoorExplosion_6: -6186942711064954946
+      DoorExplosion_7: 8085089139840826926
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

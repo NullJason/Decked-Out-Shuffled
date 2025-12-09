@@ -27,6 +27,8 @@ ShaderVariantCollection:
         passType: 0
       - keywords: TRANSITION_BLAZE
         passType: 0
+      - keywords: TRANSITION_PATTERN
+        passType: 0
   - first: {fileID: 4800000, guid: e65241fa80a374114b3f55ed746c04d9, type: 3}
     second:
       variants:

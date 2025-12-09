@@ -106,14 +106,14 @@ MonoBehaviour:
       y: 1348.2922
       width: 350
       height: 334
-  - nodeID: Env3_StartNode Example
+  - nodeID: Env3_StartNode
     dialogueText: Hey again. nice to see you again? Gonna buy some cards? (please?)
     characterHeadshotID: 0
     choices: []
     graphPosition:
       serializedVersion: 2
-      x: -30.322845
-      y: 1567.2623
+      x: -49.288345
+      y: 1733.6416
       width: 350
       height: 234
   - nodeID: node_abf1d2a6
@@ -133,14 +133,14 @@ MonoBehaviour:
       width: 350
       height: 334
   - nodeID: follow
-    dialogueText: Your welcome! <break> We should really get going though, enter
-      my Card shop, I'll be waiting inside!
+    dialogueText: <typewriter=50>Your welcome! We should really get going though,
+      enter my Card shop, I'll be waiting inside!</typewriter>
     characterHeadshotID: 0
     choices:
     - sortOrder: 0
       choiceText: Alright.
       targetNodeID: END
-      buttonAction: 
+      buttonAction: UnlockEDoor
       enabled: 1
     graphPosition:
       serializedVersion: 2
@@ -149,13 +149,13 @@ MonoBehaviour:
       width: 350
       height: 334
   - nodeID: doorDialogueNode
-    dialogueText: That's a nice name!
+    dialogueText: PlayerName, That's a nice name!
     characterHeadshotID: 0
     choices:
     - sortOrder: 0
       choiceText: Thanks!
       targetNodeID: follow
-      buttonAction: UnlockEDoor
+      buttonAction: 
       enabled: 1
     graphPosition:
       serializedVersion: 2
@@ -294,5 +294,70 @@ MonoBehaviour:
       serializedVersion: 2
       x: 1742.7072
       y: 459.375
+      width: 350
+      height: 334
+  - nodeID: GoDoorOk
+    dialogueText: <typewriter> Go Ahead! The doors right there! </typewriter>
+    characterHeadshotID: 0
+    choices:
+    - sortOrder: 0
+      choiceText: Aren't you coming?
+      targetNodeID: node_37b73fd7
+      buttonAction: 
+      enabled: 1
+    - sortOrder: 0
+      choiceText: ...
+      targetNodeID: 
+      buttonAction: 
+      enabled: 1
+    graphPosition:
+      serializedVersion: 2
+      x: -438.10284
+      y: 785.1723
+      width: 350
+      height: 434
+  - nodeID: node_37b73fd7
+    dialogueText: I'll follow you In! :)
+    characterHeadshotID: 0
+    choices: []
+    graphPosition:
+      serializedVersion: 2
+      x: 47.069283
+      y: 822.06885
+      width: 350
+      height: 234
+  - nodeID: UnlockDoorPls
+    dialogueText: What's up?
+    characterHeadshotID: 0
+    choices:
+    - sortOrder: 0
+      choiceText: The door's locked?
+      targetNodeID: node_11477313
+      buttonAction: 
+      enabled: 1
+    - sortOrder: 0
+      choiceText: ...
+      targetNodeID: 
+      buttonAction: 
+      enabled: 1
+    graphPosition:
+      serializedVersion: 2
+      x: -453.9649
+      y: 1316.7238
+      width: 350
+      height: 434
+  - nodeID: node_11477313
+    dialogueText: <typewriter> Oops... Let me open that for you! </typewriter>
+    characterHeadshotID: 0
+    choices:
+    - sortOrder: 0
+      choiceText: Uhh...
+      targetNodeID: 
+      buttonAction: ExplodeDoor
+      enabled: 1
+    graphPosition:
+      serializedVersion: 2
+      x: 2.7590103
+      y: 1221.7239
       width: 350
       height: 334

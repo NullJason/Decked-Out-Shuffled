@@ -111,5 +111,13 @@ public class Player : MonoBehaviour
     public void ObtainItem(string item, int count)
     {
         if(!Items.TryAdd(item, count)) Items[item]+=count;
+        Debug.Log($"obtained {item}: {count}, total: {Items[item]}");
+    }
+    public void ObtainItems(Dictionary<string, int> items)
+    {
+        foreach(KeyValuePair<string,int> kv in items)
+        {
+            ObtainItem(kv.Key,kv.Value);
+        }
     }
 }

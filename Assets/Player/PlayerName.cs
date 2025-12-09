@@ -15,7 +15,7 @@ public class PlayerName : EventAction
         Player.PlayerCanMove = false;
         gameObject.SetActive(true);
         inputField.onSubmit.AddListener(OnInputFieldSubmit);
-        plrDRCache.SetContainerActiveState(false);
+        plrDRCache.SetCanvasActiveState(false);
     }
     void OnInputFieldSubmit(string text)
     {
@@ -32,8 +32,10 @@ public class PlayerName : EventAction
         {
             FindFirstObjectByType<Player>().PlayerName = username;
             plrDRCache.SetCanvasActiveState(true);
-            Debug.Log("todo bug; plr main dialogue canvas may not be active even though line 34 makes it active.");
             dialogueResponse.StartDialogueFromNode("doorDialogueNode");
+            dialogueResponse.SetDefaultStartNode("GoDoorOk");
+            Player.PlayerCanMove = true;
+            gameObject.SetActive(false);
         }
         else
         {

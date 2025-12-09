@@ -8,9 +8,7 @@ public static class SceneTransition
     public static float TransitionTime = 1f; // total time to wait AFTER new scene fully loads, before DoTransitionEnd
     public static float AnimSpeed = 1f; // multiplier applied to Animator.speed if Animator exists
 
-    public static Canvas TransitionCanvas;   
-    public static Transform AnimatedSprite; 
-    private static Animator TransitionAnimator;   
+    public static GameObject TransitionEffect;     
 
     // Ensure the hidden persistent behaviour exists and is initialized
     static SceneTransition()
@@ -18,18 +16,28 @@ public static class SceneTransition
         SceneTransitionBehaviour.EnsureExists();
     }
 
-    public static void AttachTransitionItems(Canvas TC, Transform spriteT, Animator animator)
+    public static void AttachTransitionItems(GameObject transitionPrefab)
     {
-        TransitionCanvas = TC;
-        AnimatedSprite = spriteT;
-        TransitionAnimator = animator;
+        TransitionEffect = transitionPrefab;
+    }
+    /// <summary>
+    /// overload
+    /// loads level based only on path name/id. loads the first found. not recommended
+    /// 
+    /// specify the level by its id registered in LevelsManager and a path name (no tags).
+    /// If not currently in the Environment scene this triggers the transition to load it and will
+    /// perform activation/teleport after the Environment scene is loaded.
+    /// </summary>
+    public static void LoadEnvironmentLevel(string PathName)
+    {
+        LoadEnvironmentLevel(LevelsManager.Instance.GetLevelIDFromPathID(PathName), PathName);
     }
     /// <summary>
     /// specify the level by its id registered in LevelsManager and a path name (no tags).
     /// If not currently in the Environment scene this triggers the transition to load it and will
     /// perform activation/teleport after the Environment scene is loaded.
     /// </summary>
-    public static void LoadEnvironmentLevel(string levelId, Transform Player, string entryName, Vector2 entryOffset)
+    public static void LoadEnvironmentLevel(string levelId, string entryName)
     {
         if (string.IsNullOrEmpty(levelId))
         {
@@ -40,7 +48,7 @@ public static class SceneTransition
         // If already in Environment scene -> perform activation now and start animation-only transition.
         if (SceneManager.GetActiveScene().name == "Environment")
         {
-            bool ok = ActivateLevelAndTeleportById(levelId, Player, entryName, entryOffset);
+            bool ok = ActivateLevelAndTeleportById(levelId, Player.Player_Transform, entryName);
             if (!ok) Debug.LogWarning($"SceneTransition: ActivateLevelById('{levelId}') failed while already in Environment.");
             StartTransition(); // play anim only
             return;
@@ -92,7 +100,7 @@ public static class SceneTransition
                     var pathT = lm.GetPathTransform(levelId, entryName);
                     if (pathT != null)
                     {
-                        Transform player = Player;
+                        Transform player = Player.Player_Transform;
                         if (player == null)
                         {
                             var pgo = GameObject.FindFirstObjectByType<Player>();
@@ -100,8 +108,7 @@ public static class SceneTransition
                         }
                         if (player != null)
                         {
-                            Vector3 dest = pathT.position + new Vector3(entryOffset.x, entryOffset.y, player.position.z);
-                            player.position = dest;
+                            player.position = pathT.position;
                             var rb2d = player.GetComponent<Rigidbody2D>();
                             if (rb2d != null) rb2d.linearVelocity = Vector2.zero;
                             else
@@ -127,12 +134,12 @@ public static class SceneTransition
         }
 
         SceneManager.sceneLoaded += OnSceneLoaded;
-        StartTransition("Environment");
+        StartTransition();
     
     }
     
     /// <summary>Helper used when already in Environment: activate level and teleport via LevelsManager instance.</summary>
-    private static bool ActivateLevelAndTeleportById(string levelId, Transform player, string entryName, Vector2 entryOffset)
+    private static bool ActivateLevelAndTeleportById(string levelId, Transform player, string entryName)
     {
         var lm = LevelsManager.Instance ?? GameObject.FindFirstObjectByType<LevelsManager>();
         if (lm == null)
@@ -164,8 +171,7 @@ public static class SceneTransition
             return true;
         }
 
-        Vector3 dest = pathT.position + new Vector3(entryOffset.x, entryOffset.y, playerTransform.position.z);
-        playerTransform.position = dest;
+        playerTransform.position = pathT.position;
         var rb2d = playerTransform.GetComponent<Rigidbody2D>();
         if (rb2d != null) rb2d.linearVelocity = Vector2.zero;
         else
@@ -188,71 +194,16 @@ public static class SceneTransition
         }
         return null;
     }
-    // Public: plays the transition animation only
-    public static void StartTransition() => EnsureAndPlay("");
-
-    // Public: start transition and switch to the provided sceneName (if null/empty -> just play anim)
-    public static void StartTransition(string sceneName) => EnsureAndPlay(sceneName);
-
-    // Internal helper: find components, prepare persistent objects, then call behaviour to run coroutine
-    private static void EnsureAndPlay(string sceneName)
+    public static void StartTransition()
     {
-        var behaviour = SceneTransitionBehaviour.EnsureExists();
-
-        // If TransitionCanvas not set, try to find one in scene
-        if (TransitionCanvas == null)
-        {
-            Debug.Log("transitionCanvas not set, will use first canvas found.");
-            TransitionCanvas = Object.FindFirstObjectByType<Canvas>();
-            if (TransitionCanvas != null)
-                Debug.Log($"SceneTransition: Found Canvas '{TransitionCanvas.name}' and assigned it to TransitionCanvas.");
-        }
-
-        // If AnimatedSprite not set, try to find child "TransitionPanel" under the canvas
-        if (AnimatedSprite == null && TransitionCanvas != null)
-        {
-            var panel = TransitionCanvas.transform.Find("TransitionPanel");
-            if (panel != null)
-            {
-                AnimatedSprite = panel;
-                Debug.Log($"SceneTransition: Found TransitionPanel under Canvas and assigned to AnimatedSprite.");
-            }
-        }
-
-        // If AnimatedSprite still null, try to find an object named "TransitionPanel" anywhere
-        if (AnimatedSprite == null)
-        {
-            var go = GameObject.Find("TransitionPanel");
-            if (go != null)
-            {
-                AnimatedSprite = go.transform;
-                Debug.Log($"SceneTransition: Found global GameObject named 'TransitionPanel' and assigned to AnimatedSprite.");
-            }
-        }
-
-        // If we have a Canvas, mark it DontDestroyOnLoad to persist across scenes
-        if (TransitionCanvas != null)
-            Object.DontDestroyOnLoad(TransitionCanvas.gameObject);
-
-        if (AnimatedSprite != null)
-            Object.DontDestroyOnLoad(AnimatedSprite.gameObject);
-
-        // TransitionAnimator = null;
-        if (AnimatedSprite != null)
-        {
-            TransitionAnimator = AnimatedSprite.GetComponent<Animator>() ?? AnimatedSprite.GetComponentInChildren<Animator>();
-        }
-        else
-        {
-            Debug.LogWarning("SceneTransition: AnimatedSprite is null and no TransitionPanel found. Transition animation can't be triggered.");
-        }
-
-        // Apply AnimSpeed if Animator found
-        if (TransitionAnimator != null)
-            TransitionAnimator.speed = AnimSpeed;
-
-        // Hand off to behaviour coroutine to handle timing, background load, activation and optional scene load
-        behaviour.StartTransitionCoroutine(sceneName, TransitionTime, TransitionAnimator, TransitionCanvas);
+        TransitionEffect.SetActive(true);
     }
+    
+    public static void StartTransition(string scene)
+    {
+        StartTransition();
+        SceneManager.LoadScene(scene);
+    }
+
 }
 
