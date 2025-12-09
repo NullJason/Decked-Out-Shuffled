@@ -15,8 +15,11 @@ EditorBuildSettings:
     path: Assets/Scenes/Environment.unity
     guid: 5468ef8ad9037f944ac199e7bdf833ef
   - enabled: 1
-    path: Assets/Scenes/Battle.unity
+    path: Assets/Deck/Game/Uno easy.unity
     guid: 19e4376463df4ed4bad1bf80e0491bdc
+  - enabled: 1
+    path: Assets/Deck/Game/Uno Hard.unity
+    guid: e320873541aba5d4ebcf7673e5dedede
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0
