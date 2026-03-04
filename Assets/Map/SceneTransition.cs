@@ -8,7 +8,6 @@ public static class SceneTransition
     public static float TransitionTime = 1f; // total time to wait AFTER new scene fully loads, before DoTransitionEnd
     public static float AnimSpeed = 1f; // multiplier applied to Animator.speed if Animator exists
 
-    public static GameObject TransitionEffect;     
 
     // Ensure the hidden persistent behaviour exists and is initialized
     static SceneTransition()
@@ -16,10 +15,7 @@ public static class SceneTransition
         SceneTransitionBehaviour.EnsureExists();
     }
 
-    public static void AttachTransitionItems(GameObject transitionPrefab)
-    {
-        TransitionEffect = transitionPrefab;
-    }
+    
     /// <summary>
     /// overload
     /// loads level based only on path name/id. loads the first found. not recommended
@@ -39,6 +35,8 @@ public static class SceneTransition
     /// </summary>
     public static void LoadEnvironmentLevel(string levelId, string entryName)
     {
+        StartTransition();
+
         if (string.IsNullOrEmpty(levelId))
         {
             Debug.LogError("SceneTransition.LoadEnvironmentLevel: levelId is null/empty.");
@@ -50,7 +48,6 @@ public static class SceneTransition
         {
             bool ok = ActivateLevelAndTeleportById(levelId, Player.Player_Transform, entryName);
             if (!ok) Debug.LogWarning($"SceneTransition: ActivateLevelById('{levelId}') failed while already in Environment.");
-            StartTransition(); // play anim only
             return;
         }
 
@@ -134,7 +131,6 @@ public static class SceneTransition
         }
 
         SceneManager.sceneLoaded += OnSceneLoaded;
-        StartTransition();
     
     }
     
@@ -196,7 +192,7 @@ public static class SceneTransition
     }
     public static void StartTransition()
     {
-        TransitionEffect.SetActive(true);
+        LoadingTransition.DoTransition();
     }
     
     public static void StartTransition(string scene)

@@ -112,8 +112,8 @@ MonoBehaviour:
     choices: []
     graphPosition:
       serializedVersion: 2
-      x: -49.288345
-      y: 1733.6416
+      x: -49.28833
+      y: 1897.8207
       width: 350
       height: 234
   - nodeID: node_abf1d2a6
@@ -319,13 +319,18 @@ MonoBehaviour:
   - nodeID: node_37b73fd7
     dialogueText: I'll follow you In! :)
     characterHeadshotID: 0
-    choices: []
+    choices:
+    - sortOrder: 0
+      choiceText: ...
+      targetNodeID: END
+      buttonAction: 
+      enabled: 1
     graphPosition:
       serializedVersion: 2
       x: 47.069283
       y: 822.06885
       width: 350
-      height: 234
+      height: 334
   - nodeID: UnlockDoorPls
     dialogueText: What's up?
     characterHeadshotID: 0
@@ -352,7 +357,7 @@ MonoBehaviour:
     choices:
     - sortOrder: 0
       choiceText: Uhh...
-      targetNodeID: 
+      targetNodeID: END
       buttonAction: ExplodeDoor
       enabled: 1
     graphPosition:
@@ -361,3 +366,70 @@ MonoBehaviour:
       y: 1221.7239
       width: 350
       height: 334
+  - nodeID: Shop
+    dialogueText: Hey!! You're here.
+    characterHeadshotID: 0
+    choices:
+    - sortOrder: 0
+      choiceText: How did you get here before me?
+      targetNodeID: node_4a972e86
+      buttonAction: 
+      enabled: 1
+    - sortOrder: 1
+      choiceText: What now?
+      targetNodeID: node_3715bcf6
+      buttonAction: 
+      enabled: 1
+    graphPosition:
+      serializedVersion: 2
+      x: 478.47906
+      y: 1875.2966
+      width: 350
+      height: 434
+  - nodeID: node_4a972e86
+    dialogueText: I have my ways...
+    characterHeadshotID: 0
+    choices: []
+    graphPosition:
+      serializedVersion: 2
+      x: 888.95056
+      y: 1978.5802
+      width: 350
+      height: 234
+  - nodeID: node_3715bcf6
+    dialogueText: Now? Now we fight.
+    characterHeadshotID: 0
+    choices:
+    - sortOrder: 0
+      choiceText: ????
+      targetNodeID: node_fdbe2d27
+      buttonAction: GiveStarterCards
+      enabled: 1
+    graphPosition:
+      serializedVersion: 2
+      x: 872.54156
+      y: 2303.3335
+      width: 350
+      height: 334
+  - nodeID: node_fdbe2d27
+    dialogueText: <typewriter=40> Here are your cards! I've been ache-ing to battle
+      the moment I set my eyes on you! Don't worry I'll teach you along the way!
+      </typewriter>
+    characterHeadshotID: 0
+    choices:
+    - sortOrder: 0
+      choiceText: Uhhh, Okay?
+      targetNodeID: END
+      buttonAction: StartUnoTutorial
+      enabled: 1
+    - sortOrder: 0
+      choiceText: Fine.
+      targetNodeID: END
+      buttonAction: StartUnoTutorial
+      enabled: 1
+    graphPosition:
+      serializedVersion: 2
+      x: 1360.0833
+      y: 2302.375
+      width: 350
+      height: 434

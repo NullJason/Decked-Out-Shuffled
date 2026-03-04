@@ -8,7 +8,7 @@ public class DialogueResponse : MonoBehaviour
 {
     [SerializeField] private Transform NPCTransform;
     [SerializeField] private DialogueTree dialogueTree;
-    [SerializeField] private string StartNodeID;
+    [SerializeField] private string StartNodeID = "StartNode";
     [SerializeField] private DialogueResponseCache DRButtonCache;
     private Dictionary<string, DialogueNode> nodeLookup;
     private DialogueNode currentNode;

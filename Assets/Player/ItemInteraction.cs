@@ -31,7 +31,7 @@ public class ItemInteraction : Interaction
     [SerializeField] private ParticleSystem item_particleSystem;
     
     private int TriggerHash;
-    public bool CanInteract = false;
+    // public bool CanInteract = false;
 
 
     [Header("Alter NPC dialogue after interacting.")]
@@ -47,7 +47,7 @@ public class ItemInteraction : Interaction
         eventManager = FindFirstObjectByType<ActionManager>();
         TriggerHash = Animator.StringToHash(item_animTriggerName);
     }
-    public void SetState(bool state) { CanInteract = state; }
+    // public void SetState(bool state) { CanInteract = state; }
     private bool isNull()
     {
         return ItemPopupDialogueCanvas == null || ItemPopupDialogueMono == null;
@@ -67,7 +67,7 @@ public class ItemInteraction : Interaction
         if (AlterNpcDialogueOnTryInteract || AlterInteractablePopupOnTryInteract) { AlterNpcDialogueOnTryInteract = false; AlterInteractablePopupOnTryInteract = false; }
 
         
-        if (isNull() || !CanInteract) return;
+        if (isNull()) return;
         
         if(ItemNames.Count > 0 && ItemCounts.Count == ItemNames.Count) FindFirstObjectByType<Player>()
             .ObtainItems(ItemNames.Zip(ItemCounts, (key, value) => new { key, value })

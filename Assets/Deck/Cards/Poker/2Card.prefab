@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 6248011850535942296}
   - component: {fileID: 5301254585558393323}
   - component: {fileID: 3025282886168833950}
+  - component: {fileID: -6744213725495374116}
   m_Layer: 5
   m_Name: 2Card
   m_TagString: Untagged
@@ -91,3 +92,21 @@ MonoBehaviour:
   CardSprite_Back: {fileID: -8622259438476403829, guid: 207b65c88594f3641b2a7277fc13de0a, type: 3}
   CardSprite_Front: {fileID: 6657083891701035108, guid: 04bb07aaddda81544932b75d1c751bb9, type: 3}
   defaultAnimationDuration: 0.5
+--- !u!114 &-6744213725495374116
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7229365124755798993}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5eb9da09ce44aa244a36fd932fc6ac4b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CardInfoContainer: {fileID: 0}
+  CardTitleText: {fileID: 0}
+  CardDescText: {fileID: 0}
+  item_title: 
+  item_desc: 
+  HoverTimeToDisplay: 2

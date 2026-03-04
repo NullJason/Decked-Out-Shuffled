@@ -27,6 +27,7 @@ public class InteractableItem : Interactable
     {
         if (isNull() || played) return;
         SmallTalkCanvas.gameObject.SetActive(true);
+        Debug.Log(SmallTalkCanvas.gameObject.name);
         dialogueMono.PlayNext();
         played = true;
 

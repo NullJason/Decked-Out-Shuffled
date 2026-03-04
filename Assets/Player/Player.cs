@@ -12,14 +12,16 @@ public class Player : MonoBehaviour
     public Transform AchievementsPopupContainer;
     public GameObject AchievementBase; // should be organized using ui list layout
     private CanvasGroup AchievementCG;
-    public AchievementTree Achievements;
+    public AchievementTree Achievements; // cannot be written to after build, need to build a list/dict<int,bool[2]> of bools for isunlocked and isobtained
+    public GameObject ItemObtainedBase;
+    public Transform ItemObtainedContainer;
+    private CanvasGroup ItemCG;
     public float AchievementFadeTime = 1;
     public float AchievementLifespan = 3;
     public string PlayerName;
     private Rigidbody2D rb;
     private Animator animator;
     private Vector2 movement;
-    private Dictionary<string, int> Items; // not for cards. for other items
 
     void Start()
     {
@@ -27,6 +29,7 @@ public class Player : MonoBehaviour
         animator = GetComponent<Animator>();
         Player_Transform = transform;
         AchievementsPopupContainer.TryGetComponent<CanvasGroup>(out AchievementCG);
+        ItemObtainedContainer.TryGetComponent<CanvasGroup>(out ItemCG);
     }
 
     void Update()
@@ -108,10 +111,36 @@ public class Player : MonoBehaviour
         
         AchievementsPopupContainer.gameObject.SetActive(false);
     }
+    
+    Coroutine itemC;
     public void ObtainItem(string item, int count)
     {
-        if(!Items.TryAdd(item, count)) Items[item]+=count;
-        Debug.Log($"obtained {item}: {count}, total: {Items[item]}");
+        PlayerData.TryAddAmount(item, count);
+        GameObject clone = Instantiate(ItemObtainedBase,ItemObtainedContainer);
+        clone.GetComponent<Dialogue>().Play($"Obtained x{count} {item}");
+        ItemObtainedContainer.gameObject.SetActive(true);
+        if(itemC!=null)StopCoroutine(itemC);
+        if(ItemCG) {ItemCG.alpha = 1; ItemObtainedContainer.GetComponent<UIListLayout>().ApplyLayout(); itemC=StartCoroutine(FadeItemUI());}
+    }
+    IEnumerator FadeItemUI()
+    {
+        yield return new WaitForSeconds(3);
+        float startAlpha = 1;
+        float targetAlpha = 0f;
+        float currentTime = 0f;
+
+        while (currentTime < 1)
+        {
+            currentTime += Time.deltaTime;
+            ItemCG.alpha = Mathf.Lerp(startAlpha, targetAlpha, currentTime);
+            yield return null; 
+        }
+        foreach (Transform child in AchievementsPopupContainer)
+        {
+            Destroy(child.gameObject);
+        }
+        
+        AchievementsPopupContainer.gameObject.SetActive(false);
     }
     public void ObtainItems(Dictionary<string, int> items)
     {

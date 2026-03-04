@@ -11,7 +11,6 @@ public class SceneTransitionBehaviour : MonoBehaviour
     private static SceneTransitionBehaviour _instance;
     private static readonly string ManagerName = "SceneTransitionManager";
     
-    public GameObject TransitionCanvas;    
     void Awake()
     {
         if (_instance != null && _instance != this)
@@ -21,7 +20,6 @@ public class SceneTransitionBehaviour : MonoBehaviour
         }
 
         EnsureExists();
-        SceneTransition.AttachTransitionItems(TransitionCanvas);
     }
 
     public static SceneTransitionBehaviour EnsureExists()

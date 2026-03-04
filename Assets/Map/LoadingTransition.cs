@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 /// <summary>
 /// Placed in TransitionCanvas
@@ -10,7 +12,7 @@ public class LoadingTransition : MonoBehaviour
     [SerializeField] private int TransitionLifeSpan = 3;
     [SerializeField] private float FadeOutDuration = 1;
     [SerializeField] private CanvasGroup group;
-    [SerializeField] private List<GameObject> Card_Prefabs;
+    [SerializeField] private List<GameObject> Card_Prefabs = new List<GameObject>();
     [SerializeField] private float Max_FallSpeed = 1;
     [SerializeField] private float Min_FallSpeed = .1f;
     [SerializeField] private int CardsPerSecond = 1; // num cards that should spawn inside the canvas already every second. 3 cardspersecond = every 1/3 a second spawn a card.
@@ -22,10 +24,31 @@ public class LoadingTransition : MonoBehaviour
     [SerializeField] private float CircularInfluence = 10; // from 0-100, causes cards to emulate gravity (gravitational influence) around the midpoint between start and end pos
     [SerializeField] private float LifeSpan = 3;
     [SerializeField] private List<CardAnimate> activeCards = new List<CardAnimate>();
+    [SerializeField] private TextMeshProUGUI MiniGamePointText;
+    [SerializeField] private Button StayButton;
+    [SerializeField] private Button QuitButton;
+    bool isStaying = false;
+    private float points;
     float start_t;
+    public static void DoTransition()
+    {
+        FindFirstObjectByType<LoadingTransition>().StartTransition();
+    }
+    public void StartTransition()
+    {
+        gameObject.SetActive(true);
+    }
     void Start()
     {
         DontDestroyOnLoad(gameObject);
+        StayButton.onClick.AddListener(() =>
+        {
+            isStaying = true;
+        });
+        QuitButton.onClick.AddListener(() =>
+        {
+            isStaying = false;
+        });
     }
 
     void OnEnable()
@@ -48,7 +71,7 @@ public class LoadingTransition : MonoBehaviour
     {
         float spawnInterval = 1f / CardsPerSecond;
         
-        while (true && Time.time - start_t < TransitionLifeSpan)
+        while (Time.time - start_t < TransitionLifeSpan || isStaying)
         {
             activeCards.RemoveAll(card => card == null);
             
@@ -80,13 +103,20 @@ public class LoadingTransition : MonoBehaviour
             Debug.LogWarning("No card prefabs assigned!");
             return;
         }
+        int rando = Random.Range(0, Card_Prefabs.Count);
+        GameObject cardPrefab = Card_Prefabs[rando];
         
-        GameObject cardPrefab = Card_Prefabs[Random.Range(0, Card_Prefabs.Count)];
         
         Vector2 spawnPosition = GetRandomSpawnPosition();
         
         GameObject cardObject = Instantiate(cardPrefab, spawnPosition, Quaternion.identity, transform);
         CardAnimate cardAnimate = cardObject.GetComponent<CardAnimate>();
+        Button b = cardObject.AddComponent<Button>();
+        b.onClick.AddListener(() =>
+        {
+            points++;
+            if(MiniGamePointText!=null) MiniGamePointText.text = $"{points}Points";
+        });
         
         if (cardAnimate != null)
         {
